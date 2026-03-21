@@ -1,0 +1,3571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SDAPCD / Instrument Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>:root {
+  /* ── CORE PALETTE ────────────────────────────────────── */
+  --bg:        #080c14;
+  --surface:   rgba(16, 22, 36, 0.92);
+  --surface2:  rgba(12, 17, 29, 0.96);
+  --surface3:  rgba(20, 28, 44, 0.75);
+  --border:    rgba(48, 68, 100, 0.7);
+  --border2:   rgba(34, 48, 72, 0.55);
+
+  /* accents */
+  --blue:      #22d3ee;
+  --blue-dim:  rgba(34,211,238,0.09);
+  --cyan:      #22d3ee;
+  --green:     #34d399;
+  --green-dim: rgba(52,211,153,0.09);
+  --amber:     #fbbf24;
+  --amber-dim: rgba(251,191,36,0.09);
+  --red:       #f87171;
+  --red-dim:   rgba(248,113,113,0.09);
+  --purple:    #a78bfa;
+  --purple-dim:rgba(167,139,250,0.09);
+  --slate:     #94a3b8;
+  --slate-dim: rgba(148,163,184,0.09);
+
+  /* text */
+  --text:      #dde4f0;
+  --muted:     #8896ae;
+  --subtle:    #46576e;
+
+  /* typography */
+  --font-body: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  /* shape */
+  --radius:    5px;
+  --radius-lg: 9px;
+  --radius-xl: 12px;
+
+  /* elevation */
+  --shadow-xs: 0 1px 2px rgba(0,0,0,.4);
+  --shadow:    0 2px 6px rgba(0,0,0,.5), 0 1px 2px rgba(0,0,0,.4);
+  --shadow-md: 0 8px 28px rgba(0,0,0,.65), 0 2px 8px rgba(0,0,0,.4);
+  --shadow-lg: 0 20px 60px rgba(0,0,0,.7), 0 4px 16px rgba(0,0,0,.5);
+
+  /* glows */
+  --glow:      0 0 18px rgba(34,211,238,.22);
+  --glow-sm:   0 0 9px rgba(34,211,238,.16);
+
+  /* layout */
+  --sb-width:  224px;
+}
+
+/* ── LIGHT MODE ─────────────────────────────────────────── */
+[data-theme="light"] {
+  --bg:        #eef2fb;
+  --surface:   rgba(255,255,255,0.98);
+  --surface2:  rgba(248,250,253,0.98);
+  --surface3:  rgba(240,244,250,0.9);
+  --border:    rgba(196,210,228,0.88);
+  --border2:   rgba(220,230,242,0.82);
+
+  --blue:      #1a56db;
+  --blue-dim:  rgba(26,86,219,0.08);
+  --cyan:      #1a56db;
+  --green:     #0a7a55;
+  --green-dim: rgba(10,122,85,0.09);
+  --amber:     #8f5c00;
+  --amber-dim: rgba(143,92,0,0.09);
+  --red:       #b81c1c;
+  --red-dim:   rgba(184,28,28,0.09);
+  --purple:    #6920a8;
+  --purple-dim:rgba(105,32,168,0.09);
+  --slate:     #455168;
+  --slate-dim: rgba(69,81,104,0.09);
+
+  --text:      #0e1626;
+  --muted:     #445168;
+  --subtle:    #8896ae;
+
+  --shadow-xs: 0 1px 2px rgba(0,0,0,.06);
+  --shadow:    0 1px 4px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+  --shadow-md: 0 4px 20px rgba(0,0,0,.1), 0 2px 6px rgba(0,0,0,.06);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,.14), 0 2px 8px rgba(0,0,0,.08);
+  --glow:      0 0 14px rgba(26,86,219,.14);
+  --glow-sm:   0 0 7px rgba(26,86,219,.1);
+}
+[data-theme="light"] body {
+  background-color: #eef2fb;
+  background-image:
+    radial-gradient(ellipse 90% 55% at 15% -8%, rgba(99,102,241,.11) 0%, transparent 62%),
+    radial-gradient(ellipse 65% 45% at 85% 108%, rgba(16,185,129,.07) 0%, transparent 58%),
+    linear-gradient(168deg, #eef2fb 0%, #f4f1ff 42%, #ebfcf5 100%);
+}
+[data-theme="light"] #sidebar,
+[data-theme="light"] .sidebar {
+  background: rgba(255,255,255,0.99);
+  border-right-color: rgba(26,86,219,0.1);
+  box-shadow: 3px 0 24px rgba(0,0,0,.06);
+}
+[data-theme="light"] #sidebar::before,
+[data-theme="light"] .sidebar::before { opacity:.28; }
+[data-theme="light"] .sb-brand        { border-bottom-color: rgba(26,86,219,.09);   flex-shrink: 0;
+}
+[data-theme="light"] .brand           { text-shadow: none; color: var(--blue); }
+[data-theme="light"] .breadcrumb      { color: var(--subtle); }
+[data-theme="light"] .btn-nav         { color: var(--muted); }
+[data-theme="light"] .btn-theme       { color: var(--muted); }
+[data-theme="light"] .section-title   { text-shadow: none; color: var(--blue); }
+[data-theme="light"] .stat-card       { backdrop-filter: none; }
+[data-theme="light"] .inst-table      { backdrop-filter: none; }
+[data-theme="light"] .inst-table tr:hover td { background: rgba(26,86,219,.022); }
+[data-theme="light"] .modal           { background: rgba(255,255,255,0.99); }
+[data-theme="light"] .overlay         { background: rgba(0,0,0,.38); }
+[data-theme="light"] .feed-card       { backdrop-filter: none; }
+[data-theme="light"] .sidebar-card    { backdrop-filter: none; }
+[data-theme="light"] .filter-sel option       { background: #fff; color: #0e1626; }
+[data-theme="light"] .status-sel option       { background: #fff; color: #0e1626; }
+[data-theme="light"] .form-input option        { background: #fff; color: #0e1626; }
+[data-theme="light"] .c-blue  { text-shadow: none; }
+[data-theme="light"] .c-green { text-shadow: none; }
+[data-theme="light"] .c-amber { text-shadow: none; }
+[data-theme="light"] .c-red   { text-shadow: none; }
+[data-theme="light"] .stat-card.active .stat-num { text-shadow: none; }
+
+/* ── RESET ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background-color: #080c14;
+  background-image:
+    radial-gradient(circle, rgba(48,68,100,0.35) 1px, transparent 1px),
+    radial-gradient(ellipse 72% 46% at 10% -6%, rgba(34,211,238,.055) 0%, transparent 62%),
+    radial-gradient(ellipse 62% 42% at 92% 108%, rgba(52,211,153,.045) 0%, transparent 58%),
+    radial-gradient(ellipse 55% 62% at 50% 52%, rgba(20,28,42,0) 0%, #080c14 100%);
+  background-size: 28px 28px, 100% 100%, 100% 100%, 100% 100%;
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@keyframes page-in { from { opacity:0; transform:translateY(3px) } to { opacity:1; transform:translateY(0) } }
+#root { animation: page-in .25s ease both; }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(48,68,100,.65); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(34,211,238,.45); }
+
+/* ── SIDEBAR ─────────────────────────────────────────────── */
+#sidebar,
+.sidebar {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: var(--sb-width);
+  background: rgba(8,12,20,0.99);
+  border-right: 1px solid rgba(34,211,238,.1);
+  box-shadow: 4px 0 36px rgba(0,0,0,.65);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  display: flex;
+  flex-direction: column;
+  z-index: 200;
+  overflow: hidden;
+}
+#sidebar::before,
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--blue) 35%, var(--green) 65%, transparent 100%);
+  opacity: .82;
+}
+#sidebar::after,
+.sidebar::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 1px;
+  background: linear-gradient(180deg, rgba(34,211,238,.28) 0%, rgba(34,211,238,.04) 55%, transparent 100%);
+  pointer-events: none;
+}
+.sb-brand {
+  padding: 24px 18px 18px;
+  border-bottom: 1px solid rgba(34,211,238,.07);
+  flex-shrink: 0;
+}
+.brand {
+  font-family: var(--font-mono);
+  font-size: 17px; font-weight: 600;
+  color: var(--blue);
+  letter-spacing: .08em;
+  text-shadow: 0 0 22px rgba(34,211,238,.5);
+  display: block;
+  margin-bottom: 5px;
+}
+.breadcrumb {
+  font-size: 10px;
+  color: var(--subtle);
+  font-family: var(--font-mono);
+  display: block;
+  line-height: 1.65;
+  letter-spacing: .02em;
+}
+.sb-nav {
+  flex: 1;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  min-height: 0;
+}
+.btn-dash {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; text-align: left;
+  background: transparent; color: var(--muted);
+  border: 1px solid transparent;
+  padding: 9px 12px; border-radius: var(--radius);
+  font-size: 12px; font-weight: 500;
+  font-family: var(--font-mono); letter-spacing: .03em;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.btn-dash:hover { border-color: rgba(34,211,238,.2); color: var(--blue); background: rgba(34,211,238,.07); }
+.btn-dash.active { background: linear-gradient(135deg,rgba(34,211,238,.12),rgba(34,211,238,.05)); color:var(--blue); border-color:rgba(34,211,238,.32); font-weight:600; box-shadow:inset 3px 0 0 var(--blue); }
+.btn-dash .nav-icon { font-size: 14px; width: 20px; text-align: center; flex-shrink: 0; }
+.btn-nav {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  font-size: 12px; font-weight: 500;
+  font-family: var(--font-mono); letter-spacing: .03em;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s, box-shadow .15s;
+}
+.btn-nav:hover {
+  border-color: rgba(34,211,238,.2);
+  color: var(--blue);
+  background: rgba(34,211,238,.07);
+}
+.btn-nav.active {
+  border-color: rgba(34,211,238,.32);
+  color: var(--blue);
+  background: linear-gradient(135deg, rgba(34,211,238,.11) 0%, rgba(34,211,238,.04) 100%);
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--blue), var(--glow-sm);
+}
+.btn-nav .nav-icon { font-size: 14px; width: 20px; text-align: center; flex-shrink: 0; opacity: .8; }
+.btn-nav.active .nav-icon { opacity: 1; }
+.sb-footer {
+  padding: 10px 10px 16px;
+  border-top: 1px solid rgba(34,211,238,.07);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.btn-theme {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--subtle);
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  font-size: 11.5px; font-family: var(--font-mono);
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+  letter-spacing: .02em;
+}
+.btn-theme:hover { border-color: rgba(34,211,238,.2); color: var(--blue); background: rgba(34,211,238,.06); }
+.btn-theme .nav-icon { font-size: 13px; width: 20px; text-align: center; flex-shrink: 0; }
+
+/* ── LAYOUT ─────────────────────────────────────────────── */
+.main {
+  padding: 28px 32px;
+  max-width: 1440px;
+  margin: 0 auto;
+  flex: 1;
+  margin-left: var(--sb-width);
+}
+.section-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.section-title {
+  font-size: 12px; font-weight: 600;
+  color: var(--blue);
+  font-family: var(--font-mono);
+  letter-spacing: .12em; text-transform: uppercase;
+  display: flex; align-items: center; gap: 10px;
+  text-shadow: 0 0 12px rgba(34,211,238,.3);
+}
+.section-title::before {
+  content: '';
+  width: 3px; height: 14px;
+  background: linear-gradient(180deg, var(--blue), rgba(34,211,238,.2));
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* ── STAT CARDS ─────────────────────────────────────────── */
+.stat-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 14px; margin-bottom: 28px; }
+.stat-card {
+  background: linear-gradient(145deg, rgba(20,28,44,0.92) 0%, rgba(14,20,34,0.96) 100%);
+  border: 1px solid rgba(48,68,100,.62);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px 16px;
+  cursor: pointer;
+  transition: transform .2s ease, border-color .2s, box-shadow .2s;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+}
+/* shimmer at top */
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 10%, rgba(255,255,255,.08) 50%, transparent 90%);
+}
+/* bottom accent bar */
+.stat-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--blue);
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: opacity .2s, transform .22s ease;
+}
+.stat-card:hover { transform: translateY(-2px); border-color: rgba(34,211,238,.38); box-shadow: 0 6px 28px rgba(0,0,0,.55), var(--glow-sm); }
+.stat-card:hover::after { opacity: 1; transform: scaleX(1); }
+.stat-card.active { border-color: rgba(34,211,238,.5); background: linear-gradient(145deg, rgba(34,211,238,.1) 0%, rgba(14,20,34,.96) 60%); box-shadow: 0 4px 24px rgba(0,0,0,.5), var(--glow); }
+.stat-card.active::after { opacity: 1; transform: scaleX(1); background: var(--blue); }
+.stat-label { font-size: 9.5px; font-weight: 600; color: var(--subtle); letter-spacing: .11em; margin-bottom: 10px; text-transform: uppercase; font-family: var(--font-mono); }
+.stat-num { font-size: 32px; font-weight: 600; line-height: 1; color: var(--text); font-family: var(--font-mono); letter-spacing: -.02em; }
+.stat-card.active .stat-num { color: var(--blue); text-shadow: 0 0 22px rgba(34,211,238,.5); }
+.c-blue  { color: var(--blue);   text-shadow: 0 0 12px rgba(34,211,238,.4); }
+.c-green { color: var(--green);  text-shadow: 0 0 12px rgba(52,211,153,.35); }
+.c-amber { color: var(--amber);  text-shadow: 0 0 12px rgba(251,191,36,.3); }
+.c-slate { color: var(--slate); }
+.c-red   { color: var(--red);    text-shadow: 0 0 12px rgba(248,113,113,.3); }
+.stat-hint { font-size: 10px; color: var(--subtle); margin-top: 6px; font-family: var(--font-mono); }
+
+/* ── TOOLBAR ────────────────────────────────────────────── */
+.toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
+.search-box {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 12px; flex: 1; min-width: 200px; max-width: 320px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.search-box:focus-within { border-color: rgba(34,211,238,.42); box-shadow: 0 0 0 3px rgba(34,211,238,.06); }
+.search-box input { background: transparent; border: none; outline: none; color: var(--text); font-family: var(--font-mono); font-size: 12px; padding: 8px 0; width: 100%; }
+.search-box input::placeholder { color: var(--subtle); }
+.search-icon { color: var(--subtle); font-size: 13px; }
+.filter-sel {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 7px 10px;
+  font-family: var(--font-mono); font-size: 11.5px;
+  outline: none; cursor: pointer; min-width: 130px;
+  transition: border-color .15s;
+}
+.filter-sel:focus { border-color: rgba(34,211,238,.4); }
+.filter-sel option { background: #0d1220; color: var(--text); }
+.btn-add {
+  background: linear-gradient(135deg, rgba(34,211,238,.15) 0%, rgba(34,211,238,.06) 100%);
+  color: var(--blue);
+  border: 1px solid rgba(34,211,238,.3);
+  padding: 7px 16px; border-radius: var(--radius);
+  font-size: 12px; font-weight: 600;
+  font-family: var(--font-mono); letter-spacing: .04em;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  transition: all .15s; white-space: nowrap; margin-left: auto;
+}
+.btn-add:hover { background: rgba(34,211,238,.22); border-color: var(--blue); box-shadow: var(--glow); }
+.btn-reset {
+  background: rgba(248,113,113,.08); color: var(--red);
+  border: 1px solid rgba(248,113,113,.22);
+  padding: 7px 12px; border-radius: var(--radius);
+  font-size: 11px; font-weight: 600;
+  font-family: var(--font-mono); letter-spacing: .04em;
+  cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.btn-reset:hover { background: rgba(248,113,113,.15); border-color: var(--red); }
+
+/* ── GROUP / TABLE ──────────────────────────────────────── */
+.group { margin-bottom: 32px; }
+.group-hdr {
+  cursor: pointer; user-select: none; display: flex; align-items: center; margin-bottom: 10px; }
+.group-title {
+  font-size: 10.5px; font-weight: 600;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  letter-spacing: .1em; text-transform: uppercase;
+  display: flex; align-items: center; gap: 8px;
+}
+.group-title::before { content: ''; display: inline-block; width: 14px; height: 1px; background: var(--blue); opacity: .55; flex-shrink: 0; }
+.group-collapsed .group-body { max-height:0!important; opacity:0; pointer-events:none; overflow:hidden; }
+.group-body { transition: max-height .25s ease, opacity .2s ease; max-height:4000px; opacity:1; }
+.group-chevron { font-size:10px; color:var(--subtle); transition:transform .2s; display:inline-block; margin-left:6px; }
+.group-collapsed .group-chevron { transform:rotate(-90deg); }
+.group-hdr:hover .group-title { color:var(--blue); }
+.group-count {
+  font-size: 10px; color: var(--subtle);
+  margin-left: auto;
+  background: var(--surface3);
+  padding: 2px 9px; border-radius: 10px;
+  border: 1px solid var(--border2);
+  font-family: var(--font-mono);
+}
+.inst-table {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.inst-table--field   { box-shadow: -4px 0 0 0 var(--amber),  var(--shadow); }
+.inst-table--shop    { box-shadow: -4px 0 0 0 var(--blue),   var(--shadow); }
+.inst-table--vendor  { box-shadow: -4px 0 0 0 var(--purple), var(--shadow); }
+.inst-table--storage { box-shadow: -4px 0 0 0 var(--green),  var(--shadow); }
+.inst-table table { width: 100%; border-collapse: collapse; }
+.inst-table th {
+  padding: 10px 14px;
+  font-size: 9.5px; font-weight: 600;
+  color: var(--subtle);
+  letter-spacing: .1em; text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  background: rgba(10,15,26,0.85);
+  white-space: nowrap;
+  font-family: var(--font-mono);
+}
+.inst-table td { padding: 11px 14px; border-bottom: 1px solid var(--border2); vertical-align: middle; font-size: 13px; }
+.inst-table tr:last-child td { border-bottom: none; }
+.inst-table tr:hover td { background: rgba(34,211,238,.026); transition: background .1s; }
+.empty-row td { text-align: center; padding: 36px; color: var(--subtle); font-size: 13px; font-family: var(--font-mono); }
+.inst-name { font-size: 13px; font-weight: 600; color: var(--text); font-family: var(--font-mono); }
+.inst-sn   { font-family: var(--font-mono); font-size: 11px; color: var(--blue); margin-top: 2px; opacity: .78; }
+.inst-notes { font-size: 11px; color: var(--subtle); margin-top: 3px; font-style: italic; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row-archived td { opacity: .4; }
+.archived-section-hdr {
+  font-size: 10px; font-weight: 600; color: var(--subtle);
+  letter-spacing: .08em; text-transform: uppercase;
+  font-family: var(--font-mono);
+  padding: 8px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-bottom: none;
+}
+.badge-archived {
+  background: rgba(148,163,184,.09); color: var(--slate);
+  border: 1px solid rgba(148,163,184,.2);
+  padding: 2px 8px; border-radius: 3px;
+  font-size: 9.5px; font-family: var(--font-mono); font-weight: 600; letter-spacing: .05em;
+}
+.btn-restore {
+  background: rgba(52,211,153,.08); color: var(--green);
+  border: 1px solid rgba(52,211,153,.22);
+  padding: 4px 10px; border-radius: var(--radius);
+  font-size: 11px; font-weight: 500; font-family: var(--font-mono);
+  cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.btn-restore:hover { background: rgba(52,211,153,.16); box-shadow: 0 0 8px rgba(52,211,153,.15); }
+
+/* ── INLINE SELECTS ─────────────────────────────────────── */
+.site-sel {
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); border-radius: var(--radius);
+  padding: 5px 8px; font-size: 11px; font-family: var(--font-mono);
+  outline: none; cursor: pointer; max-width: 180px; width: 100%; transition: border-color .15s;
+}
+.site-sel:focus { border-color: rgba(34,211,238,.4); }
+.status-sel {
+  border: 1px solid transparent; border-radius: var(--radius);
+  padding: 4px 8px; font-size: 11px; font-weight: 600;
+  font-family: var(--font-mono); outline: none; cursor: pointer;
+  min-width: 110px; letter-spacing: .03em;
+}
+.status-sel:focus { border-color: rgba(34,211,238,.4); }
+.status-sel option { background: #0d1220; color: var(--text); }
+.s-operational { background: rgba(52,211,153,.11); color: var(--green); border-color: rgba(52,211,153,.24)!important; }
+.s-maintenance { background: rgba(251,191,36,.09); color: var(--amber); border-color: rgba(251,191,36,.22)!important; }
+.s-repair      { background: rgba(248,113,113,.09); color: var(--red);   border-color: rgba(248,113,113,.22)!important; }
+.s-calibration { background: rgba(167,139,250,.09); color: var(--purple);border-color: rgba(167,139,250,.22)!important; }
+.s-offline     { background: rgba(148,163,184,.07); color: var(--slate); border-color: rgba(148,163,184,.14)!important; }
+.s-deployed    { background: rgba(34,211,238,.09);  color: var(--blue);  border-color: rgba(34,211,238,.24)!important; }
+.s-at-vendor   { background: rgba(251,146,60,.09);  color: #e55f0c;      border-color: rgba(251,146,60,.26)!important; }
+
+/* ── ACTION BUTTONS ─────────────────────────────────────── */
+.actions { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+.btn-act {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: var(--radius);
+  font-size: 11px; font-weight: 500;
+  font-family: var(--font-mono); letter-spacing: .03em;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  transition: background .12s, color .12s, border-color .12s;
+  white-space: nowrap;
+}
+.btn-act:hover { background: var(--surface3); border-color: rgba(148,163,184,.38); color: var(--text); }
+.btn-logwork  { background: rgba(34,211,238,.09);  color: var(--blue);   border-color: rgba(34,211,238,.26); }
+.btn-logwork:hover  { background: rgba(34,211,238,.17); border-color: var(--blue); box-shadow: var(--glow-sm); }
+.btn-history  { background: var(--surface2); color: var(--slate); border-color: var(--border); }
+.btn-createwo { background: rgba(34,211,238,.06);  color: var(--blue);   border-color: rgba(34,211,238,.18); }
+.wo-badge {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--blue); cursor: pointer;
+  padding: 3px 8px; border-radius: var(--radius);
+  background: rgba(34,211,238,.08);
+  border: 1px solid rgba(34,211,238,.22);
+  letter-spacing: .03em;
+  transition: background .12s, box-shadow .12s;
+}
+.wo-badge:hover { background: rgba(34,211,238,.15); box-shadow: var(--glow-sm); }
+.btn-export {
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--subtle);
+  padding: 6px 12px; border-radius: var(--radius);
+  font-size: 11px; font-weight: 500;
+  font-family: var(--font-mono); letter-spacing: .04em;
+  cursor: pointer; transition: all .15s;
+}
+.btn-export:hover { border-color: rgba(34,211,238,.38); color: var(--blue); }
+
+/* ── MODAL ──────────────────────────────────────────────── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.6);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  overflow-y: auto;
+  padding: 16px;
+}
+.modal {
+  background: linear-gradient(168deg, rgba(16,22,36,.99) 0%, rgba(10,16,28,.99) 100%);
+  border: 1px solid rgba(34,211,238,.18);
+  border-radius: var(--radius-xl);
+  padding: 0;
+  width: 500px; max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 32px);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  min-height: 0;
+  animation: modal-in .18s cubic-bezier(.22,.9,.28,1);
+  box-shadow: 0 0 0 1px rgba(34,211,238,.05), var(--shadow-lg);
+}
+@keyframes modal-in { from { opacity:0; transform:scale(.96) translateY(8px) } to { opacity:1; transform:scale(1) translateY(0) } }
+.modal-hdr {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 18px 22px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.modal-title { font-size: 12px; font-weight: 600; color: var(--blue); font-family: var(--font-mono); letter-spacing: .1em; text-transform: uppercase; text-shadow: 0 0 12px rgba(34,211,238,.35); }
+.modal > .modal-hdr + div { overflow-y: auto; flex: 1; padding: 20px 22px; }
+/* fallback for older structure */
+.modal > div:not(.modal-hdr):not(.modal-actions) { padding: 20px 22px; }
+.modal-sub { font-family: var(--font-mono); font-size: 12px; color: var(--blue); margin-bottom: 16px; padding: 8px 12px; background: rgba(34,211,238,.07); border-radius: var(--radius); border: 1px solid rgba(34,211,238,.14); }
+.close-btn { background: none; border: none; color: var(--subtle); cursor: pointer; font-size: 20px; line-height: 1; padding: 3px 7px; transition: color .15s, background .15s; border-radius: var(--radius); }
+.close-btn:hover { color: var(--text); background: rgba(255,255,255,.06); }
+.form-group { margin-bottom: 14px; }
+.form-label { display: block; font-size: 10px; font-weight: 600; color: var(--subtle); letter-spacing: .08em; margin-bottom: 5px; text-transform: uppercase; font-family: var(--font-mono); }
+.form-input {
+  width: 100%; padding: 8px 11px;
+  background: rgba(10,15,26,.85);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font-mono); font-size: 12px;
+  outline: none; transition: border-color .15s, box-shadow .15s;
+}
+.form-input:focus { border-color: rgba(34,211,238,.48); box-shadow: 0 0 0 3px rgba(34,211,238,.06); }
+.form-input option { background: #0d1220; color: var(--text); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; padding: 14px 22px; border-top: 1px solid var(--border); background: rgba(8,12,20,.6); flex-shrink: 0; border-radius: 0 0 var(--radius-xl) var(--radius-xl); }
+.btn-cancel { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 7px 16px; border-radius: var(--radius); font-size: 12px; font-weight: 500; font-family: var(--font-mono); cursor: pointer; transition: all .15s; }
+.btn-cancel:hover { border-color: rgba(148,163,184,.42); color: var(--text); }
+.btn-save { background: linear-gradient(135deg, rgba(34,211,238,.15) 0%, rgba(34,211,238,.07) 100%); color: var(--blue); border: 1px solid rgba(34,211,238,.3); padding: 7px 20px; border-radius: var(--radius); font-size: 12px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .04em; cursor: pointer; transition: all .15s; }
+.btn-save:hover { background: rgba(34,211,238,.22); box-shadow: var(--glow); }
+.btn-close-wo { background: rgba(52,211,153,.09); color: var(--green); border: 1px solid rgba(52,211,153,.24); padding: 7px 16px; border-radius: var(--radius); font-size: 12px; font-weight: 500; font-family: var(--font-mono); cursor: pointer; transition: all .15s; }
+.btn-close-wo:hover { background: rgba(52,211,153,.17); box-shadow: 0 0 9px rgba(52,211,153,.15); }
+.btn-edit-sm { background: var(--surface2); color: var(--slate); border: 1px solid var(--border); padding: 4px 10px; border-radius: var(--radius); font-size: 11px; font-weight: 500; font-family: var(--font-mono); cursor: pointer; transition: all .15s; white-space: nowrap; }
+.btn-edit-sm:hover { border-color: rgba(148,163,184,.4); color: var(--text); background: var(--surface3); }
+.btn-del-sm { background: var(--surface2); color: var(--red); border: 1px solid rgba(248,113,113,.17); padding: 4px 10px; border-radius: var(--radius); font-size: 11px; font-weight: 500; font-family: var(--font-mono); cursor: pointer; transition: all .15s; white-space: nowrap; }
+.btn-del-sm:hover { background: rgba(248,113,113,.1); border-color: rgba(248,113,113,.35); }
+.btn-edit-md { background: var(--surface2); color: var(--slate); border: 1px solid var(--border); padding: 7px 16px; border-radius: var(--radius); font-size: 12px; font-weight: 500; font-family: var(--font-mono); cursor: pointer; transition: all .15s; }
+.btn-edit-md:hover { border-color: rgba(148,163,184,.4); color: var(--text); background: var(--surface3); }
+.err-msg { background: rgba(248,113,113,.07); border: 1px solid rgba(248,113,113,.18); color: var(--red); padding: 9px 12px; border-radius: var(--radius); font-size: 12px; margin-bottom: 14px; font-family: var(--font-mono); }
+
+/* ── HISTORY ────────────────────────────────────────────── */
+.history-item { padding: 10px 0; border-bottom: 1px solid var(--border2); }
+.history-item:last-child { border-bottom: none; }
+.history-date { font-family: var(--font-mono); font-size: 10px; color: var(--subtle); letter-spacing: .04em; }
+.history-action { color: var(--text); margin-top: 3px; font-size: 12px; font-family: var(--font-mono); }
+
+/* ── WO DETAIL ──────────────────────────────────────────── */
+.wo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.wo-field-label { font-size: 10px; font-weight: 600; color: var(--subtle); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 3px; font-family: var(--font-mono); }
+.wo-field-val { font-size: 13px; color: var(--text); font-family: var(--font-mono); }
+
+/* ── CERTIFICATION BADGES ───────────────────────────────── */
+.cert-overdue  { background: rgba(248,113,113,.11); color: var(--red);    border: 1px solid rgba(248,113,113,.27); padding: 3px 8px; border-radius: var(--radius); font-size: 10px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .04em; white-space: nowrap; }
+.cert-due-soon { background: rgba(251,191,36,.1);   color: var(--amber);  border: 1px solid rgba(251,191,36,.27);  padding: 3px 8px; border-radius: var(--radius); font-size: 10px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .04em; white-space: nowrap; }
+.cert-ok       { background: rgba(52,211,153,.09);  color: var(--green);  border: 1px solid rgba(52,211,153,.2);   padding: 3px 8px; border-radius: var(--radius); font-size: 10px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .04em; white-space: nowrap; }
+.cert-none     { background: var(--surface3);       color: var(--subtle); border: 1px solid var(--border2);        padding: 3px 8px; border-radius: var(--radius); font-size: 10px; font-weight: 500; font-family: var(--font-mono); letter-spacing: .04em; white-space: nowrap; }
+.btn-cert { background: rgba(167,139,250,.1); color: var(--purple); border: 1px solid rgba(167,139,250,.27); padding: 4px 10px; border-radius: var(--radius); font-size: 11px; font-weight: 600; font-family: var(--font-mono); cursor: pointer; transition: all .15s; white-space: nowrap; }
+.btn-cert:hover { background: rgba(167,139,250,.18); box-shadow: 0 0 10px rgba(167,139,250,.15); }
+.wo-tab.cert-tab { color: var(--purple); }
+.wo-tab.cert-tab.active { color: var(--purple); border-color: rgba(167,139,250,.3); background: rgba(167,139,250,.1); }
+
+/* ── CONFIRM MODAL ──────────────────────────────────────── */
+.confirm-modal { max-width: 420px; }
+.confirm-icon { font-size: 30px; margin-bottom: 12px; display: block; }
+.confirm-msg { font-size: 13px; color: var(--text); line-height: 1.65; margin-bottom: 6px; }
+.confirm-detail { font-family: var(--font-mono); font-size: 11px; color: var(--blue); background: var(--blue-dim); border: 1px solid rgba(34,211,238,.18); border-radius: var(--radius); padding: 8px 12px; margin-bottom: 4px; }
+.btn-confirm-ok { background: rgba(248,113,113,.11); color: var(--red); border: 1px solid rgba(248,113,113,.27); padding: 7px 20px; border-radius: var(--radius); font-size: 12px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .04em; cursor: pointer; transition: all .15s; }
+.btn-confirm-ok:hover { background: rgba(248,113,113,.2); box-shadow: 0 0 10px rgba(248,113,113,.14); }
+
+/* ── PRINT ──────────────────────────────────────────────── */
+@media print {
+  *, *::before, *::after { -webkit-print-color-adjust: exact!important; print-color-adjust: exact!important; }
+  body { background: #fff!important; color: #111!important; font-family: 'IBM Plex Sans', sans-serif; font-size: 11px; }
+  #sidebar, .sidebar, .toolbar, .stat-grid, .btn-add, .btn-export, .btn-act,
+  .actions, .group-hdr .group-count, .wo-tabs, .search-box,
+  .section-hdr button, .print-hide { display: none!important; }
+  .main { padding: 0!important; max-width: 100%!important; margin-left: 0!important; }
+  .inst-table { box-shadow: none!important; border: 1px solid #ccc!important; }
+  .inst-table th { background: #f0f0f0!important; color: #333!important; border-bottom: 1px solid #ccc!important; }
+  .inst-table td { border-bottom: 1px solid #eee!important; color: #111!important; }
+  .inst-table tr:hover td { background: none!important; }
+  .inst-name { color: #111!important; }
+  .inst-sn   { color: #1a56db!important; }
+  .wo-status-open   { background: #dbeafe!important; color: #1e40af!important; border: 1px solid #93c5fd!important; }
+  .wo-status-closed { background: #d1fae5!important; color: #065f46!important; border: 1px solid #6ee7b7!important; }
+  .print-header { display: block!important; }
+  @page { margin: 18mm 14mm; }
+}
+.print-header { display: none; padding-bottom: 16px; margin-bottom: 16px; border-bottom: 2px solid #1a56db; }
+.print-header h1 { font-size: 18px; font-weight: 700; color: #1a56db; margin-bottom: 4px; }
+.print-header p  { font-size: 11px; color: #555; }
+
+/* ── WORK ORDER TABS ────────────────────────────────────── */
+.wo-tabs { display: flex; gap: 3px; margin-bottom: 18px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 4px; width: fit-content; }
+.wo-tab { padding: 6px 18px; border-radius: var(--radius); font-size: 11px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .06em; cursor: pointer; border: none; background: transparent; color: var(--subtle); transition: all .15s; }
+.wo-tab:hover { color: var(--text); }
+.wo-tab.active { background: var(--surface); color: var(--blue); box-shadow: var(--shadow-xs); border: 1px solid rgba(34,211,238,.2); }
+.wo-status-open   { background: rgba(34,211,238,.09); color: var(--blue);  border: 1px solid rgba(34,211,238,.2);  padding: 3px 8px; border-radius: var(--radius); font-size: 10px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .04em; }
+.wo-status-closed { background: rgba(52,211,153,.09); color: var(--green); border: 1px solid rgba(52,211,153,.2);  padding: 3px 8px; border-radius: var(--radius); font-size: 10px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .04em; }
+.wo-id   { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--blue); cursor: pointer; }
+.wo-id:hover { text-decoration: underline; text-underline-offset: 2px; }
+.wo-inst { font-family: var(--font-mono); font-size: 11px; color: var(--subtle); margin-top: 2px; }
+.wo-field-label2 { font-size: 10px; font-weight: 600; color: var(--subtle); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 3px; font-family: var(--font-mono); }
+
+/* ── ADMIN ──────────────────────────────────────────────── */
+.admin-input { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-family: var(--font-mono); font-size: 12px; padding: 6px 10px; outline: none; flex: 1; min-width: 130px; transition: border-color .15s; }
+.admin-input:focus { border-color: rgba(34,211,238,.44); }
+.admin-input::placeholder { color: var(--subtle); }
+.admin-add-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 10px 14px; background: var(--surface2); border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+.admin-empty { text-align: center; padding: 28px; color: var(--subtle); font-family: var(--font-mono); font-size: 12px; }
+.btn-add-sm { background: rgba(34,211,238,.09); color: var(--blue); border: 1px solid rgba(34,211,238,.27); padding: 6px 14px; border-radius: var(--radius); font-size: 11px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .04em; cursor: pointer; white-space: nowrap; transition: all .15s; }
+.btn-add-sm:hover { background: rgba(34,211,238,.16); box-shadow: var(--glow-sm); }
+
+/* ── ACTIVITY / FEED ────────────────────────────────────── */
+.activity-grid { display: grid; grid-template-columns: 1fr 260px; gap: 20px; align-items: start; }
+.feed-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.feed-item { display: flex; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border2); transition: background .1s; align-items: flex-start; }
+.feed-item:last-child { border-bottom: none; }
+.feed-item:hover { background: rgba(34,211,238,.02); }
+.feed-hdr { padding: 10px 16px; background: rgba(10,15,26,.85); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.feed-icon { width: 32px; height: 32px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+.fi-wo     { background: rgba(34,211,238,.11);  color: var(--blue); }
+.fi-status { background: rgba(167,139,250,.11); color: var(--purple); }
+.fi-site   { background: rgba(251,191,36,.09);  color: var(--amber); }
+.fi-cert   { background: rgba(52,211,153,.09);  color: var(--green); }
+.fi-inst   { background: rgba(148,163,184,.09); color: var(--slate); }
+.feed-action { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--text); }
+.feed-detail { font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.45; }
+.feed-chip { font-family: var(--font-mono); font-size: 11px; color: var(--blue); cursor: pointer; padding: 2px 7px; background: rgba(34,211,238,.08); border: 1px solid rgba(34,211,238,.17); border-radius: 3px; display: inline-block; margin-top: 4px; transition: background .12s; }
+.feed-chip:hover { background: rgba(34,211,238,.14); }
+.feed-ts { font-family: var(--font-mono); font-size: 10px; color: var(--subtle); flex-shrink: 0; padding-top: 2px; }
+.sidebar-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow); backdrop-filter: blur(10px); }
+.mini-stat-label { font-size: 11px; color: var(--muted); }
+
+/* ── TOAST ──────────────────────────────────────────────── */
+#toast {
+  position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+  background: linear-gradient(135deg, rgba(20,28,44,.99), rgba(12,18,30,.99));
+  border: 1px solid rgba(34,211,238,.24);
+  color: var(--text);
+  padding: 10px 18px;
+  border-radius: var(--radius-lg);
+  font-family: var(--font-mono); font-size: 12px;
+  z-index: 10000;
+  display: none;
+  box-shadow: var(--shadow-md), var(--glow-sm);
+  animation: toast-in .2s ease;
+  max-width: 340px;
+  letter-spacing: .01em;
+}
+@keyframes toast-in { from { opacity:0; transform:translateX(-50%) translateY(-8px) } to { opacity:1; transform:translateX(-50%) translateY(0) } }
+
+/* ── MISC HELPERS ───────────────────────────────────────── */
+.dz-row { padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; gap: 20px; border-bottom: 1px solid rgba(248,113,113,.1); }
+.dz-row-last { border-bottom: none; }
+.wo-ref-panel { background: var(--amber-dim); border: 1px solid rgba(146,96,10,.2); border-left: 3px solid var(--amber); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 16px; }
+.cert-info-panel { background: rgba(167,139,250,.07); border: 1px solid rgba(167,139,250,.18); border-left: 3px solid var(--purple); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 16px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); line-height: 1.7; }
+.cert-table-footer { padding: 10px 14px; background: var(--surface2); border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: 10px; color: var(--subtle); }
+
+/* ── ADMIN COLLAPSIBLE ──────────────────────────────── */
+.group-chevron { font-size:10px; color:var(--subtle); transition:transform .2s; display:inline-block; margin-left:6px; }
+.group-collapsed .group-chevron { transform:rotate(-90deg); }
+.group-body { overflow:hidden; transition:max-height .25s ease, opacity .2s ease; max-height:4000px; opacity:1; }
+.group-collapsed .group-body { max-height:0!important; opacity:0; pointer-events:none; }
+.group-hdr:hover .group-title { color:var(--blue); }
+</style>
+</head>
+<body>
+<nav id="sidebar"></nav>
+<div id="root"></div>
+<script>
+const LS             = 'sdapcd_instr_v9';
+
+const STATUSES       = ['Operational','Maintenance','Repair','Calibration','Offline','Deployed','At Vendor'];
+const SHOP_STATUSES  = ['Operational','Maintenance','Repair','Calibration','Offline'];
+const FIELD_STATUSES = ['Deployed','Maintenance','Repair','Calibration','Offline'];
+const VENDOR_STATUSES= ['At Vendor','Repair','Calibration'];
+const WO_TYPES       = ['Maintenance','Repair','Calibration','Inspection','Vendor Certification','Other'];
+const CERT_WARN_DAYS = 90; // show "Due Soon" within 90 days of due date
+const DEFAULT_SITES  = ['HQ/SHOP','VENDOR','SES - 1','MAR - 2','SAY - 3','OVB - 4','LCC - 5','CTB - 7','DVN - 10','ALP - 11'];
+const PROTECTED_SITES = ['HQ/SHOP','VENDOR'];
+const SEED = [
+  {name:'BC1060', serial:'C10339', status:'Deployed',     site:'SES - 1'},
+  {name:'BC1060', serial:'Y21835', status:'Deployed',     site:'MAR - 2'},
+  {name:'BC1060', serial:'B20751', status:'Deployed',     site:'SAY - 3'},
+  {name:'BC1060', serial:'Y20060', status:'Deployed',     site:'OVB - 4'},
+  {name:'BC1060', serial:'A12823', status:'Deployed',     site:'LCC - 5'},
+  {name:'BC1060', serial:'Y21264', status:'Deployed',     site:'CTB - 7'},
+  {name:'BC1060', serial:'Y22296', status:'Deployed',     site:'DVN - 10'},
+  {name:'BC1060', serial:'Y22299', status:'Deployed',     site:'ALP - 11'},
+  {name:'BC1060', serial:'Y21836', status:'Operational',  site:'HQ/SHOP'},
+  {name:'BC1060', serial:'Y22297', status:'Operational',  site:'HQ/SHOP'},
+  {name:'BC1060', serial:'X25741', status:'Operational',  site:'HQ/SHOP'},
+  {name:'BC1060', serial:'Y10195', status:'Operational',  site:'HQ/SHOP'},
+  {name:'BC1060', serial:'2700',   status:'Operational',  site:'HQ/SHOP'},
+  {name:'BC1060', serial:'C10340', status:'Operational',  site:'HQ/SHOP'},
+  {name:'BC1060', serial:'A23959', status:'Operational',  site:'HQ/SHOP'},
+  {name:'BC1060', serial:'Y21833', status:'Operational',  site:'HQ/SHOP'},
+  {name:'BC1060', serial:'B20752', status:'Operational',  site:'HQ/SHOP'},
+  {name:'ESEQ',   serial:'B20750', status:'Operational',  site:'HQ/SHOP'},
+  {name:'ESEQ',   serial:'B20749', status:'Operational',  site:'HQ/SHOP'},
+  {name:'ESEQ',   serial:'Y12230', status:'Operational',  site:'HQ/SHOP'},
+  {name:'ESEQ',   serial:'Y12228', status:'Operational',  site:'HQ/SHOP'},
+  {name:'ESEQ',   serial:'Y20057', status:'Operational',  site:'HQ/SHOP'},
+  {name:'ESEQ',   serial:'Y20059', status:'Operational',  site:'HQ/SHOP'},
+  {name:'ESEQ',   serial:'Y20058', status:'Operational',  site:'HQ/SHOP'},
+  {name:'ESEQ',   serial:'Y12229', status:'Operational',  site:'HQ/SHOP'},
+  {name:'ESEQ',   serial:'A11212', status:'Operational',  site:'HQ/SHOP'},
+  {name:'ESEQ',   serial:'Y22298', status:'Operational',  site:'HQ/SHOP'},
+  {name:'ESEQ',   serial:'X25740', status:'Operational',  site:'HQ/SHOP'},
+  {name:'ESEQ',   serial:'Y10196', status:'Operational',  site:'HQ/SHOP'},
+  {name:'ESEQ',   serial:'Y22058', status:'Operational',  site:'HQ/SHOP'},
+  {name:'ESEQ',   serial:'A11213', status:'Operational',  site:'HQ/SHOP'},
+  {name:'ESEQ',   serial:'Y22295', status:'Operational',  site:'HQ/SHOP'},
+  {name:'ESEQ',   serial:'A11210', status:'Operational',  site:'HQ/SHOP'},
+  {name:'ESEQ',   serial:'X25743', status:'Operational',  site:'HQ/SHOP'},
+];
+
+// ── API CLIENT ─────────────────────────────────────────────
+// ── GOOGLE APPS SCRIPT API CLIENT ──────────────────────────
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyw4OrLWPQo4J-zul2eKqKFC3A5g2BopsycwD-hxpx7Hdq5kZ74iwfpPZ-BCoTxmx0k/exec';
+
+async function gasRequest(path, action, params, body) {
+  const url = new URL(GAS_URL);
+  url.searchParams.set('path', path);
+  url.searchParams.set('action', action);
+  if (params) Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
+
+  let response;
+  if (body !== null && body !== undefined) {
+    response = await fetch(url.toString(), {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+  } else {
+    response = await fetch(url.toString());
+  }
+  const j = await response.json();
+  if (!j.ok) throw new Error(j.error || 'API error');
+  return j.data;
+}
+
+const API = {
+  async get(path) {
+    // Map /db, /instruments, etc. to GAS path/action params
+    const clean = path.replace(/^\//, '');
+    const parts = clean.split('/');
+    const resource = parts[0];
+    const id = parts[1];
+    if (resource === 'db') return gasRequest('db', 'get', null, null);
+    if (resource === 'settings' && id) return gasRequest('settings', 'get', {key: id}, null);
+    return gasRequest(resource, 'get', id ? {id} : null, null);
+  },
+  async post(path, body) {
+    const clean = path.replace(/^\//, '');
+    const parts = clean.split('/');
+    const resource = parts[0];
+    const sub = parts[1]; // e.g. 'history/instrument/123' or 'admin/clear-notes'
+    if (resource === 'admin') {
+      const action = (parts[1]||'').replace('-','_');
+      return gasRequest('admin', action, null, body);
+    }
+    return gasRequest(resource, 'post', null, body);
+  },
+  async put(path, body) {
+    const clean = path.replace(/^\//, '');
+    const parts = clean.split('/');
+    const resource = parts[0];
+    const id = parts[1];
+    if (resource === 'settings') return gasRequest('settings', 'put', {key: id}, body);
+    return gasRequest(resource, 'put', {id}, body);
+  },
+  async patch(path, body) {
+    const clean = path.replace(/^\//, '');
+    const parts = clean.split('/');
+    const resource = parts[0];
+    const id = parts[1];
+    const sub = parts[2]; // e.g. 'archive', 'close', 'status', 'site', 'cert'
+    const action = sub || 'patch';
+    if (resource === 'work-orders') return gasRequest('work_orders', action === 'close' ? 'close' : 'put', {id}, body);
+    return gasRequest(resource.replace('-','_'), action, {id}, body);
+  },
+  async del(path) {
+    const clean = path.replace(/^\//, '');
+    const parts = clean.split('/');
+    const resource = parts[0];
+    const id = parts[1];
+    return gasRequest(resource.replace('-','_'), 'delete', {id}, {});
+  }
+};
+
+// ── DATABASE ───────────────────────────────────────────────
+// db is loaded async from the server at startup; saveDB is now a no-op
+// because every mutation goes directly to the API.
+function saveDB() { /* data is saved to SQLite via API calls — no-op */ }
+
+// Synchronous placeholder so render() works before async load completes
+let db = {
+  instruments: [], workOrders: [], history: {}, nextId: 1, woId: 1,
+  sites: [...DEFAULT_SITES], instTypes: ['BC1060','ESEQ'],
+  techs: [{name:'User 1',role:'',email:''},{name:'User 2',role:'',email:''}],
+  archivedSites: [], archivedTypes: [], archivedTechs: [],
+  sitesMeta: {}, customStatuses: []
+};
+
+async function loadDBFromServer() {
+  try {
+    const d = await API.get('/db');
+    db = d;
+    if (!db.customStatuses) db.customStatuses = [];
+    if (!db.sitesMeta)      db.sitesMeta = {};
+    render();
+  } catch(e) {
+    console.error('SDAPCD: failed to load from server.', e);
+    toast('⚠ Could not connect to server — is it running?');
+  }
+}
+
+// Kick off load after page is ready (called at bottom of script)
+
+// ── UI STATE ───────────────────────────────────────────────
+let ui = {
+  page: 'dashboard', modal: null, form: {},
+  search: '', statusF: 'All Statuses', typeF: 'All Types', locationF: 'Field & Shop',
+  activeStatCard: null, adminInstrSearch: '',
+  woFilter: 'Open', woSearch: '',
+  actFilter: 'All', actSearch: '', actDateFrom: '', actDateTo: '',
+  dirty: false,
+  theme: (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('sdapcd_theme')) || 'dark',
+  adminUnlocked: false,
+  adminUnlockedAt: null,
+  _openAdminSections: new Set(),
+  newStatus: '',
+  newSite: '', newType: '',
+  newTechName: '', newTechRole: '', newTechEmail: ''
+};
+
+// Apply saved theme immediately before first render
+(function() {
+  document.documentElement.setAttribute('data-theme', ui.theme);
+})();
+
+// ── HELPERS ────────────────────────────────────────────────
+const today       = () => new Date().toISOString().slice(0, 10);
+const nowTs       = () => new Date().toLocaleString('en-US', {month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'});
+const esc         = s  => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const plural      = (n, w) => `${n} ${w}${n !== 1 ? 's' : ''}`;
+const statusClass = s  => ({
+  Operational:'s-operational', Maintenance:'s-maintenance', Repair:'s-repair',
+  Calibration:'s-calibration', Offline:'s-offline', Deployed:'s-deployed',
+  'At Vendor':'s-at-vendor'
+})[s] || 's-offline';
+
+const isVendor    = i  => i.site === 'VENDOR';
+const isField     = i  => i.site && i.site !== 'HQ/SHOP' && i.site !== 'VENDOR';
+const isShop      = i  => i.site === 'HQ/SHOP';
+
+// ── CERTIFICATION HELPERS ──────────────────────────────────
+// Returns YYYY-MM-DD that is exactly 2 years after a given date string
+function certDueDate(lastDate) {
+  if (!lastDate) return null;
+  const d = new Date(lastDate + 'T00:00:00');
+  d.setFullYear(d.getFullYear() + 2);
+  return d.toISOString().slice(0, 10);
+}
+// Returns 'overdue' | 'due-soon' | 'ok' | 'none'
+function certStatus(i) {
+  if (i.name !== 'BC1060') return 'none';
+  const due = certDueDate(i.lastCertDate);
+  if (!due) return 'none';
+  const today2 = new Date(today() + 'T00:00:00');
+  const dueD   = new Date(due  + 'T00:00:00');
+  const daysLeft = Math.round((dueD - today2) / 86400000);
+  if (daysLeft < 0)                   return 'overdue';
+  if (daysLeft <= CERT_WARN_DAYS)     return 'due-soon';
+  return 'ok';
+}
+function certBadge(i) {
+  if (i.name !== 'BC1060') return '';
+  const due = certDueDate(i.lastCertDate);
+  const st  = certStatus(i);
+  if (st === 'none')     return `<span class="cert-none">NO CERT DATE</span>`;
+  if (st === 'overdue')  return `<span class="cert-overdue">⚠ OVERDUE · ${due}</span>`;
+  if (st === 'due-soon') return `<span class="cert-due-soon">◉ DUE SOON · ${due}</span>`;
+  return                        `<span class="cert-ok">✓ CERT OK · ${due}</span>`;
+}
+
+function addHistory(instId, action, detail) {
+  if (!db.history[instId]) db.history[instId] = [];
+  db.history[instId].unshift({ ts: nowTs(), epoch: Date.now(), action, detail });
+  if (db.history[instId].length > 100) db.history[instId].length = 100;
+  // Persist to server (fire-and-forget)
+  API.post('/history', { instrument_id: instId, action, detail }).catch(e => console.warn('history save failed', e));
+}
+function getVal(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
+let _toastTimer;
+function toast(msg) {
+  clearTimeout(_toastTimer);
+  let el = document.getElementById('toast');
+  if (!el) { el = document.createElement('div'); el.id = 'toast'; el.className = 'toast'; document.body.appendChild(el); }
+  el.textContent = msg;
+  el.style.display = 'block';
+  _toastTimer = setTimeout(() => { el.style.display = 'none'; }, 2200);
+}
+
+// ── RENDER ─────────────────────────────────────────────────
+function render() {
+  const inst      = db.instruments.filter(i => !i.archived);
+  const field     = inst.filter(isField);
+  const shop      = inst.filter(isShop);
+  const vendor    = inst.filter(isVendor);
+  const opCount   = inst.filter(i => i.status === 'Operational').length;
+  const instWithWO = new Set(db.workOrders.filter(w => w.status !== 'Closed').map(w => w.instrumentId));
+  const openWOCount = db.workOrders.filter(w => w.status !== 'Closed').length;
+
+  const filtered = inst.filter(i => {
+    const q  = ui.search.toLowerCase();
+    const mq = !q || i.name.toLowerCase().includes(q)
+                  || i.serial.toLowerCase().includes(q)
+                  || (i.site||'').toLowerCase().includes(q);
+    if (ui.activeStatCard === 'total')       return mq;
+    if (ui.activeStatCard === 'operational') return mq && i.status === 'Operational';
+    if (ui.activeStatCard === 'field')       return mq && isField(i);
+    if (ui.activeStatCard === 'shop')        return mq && isShop(i);
+    if (ui.activeStatCard === 'nowork')      return mq && instWithWO.has(i.id);
+    const ms = ui.statusF   === 'All Statuses' || i.status === ui.statusF;
+    const mt = ui.typeF     === 'All Types'    || i.name   === ui.typeF;
+    const ml = ui.locationF === 'Field & Shop'
+            || (ui.locationF === 'In the Field'    && isField(i))
+            || (ui.locationF === 'In the Shop'     && isShop(i) && i.status !== 'Operational')
+            || (ui.locationF === 'Storage / Operational' && isShop(i) && i.status === 'Operational')
+            || (ui.locationF === 'At Vendor'       && isVendor(i));
+    return mq && ms && mt && ml;
+  });
+
+  const fField      = filtered.filter(isField);
+  const fShopAll    = filtered.filter(isShop);
+  const hasOpenWO   = i => db.workOrders.some(w => w.instrumentId === i.id && w.status !== 'Closed');
+  const fStorage    = fShopAll.filter(i => i.status === 'Operational' && !hasOpenWO(i));
+  const fShop       = fShopAll.filter(i => i.status !== 'Operational' || hasOpenWO(i));
+  const fVendor     = filtered.filter(isVendor);
+  const fieldSites = db.sites.filter(s => s !== 'HQ/SHOP' && s !== 'VENDOR');
+
+  // Render sidebar separately so it's never part of scrollable root
+  const sbEl = document.getElementById('sidebar');
+  if (sbEl) sbEl.innerHTML = `
+    <div class="sb-brand">
+      <span class="brand">SDAPCD</span>
+      <span class="breadcrumb">Instrument Management<br>San Diego APCD</span>
+    </div>
+    <div class="sb-nav">
+      <button class="btn-dash ${ui.page==='dashboard'?'active':''}" onclick="navigateTo('dashboard')">
+        <span class="nav-icon">⊞</span>Dashboard
+      </button>
+      <button class="btn-nav ${ui.page==='workorders'?'active':''}" onclick="navigateTo('workorders')">
+        <span class="nav-icon">⊡</span>Work Orders
+      </button>
+      <button class="btn-nav ${ui.page==='sites'?'active':''}" onclick="navigateTo('sites')">
+        <span class="nav-icon">◈</span>Site Info
+      </button>
+      <button class="btn-nav ${ui.page==='activity'?'active':''}" onclick="navigateTo('activity')">
+        <span class="nav-icon">◎</span>Activity
+      </button>
+    </div>
+    <div class="sb-footer">
+      <button class="btn-nav ${ui.page==='admin'?'active':''}" onclick="navigateTo('admin')">
+        <span class="nav-icon">⚙</span>Admin
+      </button>
+      <button class="btn-theme" onclick="toggleTheme()">
+        <span class="nav-icon">${ui.theme==='light' ? '☀' : '🌙'}</span>
+        ${ui.theme==='light' ? 'Light Mode' : 'Dark Mode'}
+      </button>
+    </div>
+  `;
+
+  document.getElementById('root').innerHTML = `
+  <div class="main">
+  ${ui.page === 'admin' ? renderAdmin() : ui.page === 'workorders' ? renderWorkOrders() : ui.page === 'activity' ? renderActivity() : ui.page === 'sites' ? renderSites() : `
+
+    <div class="section-hdr">
+      <div class="section-title">System Overview</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-add" onclick="openAdd()">+ ADD INSTRUMENT</button>
+        <button class="btn-export" onclick="exportCSV()">↓ EXPORT CSV</button>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card ${ui.activeStatCard==='total'?'active':''}"       onclick="setStatFilter('total')">
+        <div class="stat-label">Total Instruments</div>
+        <div class="stat-num c-blue">${inst.length}</div>
+        <div class="stat-hint">Click to show all</div>
+      </div>
+      <div class="stat-card ${ui.activeStatCard==='operational'?'active':''}" onclick="setStatFilter('operational')">
+        <div class="stat-label">Operational</div>
+        <div class="stat-num c-green">${opCount}</div>
+        <div class="stat-hint">Click to filter</div>
+      </div>
+      <div class="stat-card ${ui.activeStatCard==='field'?'active':''}"       onclick="setStatFilter('field')">
+        <div class="stat-label">In the Field</div>
+        <div class="stat-num c-amber">${field.length}</div>
+        <div class="stat-hint">Click to filter</div>
+      </div>
+      <div class="stat-card ${ui.activeStatCard==='shop'?'active':''}"        onclick="setStatFilter('shop')">
+        <div class="stat-label">In the Shop / Storage</div>
+        <div class="stat-num c-slate">${shop.length}</div>
+        <div class="stat-hint">Click to filter</div>
+      </div>
+      <div class="stat-card ${ui.activeStatCard==='nowork'?'active':''}"      onclick="setStatFilter('nowork')">
+        <div class="stat-label">Open Work Orders</div>
+        <div class="stat-num c-red">${openWOCount}</div>
+        <div class="stat-hint">Click to filter</div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-box">
+        <span class="search-icon">⌕</span>
+        <input placeholder="Search type, serial, site..." value="${esc(ui.search)}" oninput="ui.search=this.value;render()"/>
+      </div>
+      <select class="filter-sel" onchange="ui.statusF=this.value;ui.activeStatCard=null;render()">
+        ${['All Statuses',...allStatuses()].map(s=>`<option ${ui.statusF===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+      <select class="filter-sel" onchange="ui.typeF=this.value;render()">
+        ${['All Types',...db.instTypes].map(t=>`<option ${ui.typeF===t?'selected':''}>${t}</option>`).join('')}
+      </select>
+      <select class="filter-sel" onchange="ui.locationF=this.value;ui.activeStatCard=null;render()">
+        ${['Field & Shop','In the Field','In the Shop','Storage / Operational','At Vendor'].map(l=>`<option ${ui.locationF===l?'selected':''}>${l}</option>`).join('')}
+      </select>
+      ${(ui.search || ui.statusF !== 'All Statuses' || ui.typeF !== 'All Types' || ui.locationF !== 'Field & Shop' || ui.activeStatCard) ? `
+      <button class="btn-reset" onclick="ui.search='';ui.statusF='All Statuses';ui.typeF='All Types';ui.locationF='Field & Shop';ui.activeStatCard=null;render()">✕ Reset</button>` : ''}
+    </div>
+
+    ${(ui.locationF==='Field & Shop'||ui.locationF==='In the Field') ? `
+    <div class="group">
+      <div class="group-hdr">
+        <div class="group-title">▶ In the Field</div>
+        <div class="group-count">${plural(fField.length,'instrument')}</div>
+      </div>
+      <div class="inst-table inst-table--field"><table>
+        <thead><tr><th>TYPE / SERIAL</th><th>SITE</th><th>STATUS</th><th>ACTIONS</th></tr></thead>
+        <tbody>${fField.length===0
+          ? '<tr class="empty-row"><td colspan="4">No field instruments match your filter</td></tr>'
+          : fField.map(i => renderFieldRow(i, fieldSites)).join('')}</tbody>
+      </table></div>
+    </div>` : ''}
+
+    ${(ui.locationF==='Field & Shop'||ui.locationF==='In the Shop'||ui.locationF==='Storage / Operational') ? `
+    <div class="group">
+      <div class="group-hdr">
+        <div class="group-title">🔧 In the Shop</div>
+        <div class="group-count">${plural(fShop.length,'instrument')}</div>
+      </div>
+      <div class="inst-table inst-table--shop"><table>
+        <thead><tr><th>TYPE / SERIAL</th><th>LOCATION</th><th>STATUS</th><th>WORK ORDER</th><th>ACTIONS</th></tr></thead>
+        <tbody>${fShop.length===0
+          ? '<tr class="empty-row"><td colspan="5">No instruments currently in service</td></tr>'
+          : fShop.map(renderShopRow).join('')}</tbody>
+      </table></div>
+    </div>
+    <div class="group">
+      <div class="group-hdr">
+        <div class="group-title">📦 Storage / Operational</div>
+        <div class="group-count">${plural(fStorage.length,'instrument')}</div>
+      </div>
+      <div class="inst-table inst-table--storage"><table>
+        <thead><tr><th>TYPE / SERIAL</th><th>LOCATION</th><th>STATUS</th><th>WORK ORDER</th><th>ACTIONS</th></tr></thead>
+        <tbody>${fStorage.length===0
+          ? '<tr class="empty-row"><td colspan="5">No operational instruments in storage</td></tr>'
+          : fStorage.map(renderShopRow).join('')}</tbody>
+      </table></div>
+    </div>` : ''}
+
+    ${(ui.locationF==='Field & Shop'||ui.locationF==='At Vendor') && (fVendor.length > 0 || ui.locationF==='At Vendor') ? `
+    <div class="group">
+      <div class="group-hdr">
+        <div class="group-title">◈ At Vendor</div>
+        <div class="group-count">${plural(fVendor.length,'instrument')}</div>
+      </div>
+      <div class="inst-table inst-table--vendor"><table>
+        <thead><tr><th>TYPE / SERIAL</th><th>LOCATION</th><th>STATUS</th><th>WORK ORDER</th><th>ACTIONS</th></tr></thead>
+        <tbody>${fVendor.length===0
+          ? '<tr class="empty-row"><td colspan="5">No instruments currently at vendor</td></tr>'
+          : fVendor.map(renderVendorRow).join('')}</tbody>
+      </table></div>
+    </div>` : ''}
+  `}
+  </div>
+  `;
+  if (ui.page === 'admin' && ui.adminUnlocked) setTimeout(setupAdminSections, 0);
+
+  if (ui.page === 'admin' && ui.adminUnlocked) { setTimeout(setupAdminSections, 0); }
+  // Setup admin collapsible sections
+  if (ui.page === 'admin' && ui.adminUnlocked) setTimeout(setupAdminSections, 0);
+
+  // Inject modal directly into body so position:fixed works correctly
+  let _modalEl = document.getElementById('_modal_root');
+  if (ui.modal) {
+    if (!_modalEl) { _modalEl = document.createElement('div'); _modalEl.id = '_modal_root'; document.body.appendChild(_modalEl); }
+    _modalEl.innerHTML = renderModal();
+  } else {
+    if (_modalEl) _modalEl.innerHTML = '';
+  }
+}
+
+// ── ROW RENDERERS ──────────────────────────────────────────
+function renderFieldRow(i, fieldSites) {
+  return `<tr>
+    <td><div class="inst-name">${esc(i.name)}</div><div class="inst-sn">${esc(i.serial)}</div>${i.notes?`<div class="inst-notes" title="${esc(i.notes)}">${esc(i.notes)}</div>`:''}</td>
+    <td>
+      <select class="site-sel" onchange="updateSite(${i.id},this.value)">
+        <option value="HQ/SHOP">↩ Move to HQ/SHOP</option>
+        <option value="VENDOR">↗ Send to Vendor</option>
+        <option disabled>──────────────</option>
+        ${fieldSites.map(s=>`<option ${i.site===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </td>
+    <td>
+      <select class="status-sel ${statusClass(i.status)}" onchange="updateStatus(${i.id},this.value)">
+        ${fieldStatuses().map(s=>`<option ${i.status===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </td>
+    <td>
+      <div class="actions">
+        <button class="btn-act btn-logwork" onclick="openLogWork(${i.id})" title="Log Work Entry (L)">▣ LOG WORK</button>
+        <button class="btn-act btn-history" onclick="openHistory(${i.id})" title="View History (H)">▤ HISTORY</button>
+      </div>
+    </td>
+  </tr>`;
+}
+
+function renderShopRow(i) {
+  const wo = db.workOrders.filter(w => w.instrumentId===i.id && w.status!=='Closed').sort((a,b)=>b.id-a.id)[0];
+  return `<tr>
+    <td><div class="inst-name">${esc(i.name)}</div><div class="inst-sn">${esc(i.serial)}</div>${i.notes?`<div class="inst-notes" title="${esc(i.notes)}">${esc(i.notes)}</div>`:''}</td>
+    <td>
+      <select class="site-sel" onchange="updateSite(${i.id},this.value)">
+        ${db.sites.map(s => {
+          if (s === 'VENDOR') return `<option ${i.site===s?'selected':''} value="${esc(s)}">${s}</option>`;
+          return `<option ${i.site===s?'selected':''}>${s}</option>`;
+        }).join('')}
+      </select>
+    </td>
+    <td>
+      <select class="status-sel ${statusClass(i.status)}" onchange="updateStatus(${i.id},this.value)">
+        ${shopStatuses().map(s=>`<option ${i.status===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </td>
+    <td>
+      ${(() => {
+        const openWOs = db.workOrders.filter(w => w.instrumentId===i.id && w.status!=='Closed');
+        if (!openWOs.length) return `<button class="btn-act btn-createwo" onclick="openCreateWO(${i.id})" title="Create Work Order (C)">+ CREATE WO</button>`;
+        const latest = openWOs.sort((a,b)=>b.id-a.id)[0];
+        return '<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">' +
+          `<span class="wo-badge" onclick="openWODetail(${latest.id})">WO-${latest.id} · ${esc(latest.type)}</span>` +
+          (openWOs.length > 1 ? `<span style="background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.35);color:var(--amber);border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700;font-family:var(--font-mono);cursor:pointer" onclick="ui.woFilter='Open';ui.page='workorders';render()">+${openWOs.length-1}</span>` : '') +
+          '</div>';
+      })()}
+    </td>
+    <td>
+      <div class="actions">
+        <button class="btn-act btn-logwork" onclick="openLogWork(${i.id})" title="Log Work Entry (L)">▣ LOG WORK</button>
+        <button class="btn-act btn-history" onclick="openHistory(${i.id})" title="View History (H)">▤ HISTORY</button>
+      </div>
+    </td>
+  </tr>`;
+}
+
+function renderVendorRow(i) {
+  const wo = db.workOrders.filter(w => w.instrumentId===i.id && w.status!=='Closed').sort((a,b)=>b.id-a.id)[0];
+  return `<tr>
+    <td><div class="inst-name">${esc(i.name)}</div><div class="inst-sn">${esc(i.serial)}</div>${i.notes?`<div class="inst-notes" title="${esc(i.notes)}">${esc(i.notes)}</div>`:''}</td>
+    <td>
+      <select class="site-sel" onchange="updateSite(${i.id},this.value)">
+        <option value="VENDOR" selected>VENDOR</option>
+        <option disabled>──────────────</option>
+        <option value="HQ/SHOP">↩ Return to HQ/SHOP</option>
+      </select>
+    </td>
+    <td>
+      <select class="status-sel ${statusClass(i.status)}" onchange="updateStatus(${i.id},this.value)">
+        ${vendorStatuses().map(s=>`<option ${i.status===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </td>
+    <td>
+      ${(() => {
+        const openWOs = db.workOrders.filter(w => w.instrumentId===i.id && w.status!=='Closed');
+        if (!openWOs.length) return `<button class="btn-act btn-createwo" onclick="openCreateWO(${i.id})" title="Create Work Order (C)">+ CREATE WO</button>`;
+        const latest = openWOs.sort((a,b)=>b.id-a.id)[0];
+        return '<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">' +
+          `<span class="wo-badge" onclick="openWODetail(${latest.id})">WO-${latest.id} · ${esc(latest.type)}</span>` +
+          (openWOs.length > 1 ? `<span style="background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.35);color:var(--amber);border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700;font-family:var(--font-mono);cursor:pointer" onclick="ui.woFilter='Open';ui.page='workorders';render()">+${openWOs.length-1}</span>` : '') +
+          '</div>';
+      })()}
+    </td>
+    <td>
+      <div class="actions">
+        <button class="btn-act btn-logwork" onclick="openLogWork(${i.id})" title="Log Work Entry (L)">▣ LOG WORK</button>
+        <button class="btn-act btn-history" onclick="openHistory(${i.id})" title="View History (H)">▤ HISTORY</button>
+      </div>
+    </td>
+  </tr>`;
+}
+function modalShell(title, body, actions) {
+  return `<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title">${title}</div>
+      <button class="close-btn" onclick="closeModal()">×</button>
+    </div>
+    <div style="overflow-y:auto;flex:1;min-height:0;padding:20px 22px">${body}</div>
+    <div class="modal-actions">${actions}</div>
+  </div></div>`;
+}
+
+function woFormBody(f) {
+  return `
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Work Order Type *</label>
+        <select id="f-type" class="form-input">
+          ${WO_TYPES.map(t=>`<option ${f.type===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Technician *</label>
+        ${techSelect('f-by', f.by||'', 'Select technician')}
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Description</label>
+      <textarea id="f-desc" class="form-input" rows="3" placeholder="Describe the work..." oninput="markDirty()">${esc(f.desc||'')}</textarea>
+    </div>`;
+}
+
+function renderModal() {
+  const f = ui.form;
+
+  if (ui.modal === 'add') {
+    return modalShell('ADD INSTRUMENT', `
+      ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Instrument Type *</label>
+          <select id="f-name" class="form-input" onchange="if(this.value==='custom'){document.getElementById('f-custom-name').style.display='block'}else{document.getElementById('f-custom-name').style.display='none'}">
+            <option value="">— Select —</option>
+            ${db.instTypes.map(t=>`<option ${f.name===t?'selected':''}>${t}</option>`).join('')}
+            <option value="custom">+ Custom type...</option>
+          </select>
+          <input id="f-custom-name" class="form-input" placeholder="Enter custom type name" style="margin-top:6px;display:${f.name==='custom'?'block':'none'}"/>
+        </div>
+        <div class="form-group"><label class="form-label">Serial Number *</label>
+          <input id="f-serial" class="form-input" value="${esc(f.serial||'')}" placeholder="e.g. Y21836"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Status</label>
+          <select id="f-status" class="form-input">
+            ${shopStatuses().map(s=>`<option ${(f.status||'Operational')===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Location</label>
+          <select id="f-site" class="form-input">
+            ${db.sites.map(s=>`<option ${(f.site||'HQ/SHOP')===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label>
+        <textarea id="f-notes" class="form-input" rows="2" style="resize:vertical">${esc(f.notes||'')}</textarea>
+      </div>`,
+      `<button class="btn-cancel" onclick="closeModal()">Cancel</button>
+       <button class="btn-save" onclick="saveAdd()">Add Instrument</button>`
+    );
+  }
+
+  if (ui.modal === 'logwork') {
+    return modalShell('LOG WORK', `
+      <div class="modal-sub">${esc(f.instName)} &nbsp;·&nbsp; <span style="font-family:var(--font-mono);color:var(--subtle)">${esc(f.serial)}</span></div>
+      ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Performed By (Technician) *</label>
+          ${techSelect('f-lw-by', f.by||'', 'Select technician')}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date Performed</label>
+          <input id="f-lw-date" class="form-input" type="date" value="${today()}"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description of Work *</label>
+        <textarea id="f-lw-desc" class="form-input" rows="4" placeholder="Describe the work performed, parts replaced, observations...">${esc(f.desc||'')}</textarea>
+      </div>`,
+      `<button class="btn-cancel" onclick="closeModal()">Cancel</button>
+       <button class="btn-save" onclick="saveLogWork()">&#10003; Save Work Entry</button>`
+    );
+  }
+
+  if (ui.modal === 'createwo') {
+    return modalShell('CREATE WORK ORDER', `
+      <div class="modal-sub">${esc(f.instName)} · ${esc(f.serial)}</div>
+      ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
+      ${woFormBody({type: f.type||WO_TYPES[0], by: f.by||'', desc: f.desc||''})}`,
+      `<button class="btn-cancel" onclick="closeModal()">Cancel</button>
+       <button class="btn-save" onclick="saveWorkEntry('createwo')">Create Work Order</button>`
+    );
+  }
+
+  if (ui.modal === 'history') {
+    const hist = db.history[f.instId] || [];
+    return modalShell('HISTORY', `
+      <div class="modal-sub">${esc(f.instName)} · ${esc(f.serial)}</div>
+      ${hist.length === 0
+        ? '<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">No history recorded yet.</div>'
+        : hist.map(h => `<div class="history-item">
+            <div class="history-date">${esc(h.ts)}</div>
+            <div class="history-action"><strong style="color:var(--cyan)">${esc(h.action)}</strong>${h.detail ? ` — ${esc(h.detail)}` : ''}</div>
+          </div>`).join('')}`,
+      `<button class="btn-export" onclick="printHistory(${f.instId})">⎙ Print PDF</button> <button class="btn-save" onclick="closeModal()">Close</button>`
+    );
+  }
+
+  if (ui.modal === 'wodetail') {
+    const wo   = db.workOrders.find(w => w.id === f.woId);
+    const inst = wo ? db.instruments.find(i => i.id === wo.instrumentId) : null;
+    if (!wo) return modalShell('WORK ORDER', '<div style="color:var(--muted)">Work order not found.</div>',
+      '<button class="btn-save" onclick="closeModal()">Close</button>');
+    return modalShell(`WO-${wo.id} DETAIL`, `
+      <div class="wo-grid">
+        <div><div class="wo-field-label">INSTRUMENT</div><div class="wo-field-val" style="font-family:var(--font-mono);font-size:15px">${esc(inst?inst.name:'?')}</div></div>
+        <div><div class="wo-field-label">SERIAL</div><div class="wo-field-val inst-sn">${esc(inst?inst.serial:'—')}</div></div>
+        <div><div class="wo-field-label">TYPE</div><div class="wo-field-val">${esc(wo.type)}</div></div>
+        <div><div class="wo-field-label">TECHNICIAN</div><div class="wo-field-val inst-sn">${esc(wo.technician||'—')}</div></div>
+        <div><div class="wo-field-label">STATUS</div><span class="${statusClass(wo.status)}" style="padding:3px 8px;border-radius:var(--radius);font-size:11px;font-weight:600">${esc(wo.status)}</span></div>
+        <div><div class="wo-field-label">CREATED</div><div class="wo-field-val" style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">${esc(wo.created)}</div></div>
+        ${wo.closedDate ? `<div><div class="wo-field-label">COMPLETED</div><div class="wo-field-val" style="font-family:var(--font-mono);font-size:11px;color:var(--green)">${esc(wo.closedDate)}</div></div>` : ''}
+        ${wo.closedBy   ? `<div><div class="wo-field-label">CLOSED BY</div><div class="wo-field-val inst-sn">${esc(wo.closedBy)}</div></div>` : ''}
+      </div>
+      ${wo.description ? `<div class="form-group"><div class="wo-field-label">DESCRIPTION</div><div style="font-size:13px;color:var(--muted);margin-top:4px;line-height:1.5">${esc(wo.description)}</div></div>` : ''}`,
+      `${wo.status !== 'Closed' ? `<button class="btn-close-wo" onclick="closeWO(${wo.id})">✓ Mark Complete</button>` : ''}
+       <button class="btn-edit-md" onclick="openEditWO(${wo.id})">EDIT</button>
+       <button class="btn-edit-md" onclick="printWO(${wo.id})">⎙ PRINT</button>
+       <button class="btn-save" onclick="closeModal()">Close</button>`
+    );
+  }
+
+  if (ui.modal === 'editwo') {
+    const wo   = db.workOrders.find(w => w.id === f.woId);
+    const inst = wo ? db.instruments.find(i => i.id === wo.instrumentId) : null;
+    return modalShell('EDIT WORK ORDER', `
+      <div class="modal-sub">${esc(inst?inst.name:'?')} · ${esc(inst?inst.serial:'')}</div>
+      ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
+      ${woFormBody(f)}`,
+      `<button class="btn-cancel" onclick="openWODetail(${f.woId})">← Back</button>
+       <button class="btn-save" onclick="saveEditWO(${f.woId})">Save Changes</button>`
+    );
+  }
+
+  if (ui.modal === 'editinstrument') {
+    const allStatuses = isField(db.instruments.find(x=>x.id===f.instId)||{}) ? FIELD_STATUSES
+                      : isVendor(db.instruments.find(x=>x.id===f.instId)||{}) ? VENDOR_STATUSES
+                      : SHOP_STATUSES;
+    return modalShell('EDIT INSTRUMENT', `
+      <div class="modal-sub">${esc(f.instName)} · ${esc(f.serial)}</div>
+      ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Instrument Type *</label>
+          <select id="f-name" class="form-input">
+            ${db.instTypes.map(t=>`<option ${f.name===t?'selected':''}>${t}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Serial Number</label>
+          <input id="f-serial" class="form-input" value="${esc(f.serial||'')}" placeholder="e.g. Y21836"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Status</label>
+          <select id="f-status" class="form-input">
+            ${allStatuses.map(s=>`<option ${f.status===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Location</label>
+          <select id="f-site" class="form-input">
+            ${db.sites.map(s=>`<option ${f.site===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label>
+        <textarea id="f-notes" class="form-input" rows="2" style="resize:vertical" oninput="markDirty()">${esc(f.notes||'')}</textarea>
+      </div>`,
+      `<button class="btn-cancel" onclick="closeModal()">Cancel</button>
+       <button class="btn-save" onclick="saveEditInstrument(${f.instId})">Save Changes</button>`
+    );
+  }
+
+  
+  if (ui.modal === 'edittype') {
+    return modalShell('EDIT INSTRUMENT TYPE', `
+      ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
+      <div class="form-group"><label class="form-label">Type Name *</label>
+        <input id="f-val" class="form-input" value="${esc(f.val||'')}" placeholder="e.g. ESEQ"/>
+      </div>`,
+      `<button class="btn-cancel" onclick="closeModal()">Cancel</button>
+       <button class="btn-save" onclick="saveEditType(${f.idx})">Save Changes</button>`
+    );
+  }
+
+  if (ui.modal === 'edittech') {
+    return modalShell('EDIT TECHNICIAN', `
+      ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
+      <div class="form-group"><label class="form-label">Full Name *</label>
+        <input id="f-name" class="form-input" value="${esc(f.name||'')}" placeholder="Full name"/>
+      </div>
+      <div class="form-group"><label class="form-label">Role</label>
+        <input id="f-role" class="form-input" value="${esc(f.role||'')}" placeholder="e.g. Field Tech"/>
+      </div>
+      <div class="form-group"><label class="form-label">Email</label>
+        <input id="f-email" class="form-input" value="${esc(f.email||'')}" placeholder="Email (optional)"/>
+      </div>`,
+      `<button class="btn-cancel" onclick="closeModal()">Cancel</button>
+       <button class="btn-save" onclick="saveEditTech(${f.idx})">Save Changes</button>`
+    );
+  }
+
+  if (ui.modal === 'logcert') {
+    const due = certDueDate(f.certDate || today());
+    const isEdit = !!f.editMode;
+    const inst = db.instruments.find(x => x.id === f.instId);
+    return modalShell(isEdit ? 'EDIT CERTIFICATION RECORD' : 'LOG VENDOR CERTIFICATION', `
+      <div class="modal-sub">${esc(f.instName)} · ${esc(f.serial)}</div>
+      <div class="cert-info-panel">
+        BC1060 instruments require vendor factory certification every <strong style="color:var(--purple)">2 years</strong> per EPA requirements.<br>
+        ${isEdit ? `Current cert date: <strong style="color:var(--purple)">${inst && inst.lastCertDate ? inst.lastCertDate : '—'}</strong> &nbsp;·&nbsp; ` : ''}Next due date: <strong style="color:var(--purple)">${due}</strong>
+      </div>
+      ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
+      <div class="form-group"><label class="form-label">Certification Date *</label>
+        <div style="display:flex;gap:8px">
+          <select id="f-cert-month" class="form-input" style="flex:2">
+            ${['January','February','March','April','May','June','July','August','September','October','November','December'].map((mn,i)=>{const v=String(i+1).padStart(2,'0');return '<option value="'+v+'"'+(((f.certDate||today()).split('-')[1])===v?' selected':'')+'>'+mn+'</option>';}).join('')}
+          </select>
+          <select id="f-cert-day" class="form-input" style="flex:1">
+            ${Array.from({length:31},(_,i)=>String(i+1).padStart(2,'0')).map(d=>'<option value="'+d+'"'+((f.certDate||today()).split('-')[2]===d?' selected':'')+'>'+d+'</option>').join('')}
+          </select>
+          <select id="f-cert-year" class="form-input" style="flex:1">
+            ${Array.from({length:21},(_,i)=>2020+i).map(y=>'<option value="'+y+'"'+(parseInt((f.certDate||today()).split('-')[0])===y?' selected':'')+'>'+y+'</option>').join('')}
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Certified By / Tech</label>
+          ${techSelect('f-cert-by', f.certBy||'', 'Select technician')}
+        </div>
+        <div class="form-group"><label class="form-label">Notes</label>
+          <input id="f-cert-notes" class="form-input" value="${esc(f.certNotes||'')}" placeholder="Certificate number, notes..."/>
+        </div>
+      </div>`,
+      `<button class="btn-cancel" onclick="closeModal()">Cancel</button>
+       ${!isEdit && inst && inst.lastCertDate ? `<button class="btn-edit-md" onclick="openEditCert(${f.instId})">EDIT EXISTING</button>` : ''}
+       <button class="btn-cert" onclick="saveLogCert()">◈ ${isEdit ? 'Update Certification' : 'Save Certification'}</button>`
+    );
+  }
+
+  if (ui.modal === 'adminlogin') {
+    return `<div class="overlay"><div class="modal confirm-modal" style="max-width:360px">
+      <div class="modal-hdr">
+        <div class="modal-title" style="display:flex;align-items:center;gap:8px">⚙ ADMIN ACCESS</div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:18px;font-family:var(--font-mono);line-height:1.6">
+        Enter the admin password to access settings, archived instruments, and the danger zone.
+      </div>
+      ${f.err ? `<div class="err-msg" style="margin-bottom:12px">${f.err}</div>` : ''}
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input id="admin-pw-input" class="form-input" type="password" placeholder="Enter admin password"
+          onkeydown="if(event.key==='Enter')submitAdminPassword()"/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <button class="btn-save" onclick="submitAdminPassword()">⚙ UNLOCK ADMIN</button>
+      </div>
+    </div></div>`;
+    setTimeout(() => { const el = document.getElementById('admin-pw-input'); if (el) el.focus(); }, 30);
+  }
+
+  if (ui.modal === 'changepw') {
+    return modalShell('CHANGE ADMIN PASSWORD', `
+      ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
+      <div class="form-group"><label class="form-label">Current Password</label>
+        <input id="pw-current" class="form-input" type="password" placeholder="Current password"/>
+      </div>
+      <div class="form-group"><label class="form-label">New Password *</label>
+        <input id="pw-new" class="form-input" type="password" placeholder="New password (min 4 chars)"/>
+      </div>
+      <div class="form-group"><label class="form-label">Confirm New Password *</label>
+        <input id="pw-confirm" class="form-input" type="password" placeholder="Re-enter new password"/>
+      </div>`,
+      `<button class="btn-cancel" onclick="closeModal()">Cancel</button>
+       <button class="btn-save" onclick="saveAdminPassword()">Save Password</button>`
+    );
+  }
+
+  if (ui.modal === 'confirm') {
+    return `<div class="overlay" onclick="if(event.target===this)confirmCancel()"><div class="modal confirm-modal">
+      <div class="modal-hdr">
+        <div class="modal-title">${esc(f.title||'CONFIRM CHANGE')}</div>
+        <button class="close-btn" onclick="confirmCancel()">×</button>
+      </div>
+      <span class="confirm-icon">${f.icon||'⚠'}</span>
+      <div class="confirm-msg">${f.msg||'Are you sure?'}</div>
+      ${f.detail ? `<div class="confirm-detail">${esc(f.detail)}</div>` : ''}
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="confirmCancel()">Cancel</button>
+        <button class="btn-confirm-ok" onclick="confirmProceed()">Confirm</button>
+      </div>
+    </div></div>`;
+  }
+
+  if (ui.modal === 'addsite') {
+    const SITE_TYPES = ['Field','HQ/Shop','Vendor','Storage','Mobile'];
+    return modalShell('ADD MONITORING SITE', `
+      ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
+      <div class="form-group"><label class="form-label">Site Code *</label>
+        <input id="f-site-code" class="form-input" value="${esc(f.code||'')}" placeholder="e.g. SES - 1" oninput="markDirty()"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Type</label>
+          <select id="f-site-type" class="form-input">
+            ${SITE_TYPES.map(t=>'<option'+(f.type===t?' selected':'')+'>'+t+'</option>').join('')}
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Address</label>
+          <input id="f-site-address" class="form-input" value="${esc(f.address||'')}" placeholder="123 Main St" oninput="markDirty()"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Latitude</label>
+          <input id="f-site-lat" class="form-input" value="${esc(f.lat||'')}" placeholder="e.g. 32.7157" oninput="markDirty()"/>
+        </div>
+        <div class="form-group"><label class="form-label">Longitude</label>
+          <input id="f-site-lng" class="form-input" value="${esc(f.lng||'')}" placeholder="e.g. -117.1611" oninput="markDirty()"/>
+        </div>
+      </div>`,
+      `<button class="btn-cancel" onclick="closeModal()">Cancel</button>
+       <button class="btn-save" onclick="saveAddSite()">+ Add Site</button>`
+    );
+  }
+
+  
+  if (ui.modal === 'editsite') {
+    const SITE_TYPES = ['Field','HQ/Shop','Vendor','Storage','Mobile'];
+    return modalShell('EDIT MONITORING SITE', `
+      ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
+      <div class="form-group"><label class="form-label">Site Code *</label>
+        <input id="f-val" class="form-input" value="${esc(f.val||'')}" placeholder="e.g. SES - 1"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Site Type</label>
+          <select id="f-site-type" class="form-input">
+            ${SITE_TYPES.map(t => '<option' + ((f.type||'Field')===t?' selected':'') + '>' + t + '</option>').join('')}
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Address</label>
+          <input id="f-site-address" class="form-input" value="${esc(f.address||'')}" placeholder="123 Main St, San Diego, CA"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Latitude</label>
+          <input id="f-site-lat" class="form-input" value="${esc(f.lat||'')}" placeholder="e.g. 32.7157"/>
+        </div>
+        <div class="form-group"><label class="form-label">Longitude</label>
+          <input id="f-site-lng" class="form-input" value="${esc(f.lng||'')}" placeholder="e.g. -117.1611"/>
+        </div>
+      </div>`,
+      `<button class="btn-cancel" onclick="closeModal()">Cancel</button>
+       <button class="btn-save" onclick="saveEditSite(${f.idx})">Save Changes</button>`
+    );
+  }
+
+  if (ui.modal === 'closeworkorder') {
+    const wo = db.workOrders.find(w => w.id === f.woId);
+    const inst = wo ? db.instruments.find(i => i.id === wo.instrumentId) : null;
+    if (!wo) return modalShell('COMPLETE WORK ORDER', '<div>Work order not found.</div>',
+      '<button class="btn-cancel" onclick="closeModal()">Cancel</button>');
+    return modalShell('COMPLETE WORK ORDER', `
+      <div class="modal-sub">WO-${esc(String(wo.id))} &nbsp;·&nbsp; ${esc(wo.type)} &nbsp;·&nbsp; ${esc(inst?inst.name:'—')} ${esc(inst?inst.serial:'')}</div>
+      ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
+      <div class="form-group">
+        <label class="form-label">Completed By (Technician) *</label>
+        ${techSelect('f-close-by', '', 'Select technician who completed the work')}
+      </div>
+      <div style="background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.2);border-radius:var(--radius);padding:14px 16px;margin-bottom:14px">
+        <div style="font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--subtle);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">Task Completion Checklist</div>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+          <input type="checkbox" id="f-close-confirm" style="margin-top:2px;accent-color:var(--green);width:15px;height:15px;flex-shrink:0"/>
+          <span style="font-size:12px;color:var(--muted);line-height:1.5">
+            I confirm all tasks for <strong style="color:var(--text)">WO-${esc(String(wo.id))}</strong> have been completed and this work order is ready to be closed.
+          </span>
+        </label>
+      </div>
+      ${wo.description ? `<div class="form-group"><div class="form-label">Work Description</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;line-height:1.5;padding:8px 10px;background:var(--surface2);border-radius:var(--radius)">${esc(wo.description)}</div></div>` : ''}`,
+      `<button class="btn-cancel" onclick="closeModal()">Cancel</button>
+       <button class="btn-save" style="background:linear-gradient(135deg,rgba(52,211,153,.18),rgba(52,211,153,.08));color:var(--green);border-color:rgba(52,211,153,.35)" onclick="confirmCloseWO()">✓ Mark as Complete</button>`
+    );
+  }
+
+
+  return '';
+}
+
+// ── WORK ORDERS PAGE ───────────────────────────────────────
+function renderWorkOrders() {
+  const q = (ui.woSearch || '').toLowerCase();
+
+  // Short-circuit: cert tab has its own renderer
+  if (ui.woFilter === 'cert') return renderCertSection();
+
+  const filtered = db.workOrders.filter(wo => {
+    const inst = db.instruments.find(i => i.id === wo.instrumentId);
+    const matchStatus =
+      ui.woFilter === 'All'    ? true :
+      ui.woFilter === 'Open'   ? wo.status !== 'Closed' :
+      ui.woFilter === 'Closed' ? wo.status === 'Closed' : true;
+    const matchSearch = !q
+      || `WO-${wo.id}`.toLowerCase().includes(q)
+      || (wo.type||'').toLowerCase().includes(q)
+      || (wo.technician||'').toLowerCase().includes(q)
+      || (wo.description||'').toLowerCase().includes(q)
+      || (inst ? inst.serial.toLowerCase().includes(q) : false)
+      || (inst ? inst.name.toLowerCase().includes(q) : false);
+    return matchStatus && matchSearch;
+  }).sort((a, b) => b.id - a.id); // newest first
+
+  const openCount   = db.workOrders.filter(w => w.status !== 'Closed').length;
+  const closedCount = db.workOrders.filter(w => w.status === 'Closed').length;
+  const allCount    = db.workOrders.length;
+
+  const rows = filtered.length === 0
+    ? `<tr class="empty-row"><td colspan="6">No work orders match your filter</td></tr>`
+    : filtered.map(wo => {
+        const inst = db.instruments.find(i => i.id === wo.instrumentId);
+        const statusBadge = wo.status === 'Closed'
+          ? `<span class="wo-status-closed">CLOSED</span>`
+          : `<span class="wo-status-open">OPEN</span>`;
+        return `<tr>
+          <td>
+            <div class="wo-id" onclick="openWODetail(${wo.id})">WO-${wo.id}</div>
+            <div class="wo-inst">${inst ? esc(inst.name) + ' · ' + esc(inst.serial) : '—'}</div>
+          </td>
+          <td style="font-family:var(--font-mono);font-size:12px">${esc(wo.type)}</td>
+          <td>${statusBadge}</td>
+          <td style="font-family:var(--font-mono);font-size:12px;color:var(--muted)">${esc(wo.technician||'—')}</td>
+          <td style="font-family:var(--font-mono);font-size:11px;color:var(--subtle)">${esc(wo.created)}</td>
+          <td>
+            <div class="actions">
+              <button class="btn-act btn-history" onclick="openWODetail(${wo.id})">▤ VIEW</button>
+              <button class="btn-act" onclick="printWO(${wo.id})">⎙ PRINT</button>
+              ${wo.status !== 'Closed'
+                ? `<button class="btn-act btn-logwork" onclick="closeWO(${wo.id})">✓ Mark Complete</button>`
+                : ''}
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+
+  return `
+  <div class="print-header">
+    <h1>SDAPCD — Open Work Orders</h1>
+    <p>San Diego Air Pollution Control District &nbsp;·&nbsp; Instrument Management &nbsp;·&nbsp; Generated: ${new Date().toLocaleString('en-US',{dateStyle:'long',timeStyle:'short'})}</p>
+  </div>
+
+  <div class="section-hdr print-hide">
+    <div class="section-title">Work Orders</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-export" onclick="exportOpenWOPDF()">⎙ EXPORT OPEN WOs PDF</button>
+      <button class="btn-export" onclick="exportWOCSV()">↓ EXPORT CSV</button>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap" class="print-hide">
+    <div class="wo-tabs">
+      <button class="wo-tab ${ui.woFilter==='Open'?'active':''}"   onclick="ui.woFilter='Open';render()">OPEN (${openCount})</button>
+      <button class="wo-tab ${ui.woFilter==='Closed'?'active':''}" onclick="ui.woFilter='Closed';render()">CLOSED (${closedCount})</button>
+      <button class="wo-tab ${ui.woFilter==='All'?'active':''}"    onclick="ui.woFilter='All';render()">ALL (${allCount})</button>
+      <button class="wo-tab cert-tab ${ui.woFilter==='cert'?'active':''}" onclick="ui.woFilter='cert';render()">◈ VENDOR CERT</button>
+    </div>
+    <div class="search-box" style="max-width:280px">
+      <span class="search-icon">⌕</span>
+      <input placeholder="Search WO#, serial, tech, type..." value="${esc(ui.woSearch||'')}" oninput="ui.woSearch=this.value;render()"/>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-hdr">
+      <div class="group-title">◈ Work Order Log</div>
+      <div class="group-count">${plural(filtered.length, 'record')}</div>
+    </div>
+    <div class="inst-table">
+      <table>
+        <thead>
+          <tr>
+            <th>WO # / INSTRUMENT</th>
+            <th>TYPE</th>
+            <th>STATUS</th>
+            <th>TECHNICIAN</th>
+            <th>CREATED</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ── ACTIVITY FEED ──────────────────────────────────────────
+function renderActivity() {
+  // Flatten all history across all instruments into one sorted array
+  const allEvents = [];
+  Object.entries(db.history).forEach(([instId, events]) => {
+    const inst = db.instruments.find(i => i.id === Number(instId));
+    events.forEach(ev => allEvents.push({ ...ev, instId: Number(instId), inst }));
+  });
+
+  // Sort by timestamp descending (most recent first)
+  // ts format: "Mar 14, 2026, 10:30 AM" — use localeCompare reversed
+  allEvents.sort((a, b) => (b.epoch || 0) - (a.epoch || 0) || b.ts.localeCompare(a.ts));
+
+  // Filter categories
+  const FILTERS = ['All','Work Order','Status Change','Site Change','Certification','Instrument'];
+  const filterMap = {
+    'Work Order':   ev => ev.action.toLowerCase().includes('work') || ev.action.toLowerCase().includes('wo'),
+    'Status Change':ev => ev.action.toLowerCase().includes('status'),
+    'Site Change':  ev => ev.action.toLowerCase().includes('site'),
+    'Certification':ev => ev.action.toLowerCase().includes('cert'),
+    'Instrument':   ev => ev.action.toLowerCase().includes('instrument'),
+  };
+
+  const q = (ui.actSearch || '').toLowerCase();
+  const filtered = allEvents.filter(ev => {
+      const matchFilter = ui.actFilter === 'All' || (filterMap[ui.actFilter] && filterMap[ui.actFilter](ev));
+    const matchDate = (() => {
+      if (!ui.actDateFrom && !ui.actDateTo) return true;
+      const ep = ev.epoch || 0;
+      const from = ui.actDateFrom ? new Date(ui.actDateFrom).getTime() : 0;
+      const to   = ui.actDateTo   ? new Date(ui.actDateTo).getTime() + 86399999 : Infinity;
+      return ep >= from && ep <= to;
+    })();
+    const matchSearch = !q
+      || ev.action.toLowerCase().includes(q)
+      || (ev.detail||'').toLowerCase().includes(q)
+      || (ev.inst ? ev.inst.serial.toLowerCase().includes(q) : false)
+      || (ev.inst ? ev.inst.name.toLowerCase().includes(q) : false)
+      || (ev.inst ? (ev.inst.site||'').toLowerCase().includes(q) : false);
+    return matchFilter && matchDate && matchSearch;
+  });
+
+  const displayed = filtered.slice(0, 50); // show up to 50 events
+
+  // Icon + color per action type
+  function feedIcon(action) {
+    const a = action.toLowerCase();
+    if (a.includes('work') || a.includes('wo')) return { cls:'fi-wo',    icon:'▣' };
+    if (a.includes('status'))                   return { cls:'fi-status', icon:'◈' };
+    if (a.includes('site'))                     return { cls:'fi-site',   icon:'▶' };
+    if (a.includes('cert'))                     return { cls:'fi-cert',   icon:'◎' };
+    if (a.includes('instrument'))               return { cls:'fi-add',    icon:'⊞' };
+    return                                             { cls:'fi-default', icon:'·' };
+  }
+
+  const feedItems = displayed.length === 0
+    ? `<div class="feed-empty">No activity matches your filter</div>`
+    : displayed.map(ev => {
+        const { cls, icon } = feedIcon(ev.action);
+        const instLabel = ev.inst
+          ? `<span class="feed-inst" onclick="openHistory(${ev.instId})">${esc(ev.inst.name)} · ${esc(ev.inst.serial)}</span>`
+          : '';
+        return `
+        <div class="feed-item">
+          <div class="feed-icon ${cls}">${icon}</div>
+          <div class="feed-body">
+            <div class="feed-action">${esc(ev.action)}</div>
+            ${ev.detail ? `<div class="feed-detail">${esc(ev.detail)}</div>` : ''}
+            <div class="feed-meta">
+              ${instLabel}
+              <span class="feed-ts">${esc(ev.ts)}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+
+  // Sidebar stats
+  const totalEvents  = allEvents.length;
+  const instActive   = new Set(allEvents.slice(0, 20).map(e => e.instId)).size;
+  const woEvents     = allEvents.filter(ev => ev.action.toLowerCase().includes('work') || ev.action.toLowerCase().includes('wo')).length;
+  const certEvents   = allEvents.filter(ev => ev.action.toLowerCase().includes('cert')).length;
+
+  // Most active instruments (top 5)
+  const instEventCount = {};
+  allEvents.forEach(ev => {
+    if (ev.inst) instEventCount[ev.instId] = (instEventCount[ev.instId]||0) + 1;
+  });
+  const topInst = Object.entries(instEventCount)
+    .sort((a,b) => b[1]-a[1])
+    .slice(0,5)
+    .map(([id,count]) => {
+      const inst = db.instruments.find(i => i.id === Number(id));
+      return inst ? { inst, count } : null;
+    }).filter(Boolean);
+
+  return `
+  <div class="section-hdr">
+    <div class="section-title">Activity Feed</div>
+    <div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle)">${totalEvents} total events across ${db.instruments.length} instruments</div>
+  </div>
+
+  <div class="activity-grid">
+
+    <!-- MAIN FEED -->
+    <div>
+      <div class="activity-filter-bar">
+        <div class="wo-tabs">${FILTERS.map(f => `<button class="wo-tab ${ui.actFilter===f?'active':''}" onclick="ui.actFilter='${f}';render()">${f.toUpperCase()}</button>`).join('')}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <label style="font-family:var(--font-mono);font-size:10px;font-weight:600;color:var(--subtle);letter-spacing:.06em">FROM</label>
+          <input type="date" id="act-date-from" class="form-input" style="width:140px;padding:4px 8px;font-size:11px" value="${ui.actDateFrom||''}" onchange="ui.actDateFrom=this.value;render()"/>
+          <label style="font-family:var(--font-mono);font-size:10px;font-weight:600;color:var(--subtle);letter-spacing:.06em">TO</label>
+          <input type="date" id="act-date-to" class="form-input" style="width:140px;padding:4px 8px;font-size:11px" value="${ui.actDateTo||''}" onchange="ui.actDateTo=this.value;render()"/>
+          ${(ui.actDateFrom||ui.actDateTo) ? `<button class="btn-clear-sm" onclick="ui.actDateFrom='';ui.actDateTo='';render()" style="font-size:10px;padding:3px 8px">✕ Clear dates</button>` : ''}
+        </div>
+        <div class="search-box" style="max-width:220px;margin-left:auto">
+          <span class="search-icon">⌕</span>
+          <input placeholder="Search events..." value="${esc(ui.actSearch||'')}" oninput="ui.actSearch=this.value;render()"/>
+        </div>
+      </div>
+
+      <div class="feed-card">
+        <div class="feed-hdr">
+          <span style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);letter-spacing:.06em;text-transform:uppercase">
+            ${ui.actFilter === 'All' ? 'All Events' : ui.actFilter} · showing ${Math.min(displayed.length,50)} of ${filtered.length}
+          </span>
+          ${filtered.length > 50 ? `<span style="font-family:var(--font-mono);font-size:10px;color:var(--amber)">Showing latest 50 — use search to narrow</span>` : ''}
+        </div>
+        ${feedItems}
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="stat-sidebar">
+
+      <div class="sidebar-card">
+        <div class="sidebar-card-title">Fleet Summary</div>
+        <div class="mini-stat-row">
+          <span class="mini-stat-label">Total Events</span>
+          <span class="mini-stat-val c-blue">${totalEvents}</span>
+        </div>
+        <div class="mini-stat-row">
+          <span class="mini-stat-label">Work Order Events</span>
+          <span class="mini-stat-val" style="color:var(--cyan)">${woEvents}</span>
+        </div>
+        <div class="mini-stat-row">
+          <span class="mini-stat-label">Cert Events</span>
+          <span class="mini-stat-val" style="color:var(--purple)">${certEvents}</span>
+        </div>
+        <div class="mini-stat-row">
+          <span class="mini-stat-label">Instruments w/ History</span>
+          <span class="mini-stat-val">${Object.keys(db.history).length}</span>
+        </div>
+        <div class="mini-stat-row">
+          <span class="mini-stat-label">Active Last 20 Events</span>
+          <span class="mini-stat-val c-green">${instActive}</span>
+        </div>
+      </div>
+
+      ${topInst.length > 0 ? `
+      <div class="sidebar-card">
+        <div class="sidebar-card-title">Most Active Instruments</div>
+        ${topInst.map(({inst, count}) => `
+        <div class="mini-stat-row" style="cursor:pointer" onclick="openHistory(${inst.id})">
+          <span class="mini-stat-label">
+            <div style="font-family:var(--font-mono);font-size:11px;color:var(--text)">${esc(inst.name)}</div>
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle)">${esc(inst.serial)}</div>
+          </span>
+          <span class="mini-stat-val c-blue">${count}</span>
+        </div>`).join('')}
+      </div>` : ''}
+
+      <div class="sidebar-card">
+        <div class="sidebar-card-title">Event Types</div>
+        ${FILTERS.filter(f=>f!=='All').map(f => {
+          const cnt = allEvents.filter(ev => filterMap[f] && filterMap[f](ev)).length;
+          const pct = totalEvents > 0 ? Math.round((cnt/totalEvents)*100) : 0;
+          return `
+          <div class="mini-stat-row">
+            <span class="mini-stat-label">${f}</span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div style="width:60px;height:4px;background:var(--surface3);border-radius:2px;overflow:hidden">
+                <div style="width:${pct}%;height:100%;background:var(--blue);border-radius:2px"></div>
+              </div>
+              <span class="mini-stat-val" style="font-size:11px">${cnt}</span>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+
+    </div>
+  </div>`;
+}
+
+// ── VENDOR CERTIFICATION TABLE ────────────────────────────
+function renderCertSection() {
+  return `
+  <div class="section-hdr print-hide">
+    <div class="section-title">Work Orders</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-export" onclick="exportOpenWOPDF()">⎙ EXPORT OPEN WOs PDF</button>
+      <button class="btn-export" onclick="exportWOCSV()">↓ EXPORT CSV</button>
+    </div>
+  </div>
+  <div style="display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap" class="print-hide">
+    <div class="wo-tabs">
+      ${renderWOTabs()}
+    </div>
+  </div>
+  ${renderCertTable()}`;
+}
+
+function renderWOTabs() {
+  const openCount   = db.workOrders.filter(w => w.status !== 'Closed').length;
+  const closedCount = db.workOrders.filter(w => w.status === 'Closed').length;
+  const allCount    = db.workOrders.length;
+  return `
+    <button class="wo-tab ${ui.woFilter==='Open'?'active':''}"   onclick="ui.woFilter='Open';render()">OPEN (${openCount})</button>
+    <button class="wo-tab ${ui.woFilter==='Closed'?'active':''}" onclick="ui.woFilter='Closed';render()">CLOSED (${closedCount})</button>
+    <button class="wo-tab ${ui.woFilter==='All'?'active':''}"    onclick="ui.woFilter='All';render()">ALL (${allCount})</button>
+    <button class="wo-tab cert-tab ${ui.woFilter==='cert'?'active':''}" onclick="ui.woFilter='cert';render()">◈ VENDOR CERT</button>`;
+}
+
+function renderCertTable() {
+  const bc = db.instruments
+    .filter(i => i.name === 'BC1060')
+    .sort((a, b) => {
+      // sort order: overdue → due-soon → none → ok
+      const order = { overdue: 0, 'due-soon': 1, none: 2, ok: 3 };
+      return (order[certStatus(a)] ?? 4) - (order[certStatus(b)] ?? 4);
+    });
+
+  const overdueCount  = bc.filter(i => certStatus(i) === 'overdue').length;
+  const dueSoonCount  = bc.filter(i => certStatus(i) === 'due-soon').length;
+  const noCertCount   = bc.filter(i => certStatus(i) === 'none').length;
+
+  const certRows = bc.length === 0
+    ? `<tr class="empty-row"><td colspan="5">No BC1060 instruments found</td></tr>`
+    : bc.map(i => {
+        const due = certDueDate(i.lastCertDate);
+        return `<tr>
+          <td>
+            <div class="inst-name">${esc(i.name)}</div>
+            <div class="inst-sn">${esc(i.serial)}</div>
+          </td>
+          <td style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">
+            ${i.lastCertDate ? esc(i.lastCertDate) : '<span style="color:var(--subtle)">—</span>'}
+          </td>
+          <td style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">
+            ${due ? esc(due) : '<span style="color:var(--subtle)">—</span>'}
+          </td>
+          <td>${certBadge(i)}</td>
+          <td>
+            <div class="actions">
+              <button class="btn-cert" onclick="openLogCert(${i.id})">◈ LOG CERTIFICATION</button>
+              <button class="btn-act btn-history" onclick="openHistory(${i.id})" title="View History (H)">▤ HISTORY</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+
+  return `
+  <div class="group">
+    <div class="group-hdr">
+      <div class="group-title">◈ Vendor (BC1060) — EPA Certification Tracker</div>
+      <div class="group-count">${plural(bc.length, 'instrument')}</div>
+    </div>
+    ${overdueCount > 0 || dueSoonCount > 0 || noCertCount > 0 ? `
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      ${overdueCount > 0  ? `<span class="cert-overdue">⚠ ${overdueCount} OVERDUE</span>` : ''}
+      ${dueSoonCount > 0  ? `<span class="cert-due-soon">◉ ${dueSoonCount} DUE WITHIN 90 DAYS</span>` : ''}
+      ${noCertCount > 0   ? `<span class="cert-none">${noCertCount} NO DATE ON FILE</span>` : ''}
+    </div>` : ''}
+    <div class="inst-table">
+      <table>
+        <thead>
+          <tr>
+            <th>INSTRUMENT / SERIAL</th>
+            <th>LAST CERTIFIED</th>
+            <th>CERT DUE (2-YR EPA)</th>
+            <th>STATUS</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>${certRows}</tbody>
+      </table>
+    </div>
+    <div class="cert-table-footer">
+      ◈ BC1060 instruments require vendor factory certification every 2 years per EPA requirements. &nbsp;·&nbsp; Instruments due within 90 days are flagged amber.
+    </div>
+  </div>`;
+}
+
+// ── ADMIN TABLE HELPER ─────────────────────────────────────
+function adminTable(cols, rows, addRow) {
+  return `
+    <div class="inst-table">
+      <table>
+        <thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead>
+        <tbody>${rows.length === 0
+          ? `<tr class="empty-row"><td colspan="${cols.length}">Nothing configured yet</td></tr>`
+          : rows.join('')}
+        </tbody>
+      </table>
+    </div>
+    ${addRow ? `<div class="admin-add-row" style="border:1px solid var(--border);border-top:none;border-radius:0 0 6px 6px;background:var(--surface2)">${addRow}</div>` : ''}`;
+}
+
+// ── ADMIN ───────────────────────────────────────────────────
+function renderAdmin() {
+  if (!ui.adminUnlocked) { ui.modal = 'adminlogin'; ui.form = {}; return ''; }
+  const instCount = {};
+  const siteCount = {};
+  db.instruments.forEach(i => {
+    instCount[i.name] = (instCount[i.name]||0) + 1;
+    if (i.site) siteCount[i.site] = (siteCount[i.site]||0) + 1;
+  });
+
+  const siteRows = db.sites.map((s, idx) => `<tr>
+    <td><span class="inst-name" style="font-size:13px">${esc(s)}</span></td>
+    <td style="color:var(--muted)">${plural(siteCount[s]||0,'instrument')} assigned</td>
+    <td>${PROTECTED_SITES.includes(s)
+      ? '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">protected</span>'
+      : `<div style="display:flex;gap:6px">
+           <button class="btn-edit-sm" onclick="openEditSite(${idx})">EDIT</button>
+           <button class="btn-del-sm"  onclick="archiveSite(${idx})">ARCHIVE</button>
+         </div>`}
+    </td>
+  </tr>`);
+  const archivedSiteRows = (db.archivedSites||[]).map(s => `<tr class="row-archived">
+    <td><span class="inst-name" style="font-size:13px">${esc(s)}</span></td>
+    <td><span class="badge-archived">ARCHIVED</span></td>
+    <td>
+      <div style="display:flex;gap:6px">
+        <button class="btn-restore" onclick="restoreSite('${esc(s)}')">RESTORE</button>
+        <button class="btn-del-sm"  onclick="permanentlyDeleteSite('${esc(s)}')">DELETE</button>
+      </div>
+    </td>
+  </tr>`);
+
+  const typeRows = db.instTypes.map((t, idx) => `<tr>
+    <td><span class="inst-name" style="font-size:13px">${esc(t)}</span></td>
+    <td style="color:var(--muted)">${plural(instCount[t]||0,'instrument')}</td>
+    <td>
+      <div style="display:flex;gap:6px">
+        <button class="btn-edit-sm" onclick="openEditType(${idx})">EDIT</button>
+        <button class="btn-del-sm"  onclick="archiveInstType(${idx})">ARCHIVE</button>
+      </div>
+    </td>
+  </tr>`);
+
+  const techRows = db.techs.map((t, idx) => `<tr>
+    <td><div class="inst-name" style="font-size:13px">${esc(t.name)}</div><div class="inst-sn">${esc(t.role||'Technician')}</div></td>
+    <td style="color:var(--muted);font-family:var(--font-mono);font-size:11px">${esc(t.email||'—')}</td>
+    <td>
+      <div style="display:flex;gap:6px">
+        <button class="btn-edit-sm" onclick="openEditTech(${idx})">EDIT</button>
+        <button class="btn-del-sm"  onclick="archiveTech(${idx})">ARCHIVE</button>
+      </div>
+    </td>
+  </tr>`);
+
+  const archivedTypeRows = (db.archivedTypes||[]).map(t => `<tr class="row-archived">
+    <td><span class="inst-name" style="font-size:13px">${esc(t)}</span></td>
+    <td><span class="badge-archived">ARCHIVED</span></td>
+    <td>
+      <div style="display:flex;gap:6px">
+        <button class="btn-restore" onclick="restoreInstType('${esc(t)}')">RESTORE</button>
+        <button class="btn-del-sm"  onclick="permanentlyDeleteType('${esc(t)}')">DELETE</button>
+      </div>
+    </td>
+  </tr>`);
+  const archivedTechRows = (db.archivedTechs||[]).map((t, idx) => `<tr class="row-archived">
+    <td><div class="inst-name" style="font-size:13px">${esc(t.name)}</div><div class="inst-sn">${esc(t.role||'Technician')}</div></td>
+    <td style="color:var(--muted);font-family:var(--font-mono);font-size:11px">${esc(t.email||'—')}</td>
+    <td>
+      <div style="display:flex;gap:6px">
+        <button class="btn-restore" onclick="restoreTech(${idx})">RESTORE</button>
+        <button class="btn-del-sm"  onclick="permanentlyDeleteTech(${idx})">DELETE</button>
+      </div>
+    </td>
+  </tr>`);
+
+  const instrSearch = (ui.adminInstrSearch||'').toLowerCase();
+  const activeInstr  = db.instruments.filter(i => !i.archived);
+  const archivedInstr = db.instruments.filter(i => i.archived);
+  const instrList   = instrSearch
+    ? activeInstr.filter(i => i.name.toLowerCase().includes(instrSearch) || i.serial.toLowerCase().includes(instrSearch) || (i.site||'').toLowerCase().includes(instrSearch))
+    : activeInstr;
+  const instrRows = instrList.map(i => `<tr>
+    <td>
+      <div class="inst-name" style="font-size:13px">${esc(i.name)}</div>
+      <div class="inst-sn">${esc(i.serial)}</div>
+    </td>
+    <td style="color:var(--muted)">${esc(i.site||'—')}</td>
+    <td><span class="${statusClass(i.status)}" style="padding:3px 8px;border-radius:var(--radius);font-size:11px;font-weight:500">${esc(i.status)}</span></td>
+    <td>
+      <div style="display:flex;gap:6px">
+        <button class="btn-edit-sm" onclick="openEditInstrument(${i.id})">EDIT</button>
+        <button class="btn-del-sm"  onclick="archiveInstrument(${i.id})">ARCHIVE</button>
+      </div>
+    </td>
+  </tr>`);
+  const archivedInstrRows = archivedInstr.map(i => `<tr class="row-archived">
+    <td>
+      <div class="inst-name" style="font-size:13px">${esc(i.name)}</div>
+      <div class="inst-sn">${esc(i.serial)}</div>
+    </td>
+    <td style="color:var(--muted)">${esc(i.archivedDate||'—')}</td>
+    <td><span class="badge-archived">ARCHIVED</span></td>
+    <td>
+      <div style="display:flex;gap:6px">
+        <button class="btn-restore" onclick="restoreInstrument(${i.id})">RESTORE</button>
+        <button class="btn-del-sm" onclick="permanentlyDeleteInstrument(${i.id})">DELETE</button>
+      </div>
+    </td>
+  </tr>`);
+
+  return `
+  <div class="section-hdr">
+    <div class="section-title">Administration</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn-export" onclick="openChangePassword()">🔑 Change Password</button>
+      <button class="btn-export" onclick="exportCSV()">↓ EXPORT CSV</button>
+      <button class="btn-del-sm" style="padding:6px 12px" onclick="lockAdmin()">🔒 LOCK</button>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-hdr" onclick="toggleAdminSection(this)">
+      <div class="group-title">⊟ Instruments<span class="group-chevron">▼</span></div>
+      <div class="group-count">${instrSearch ? `${instrList.length} of ${activeInstr.length}` : plural(activeInstr.length,'instrument')}${archivedInstr.length > 0 ? ` · <span style="color:var(--subtle)">${archivedInstr.length} archived</span>` : ''}</div>
+      <button class="btn-add-sm" style="margin-left:12px" onclick="openAdd()">+ ADD INSTRUMENT</button>
+    </div>
+    <div class="toolbar" style="margin-bottom:12px">
+      <div class="search-box" style="max-width:100%">
+        <span class="search-icon">⌕</span>
+        <input id="admin-instr-search" placeholder="Search type, serial, site..." oninput="ui.adminInstrSearch=this.value;render()" value="${esc(ui.adminInstrSearch||'')}"/>
+      </div>
+    </div>
+    ${adminTable(['Type / Serial','Site','Status',''], instrRows,'')}
+    ${archivedInstr.length > 0 ? `
+    <div style="margin-top:16px">
+      <div class="archived-section-hdr">
+        Archived Instruments (${archivedInstr.length})
+      </div>
+      ${adminTable(['Type / Serial','Archived Date','',''], archivedInstrRows,'')}
+    </div>` : ''}
+  </div>
+
+  <div class="group">
+    <div class="group-hdr" onclick="toggleAdminSection(this)">
+      <div class="group-title">◎ Monitoring Sites<span class="group-chevron">▼</span></div>
+      <div class="group-count">${plural(db.sites.length,'site')}${(db.archivedSites||[]).length > 0 ? ` · <span style="color:var(--subtle)">${db.archivedSites.length} archived</span>` : ''}</div>
+    </div>
+    ${adminTable(['Site Code / ID','Instruments Assigned',''], siteRows, '')}
+    <div class="admin-add-row" style="border:1px solid var(--border);border-top:none;border-radius:0 0 6px 6px;background:var(--surface2)">
+      <button class="btn-add-sm" onclick="openAddSite()">+ Add Site</button>
+    </div>
+    ${(db.archivedSites||[]).length > 0 ? `
+    <div style="margin-top:16px">
+      <div class="archived-section-hdr">
+        Archived Sites (${(db.archivedSites||[]).length})
+      </div>
+      ${adminTable(['Site Code / ID','',''], archivedSiteRows,'')}
+    </div>` : ''}
+  </div>
+
+  <div class="group">
+    <div class="group-hdr" onclick="toggleAdminSection(this)">
+      <div class="group-title">⊞ Instrument Types<span class="group-chevron">▼</span></div>
+      <div class="group-count">${plural(db.instTypes.length,'type')}${(db.archivedTypes||[]).length > 0 ? ` · <span style="color:var(--subtle)">${db.archivedTypes.length} archived</span>` : ''}</div>
+    </div>
+    ${adminTable(['Type Name','Total Instruments',''], typeRows, '')}
+    <div class="admin-add-row" style="border:1px solid var(--border);border-top:none;border-radius:0 0 6px 6px;background:var(--surface2)">
+      <input id="new-type" class="admin-input" placeholder="e.g. BC1060"
+        value="${esc(ui.newType||'')}"
+        oninput="ui.newType=this.value"
+        onkeydown="if(event.key==='Enter')addInstType()"/>
+      <button class="btn-add-sm" onclick="addInstType()">+ Add Type</button>
+    </div>
+    ${(db.archivedTypes||[]).length > 0 ? `
+    <div style="margin-top:16px">
+      <div class="archived-section-hdr">
+        Archived Types (${(db.archivedTypes||[]).length})
+      </div>
+      ${adminTable(['Type Name','',''], archivedTypeRows,'')}
+    </div>` : ''}
+  </div>
+
+  <div class="group">
+    <div class="group-hdr" onclick="toggleAdminSection(this)">
+      <div class="group-title">◈ Technicians<span class="group-chevron">▼</span></div>
+      <div class="group-count">${plural(db.techs.length,'technician')}${(db.archivedTechs||[]).length > 0 ? ` · <span style="color:var(--subtle)">${db.archivedTechs.length} archived</span>` : ''}</div>
+    </div>
+    ${adminTable(['Name / Role','Email',''], techRows, '')}
+    <div class="admin-add-row" style="border:1px solid var(--border);border-top:none;border-radius:0 0 6px 6px;background:var(--surface2)">
+      <input id="new-tech-name"  class="admin-input" placeholder="Full name *"
+        value="${esc(ui.newTechName||'')}"
+        oninput="ui.newTechName=this.value"
+        onkeydown="if(event.key==='Enter')addTech()"/>
+      <input id="new-tech-role"  class="admin-input" placeholder="Role, e.g. Field Tech"
+        value="${esc(ui.newTechRole||'')}"
+        oninput="ui.newTechRole=this.value"
+        onkeydown="if(event.key==='Enter')addTech()"/>
+      <input id="new-tech-email" class="admin-input" placeholder="Email (optional)"
+        value="${esc(ui.newTechEmail||'')}"
+        oninput="ui.newTechEmail=this.value"
+        onkeydown="if(event.key==='Enter')addTech()"/>
+      <button class="btn-add-sm" onclick="addTech()">+ Add Technician</button>
+    </div>
+    ${(db.archivedTechs||[]).length > 0 ? `
+    <div style="margin-top:16px">
+      <div class="archived-section-hdr">
+        Archived Technicians (${(db.archivedTechs||[]).length})
+      </div>
+      ${adminTable(['Name / Role','Email',''], archivedTechRows,'')}
+    </div>` : ''}
+  </div>
+
+    <div class="group">
+    <div class="group-hdr" onclick="toggleAdminSection(this)">
+      <div class="group-title">Statuses<span class="group-chevron">▼</span></div>
+      <div class="group-count">${plural((db.customStatuses||[]).length, 'custom status')}</div>
+    </div>
+    ${adminTable(
+      ['Status Name','Instruments Using',''],
+      (db.customStatuses||[]).map((s, idx) => {
+        const n = db.instruments.filter(i => i.status === s && !i.archived).length;
+        return '<tr><td><span class="inst-name" style="font-size:13px">' + esc(s) + '</span></td><td style="color:var(--muted);font-size:12px">' + n + ' instrument' + (n===1?'':'s') + '</td><td><button class="btn-del-sm" onclick="removeCustomStatus(' + idx + ')">REMOVE</button></td></tr>';
+      }),
+      '<input id="new-status" class="admin-input" placeholder="e.g. Out of Service" onkeydown="if(event.key===\'Enter\')addCustomStatus()"/>' +
+      '<button class="btn-add-sm" onclick="addCustomStatus()">+ Add Status</button>'
+    )}
+    <div style="margin-top:8px;font-family:var(--font-mono);font-size:10px;color:var(--subtle)">Built-in statuses (Operational, Maintenance, Repair, Calibration, Offline, Deployed, At Vendor) cannot be removed.</div>
+  </div>
+
+  <div class="group">
+    <div class="group-hdr" onclick="toggleAdminSection(this)">
+      <div class="group-title" style="color:var(--red)">⚠ Danger Zone<span class="group-chevron">▼</span></div>
+    </div>
+    <div class="inst-table" style="border-color:rgba(248,113,113,.3)">
+
+      <div class="dz-row">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Clear History</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">Delete all audit history logs. Instruments, sites, work orders, and notes are preserved.</div>
+        </div>
+        <button class="btn-del-sm" style="padding:6px 16px;font-size:12px;flex-shrink:0" onclick="confirmClearHistory()">CLEAR HISTORY</button>
+      </div>
+
+      <div class="dz-row">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Clear Work Orders</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">Delete all work order records. Instruments, sites, history, and notes are preserved.</div>
+        </div>
+        <button class="btn-del-sm" style="padding:6px 16px;font-size:12px;flex-shrink:0" onclick="confirmClearWorkOrders()">CLEAR WORK ORDERS</button>
+      </div>
+
+      <div class="dz-row">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Clear Notes</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">Remove all notes from every instrument. Everything else is preserved.</div>
+        </div>
+        <button class="btn-del-sm" style="padding:6px 16px;font-size:12px;flex-shrink:0" onclick="confirmClearNotes()">CLEAR NOTES</button>
+      </div>
+
+      <div class="dz-row dz-row-last">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Delete All Records</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">Wipe all work orders, history, notes, and technicians — keeping only sites and instruments.</div>
+        </div>
+        <button class="btn-del-sm" style="padding:6px 16px;font-size:12px;flex-shrink:0" onclick="confirmClearExceptSitesInst()">DELETE ALL RECORDS</button>
+      </div>
+
+    </div>
+  </div>`;
+}
+
+// ── INSTRUMENT ACTIONS ─────────────────────────────────────
+function navigateTo(page) {
+  if (ui.adminUnlocked && ui.adminUnlockedAt && (Date.now()-ui.adminUnlockedAt > 5*60*1000)) {
+    ui.adminUnlocked = false; ui.adminUnlockedAt = null;
+  }
+  if (ui.page === 'admin' && page !== 'admin') { ui._openAdminSections = new Set(); }
+  if (page === 'admin' && !ui.adminUnlocked) {
+    ui.modal = 'adminlogin'; ui.form = {}; render(); return;
+  }
+  if (ui.modal && ui.dirty) {
+    showConfirm({
+      title: 'UNSAVED CHANGES',
+      icon: '⚠',
+      msg: 'You have unsaved changes in an open form. Navigating away will discard them.',
+      detail: 'Discard changes and navigate?',
+      onConfirm: () => {
+        ui.dirty = false;
+        if (page === 'workorders') ui.woFilter = 'Open';
+        if (page === 'activity')   ui.actFilter = 'All';
+        ui.page = page; render();
+      }
+    });
+  } else {
+    if (page === 'workorders') ui.woFilter = 'Open';
+    if (page === 'activity')   ui.actFilter = 'All';
+    ui.page = page; render();
+  }
+}
+// ── ADMIN PASSWORD ─────────────────────────────────────────
+const ADMIN_PW_KEY = 'sdapcd_admin_pw';
+// Simple hash — not cryptographic, prevents casual access only.
+// For stronger security, replace with a proper auth system.
+function hashPW(pw) {
+  let h = 0;
+  for (let i = 0; i < pw.length; i++) {
+    h = (Math.imul(31, h) + pw.charCodeAt(i)) | 0;
+  }
+  return h.toString(16);
+}
+function getStoredHash() {
+  return localStorage.getItem(ADMIN_PW_KEY) || hashPW('admin1234');
+}
+function submitAdminPassword() {
+  const pw = document.getElementById('admin-pw-input')?.value || '';
+  if (!pw) { ui.form = {...ui.form, err: 'Please enter the password.'}; render(); return; }
+  if (hashPW(pw) !== getStoredHash()) {
+    ui.form = {...ui.form, err: 'Incorrect password. Try again.'};
+    render();
+    setTimeout(() => {
+      const el = document.getElementById('admin-pw-input');
+      if (el) { el.value = ''; el.focus(); }
+    }, 50);
+    return;
+  }
+  ui.adminUnlocked = true;
+  ui.adminUnlockedAt = Date.now();
+  ui.modal = null; ui.form = {};
+  ui.page = 'admin';
+  render();
+}
+function lockAdmin() {
+  navigateTo('dashboard');
+}
+function openChangePassword() {
+  ui.modal = 'changepw'; ui.form = {}; render();
+}
+function saveAdminPassword() {
+  const current  = document.getElementById('pw-current')?.value || '';
+  const newPw    = document.getElementById('pw-new')?.value || '';
+  const confirm  = document.getElementById('pw-confirm')?.value || '';
+  if (hashPW(current) !== getStoredHash()) {
+    ui.form = {...ui.form, err: 'Current password is incorrect.'}; render(); return;
+  }
+  if (newPw.length < 4) {
+    ui.form = {...ui.form, err: 'New password must be at least 4 characters.'}; render(); return;
+  }
+  if (newPw !== confirm) {
+    ui.form = {...ui.form, err: 'Passwords do not match.'}; render(); return;
+  }
+  localStorage.setItem(ADMIN_PW_KEY, hashPW(newPw));
+  closeModal();
+  toast('Admin password updated');
+}
+
+function toggleTheme() {
+  ui.theme = ui.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', ui.theme);
+  sessionStorage.setItem('sdapcd_theme', ui.theme);
+  render();
+}
+function markDirty() { ui.dirty = true; }
+function closeModal() { ui.modal = null; ui.form = {}; ui.dirty = false; render(); }
+function setStatFilter(k) { ui.activeStatCard = ui.activeStatCard === k ? null : k; render(); }
+
+// ── CONFIRM HELPER ─────────────────────────────────────────
+let _confirmCallback = null;
+function confirmCancel() { _confirmCallback = null; closeModal(); }
+function confirmProceed() { if (_confirmCallback) { const cb = _confirmCallback; _confirmCallback = null; ui.modal = null; ui.form = {}; cb(); } }
+function showConfirm({ title, icon, msg, detail, onConfirm }) {
+  _confirmCallback = onConfirm;
+  ui.modal = 'confirm';
+  ui.form  = { title, icon, msg, detail };
+  render();
+}
+
+function updateStatus(id, val) {
+  const i = db.instruments.find(x => x.id === id);
+  if (!i) return;
+  const prev = i.status;
+  showConfirm({
+    title: 'CONFIRM STATUS CHANGE',
+    icon: '◈',
+    msg: `Change status for <strong>${esc(i.name)}</strong> S/N ${esc(i.serial)}?`,
+    detail: `${prev}  →  ${val}`,
+    onConfirm: () => {
+      addHistory(id, 'Status changed', `${prev} → ${val}`);
+      i.status = val;
+      saveDB(); render(); toast(`Status → ${val}`);
+    }
+  });
+}
+
+function updateSite(id, val) {
+  const i = db.instruments.find(x => x.id === id);
+  if (!i) return;
+  const prev = i.site;
+  showConfirm({
+    title: 'CONFIRM SITE CHANGE',
+    icon: '▶',
+    msg: `Move <strong>${esc(i.name)}</strong> S/N ${esc(i.serial)} to a new site?`,
+    detail: `${prev}  →  ${val}`,
+    onConfirm: () => {
+      addHistory(id, 'Site changed', `${prev} → ${val}`);
+      i.site = val;
+      if (val === 'VENDOR') {
+        const prevStatus = i.status;
+        i.status = 'At Vendor';
+        addHistory(id, 'Status changed', `${prevStatus} → At Vendor (sent to vendor)`);
+      } else if (val === 'HQ/SHOP') {
+        if (i.status === 'At Vendor' || i.status === 'Deployed') {
+          const prevStatus2 = i.status;
+          i.status = 'Operational';
+          addHistory(id, 'Status changed', `${prevStatus2} → Operational (returned to HQ/SHOP)`);
+        }
+      } else if (i.status === 'Operational') { // moving to field site
+        i.status = 'Deployed';
+        addHistory(id, 'Status changed', 'Operational → Deployed');
+      }
+      saveDB(); render(); toast(`Moved to ${val}`);
+    }
+  });
+}
+
+function openAdd()        { ui.modal='add';      ui.form={}; render(); }
+function openEditInstrument(id) {
+  const i = db.instruments.find(x => x.id === id);
+  if (!i) return;
+  ui.modal = 'editinstrument';
+  ui.form  = { instId: id, instName: i.name, serial: i.serial, name: i.name, status: i.status, site: i.site, notes: i.notes||'' };
+  render();
+}
+function saveEditInstrument(id) {
+  const i = db.instruments.find(x => x.id === id);
+  if (!i) return;
+  const nameEl = document.getElementById('f-name');
+  const name   = nameEl ? nameEl.value : i.name;
+  const serial = getVal('f-serial') || i.serial;
+  const status = document.getElementById('f-status').value;
+  const site   = document.getElementById('f-site').value;
+  const notes  = getVal('f-notes');
+  if (!name || !serial) { ui.form={...ui.form, err:'Type and serial are required.'}; render(); return; }
+  const dupSerial = db.instruments.find(x => x.serial === serial && x.id !== id);
+  if (dupSerial) { ui.form={...ui.form, err:'Serial number already used by another instrument.'}; render(); return; }
+  const changes = [];
+  if (i.name   !== name)   changes.push(`Type: ${i.name} → ${name}`);
+  if (i.serial !== serial) changes.push(`S/N: ${i.serial} → ${serial}`);
+  if (i.status !== status) changes.push(`Status: ${i.status} → ${status}`);
+  if (i.site   !== site)   changes.push(`Site: ${i.site} → ${site}`);
+  if (i.notes  !== notes)  changes.push('Notes updated');
+  i.name = name; i.serial = serial; i.status = status; i.site = site; i.notes = notes;
+  if (name === 'BC1060' && i.lastCertDate === undefined) i.lastCertDate = null;
+  if (changes.length) addHistory(id, 'Instrument edited', changes.join(' · '));
+  saveDB(); closeModal(); toast('Instrument updated');
+}
+function openLogWork(id) {
+  const i = db.instruments.find(x => x.id === id);
+  if (!i) return;
+  ui.modal = 'logwork';
+  ui.form  = { instId: id, instName: i.name, serial: i.serial, by: '', desc: '' };
+  render();
+}
+function openCreateWO(id) { const i=db.instruments.find(x=>x.id===id); if (!i) return; ui.modal='createwo'; ui.form={instId:id,instName:i.name,serial:i.serial}; render(); }
+function openHistory(id)  { const i=db.instruments.find(x=>x.id===id); if (!i) return; ui.modal='history';  ui.form={instId:id,instName:i.name,serial:i.serial}; render(); }
+function openLogCert(id)  {
+  const i = db.instruments.find(x => x.id === id);
+  if (!i) return;
+  ui.modal = 'logcert';
+  ui.form  = { instId: id, instName: i.name, serial: i.serial, certDate: today(), certBy: '', certNotes: '', editMode: false };
+  render();
+}
+function openEditCert(id) {
+  const i = db.instruments.find(x => x.id === id);
+  if (!i) return;
+  ui.modal = 'logcert';
+  ui.form  = { instId: id, instName: i.name, serial: i.serial, certDate: i.lastCertDate || today(), certBy: '', certNotes: '', editMode: true };
+  render();
+}
+function saveLogCert() {
+  const mo=document.getElementById('f-cert-month'),dy=document.getElementById('f-cert-day'),yr=document.getElementById('f-cert-year');
+  const certDate=(mo&&dy&&yr)?yr.value+'-'+mo.value+'-'+dy.value:'';
+  const certBy    = getVal('f-cert-by');
+  const certNotes = getVal('f-cert-notes');
+  if (!certDate) { ui.form={...ui.form, err:'Certification date is required.'}; render(); return; }
+  const { instId, editMode } = ui.form;
+  const i = db.instruments.find(x => x.id === instId);
+  if (!i) return;
+  const prevDate = i.lastCertDate;
+  i.lastCertDate = certDate;
+  const due = certDueDate(certDate);
+  const action = editMode ? 'Vendor Certification updated' : 'Vendor Certification logged';
+  const detail = editMode
+    ? `Cert date changed: ${prevDate || '—'} → ${certDate} · Next due: ${due}${certBy ? ' · By: ' + certBy : ''}${certNotes ? ' · ' + certNotes.slice(0,80) : ''}`
+    : `Cert date: ${certDate} · Next due: ${due}${certBy ? ' · By: ' + certBy : ''}${certNotes ? ' · ' + certNotes.slice(0,80) : ''}`;
+  addHistory(instId, action, detail);
+  saveDB(); closeModal(); toast((editMode ? 'Certification updated' : 'Certification recorded') + ' — next due ' + due);
+}
+function openWODetail(wid){ if (db.workOrders.find(w => w.id === wid)) { ui.modal='wodetail'; ui.form={woId:wid}; render(); } }
+function openEditWO(wid)  {
+  const wo = db.workOrders.find(w => w.id === wid);
+  if (!wo) return;
+  ui.modal='editwo'; ui.form={woId:wid, type:wo.type, by:wo.technician||'', desc:wo.description||''};
+  render();
+}
+
+function saveAdd() {
+  const nameEl   = document.getElementById('f-name');
+  const customEl = document.getElementById('f-custom-name');
+  const name     = nameEl.value === 'custom'
+    ? (customEl ? customEl.value.trim().toUpperCase() : '')
+    : nameEl.value;
+  const serial = getVal('f-serial');
+  const status = document.getElementById('f-status').value;
+  const site   = document.getElementById('f-site').value;
+  const notes  = getVal('f-notes');
+  if (!name || !serial) { ui.form={...ui.form,err:'Instrument type and serial number are required.',name,serial,status,site,notes}; render(); return; }
+  if (db.instruments.find(i => i.serial === serial)) { ui.form={...ui.form,err:'Serial number already exists.',name,serial,status,site,notes}; render(); return; }
+  const id = db.nextId++;
+  const newInst = { id, name, serial, status, site, notes, created: today() };
+  if (name === 'BC1060') newInst.lastCertDate = null;
+  // Auto-set Deployed if placed directly at a field site
+  if (site !== 'HQ/SHOP' && site !== 'VENDOR' && newInst.status === 'Operational') {
+    newInst.status = 'Deployed';
+  } else if (site === 'VENDOR') {
+    newInst.status = 'At Vendor';
+  }
+  db.instruments.push(newInst);
+  addHistory(id, 'Instrument added', `${name} ${serial} at ${site} — ${newInst.status}`);
+  saveDB(); closeModal(); toast('Instrument added');
+}
+
+// Shared save for logwork and createwo
+function saveWorkEntry(mode) {
+  // legacy entry point kept for createwo modal
+  const type = document.getElementById('f-type') ? document.getElementById('f-type').value : '';
+  const by   = getVal('f-by');
+  const desc = getVal('f-desc');
+  if (!by) { ui.form={...ui.form, err:'Technician is required.', type, by, desc}; render(); return; }
+  const { instId } = ui.form;
+  const woId = db.woId++;
+  db.workOrders.push({ id:woId, instrumentId:instId, type, description:desc, technician:by, status:'Open', created:today() });
+  addHistory(instId, 'Work order created', `WO-${woId} · ${type} · Tech: ${by}${desc?' · '+desc.slice(0,80):''}`);
+  saveDB(); closeModal(); toast('Work order WO-'+woId+' created');
+}
+
+function saveLogWork() {
+  const byEl       = document.getElementById('f-lw-by');
+  const descEl     = document.getElementById('f-lw-desc');
+  const by         = byEl   ? byEl.value.trim()   : '';
+  const desc       = descEl ? descEl.value.trim()  : '';
+  if (!by)   { ui.form={...ui.form, err:'Please select the technician who performed the work.'}; render(); return; }
+  if (!desc) { ui.form={...ui.form, err:'Please describe the work that was performed.'}; render(); return; }
+  const { instId } = ui.form;
+  addHistory(instId, 'Work performed', 'Tech: ' + by + ' · ' + desc.slice(0, 120));
+  saveDB(); closeModal();
+  toast('\u2713 Work entry logged');
+}
+
+function saveEditWO(wid) {
+  const type = document.getElementById('f-type').value;
+  const by   = getVal('f-by');
+  const desc = getVal('f-desc');
+  if (!by) { ui.form={...ui.form, err:'Technician name is required.', type, by, desc}; render(); return; }
+  const wo = db.workOrders.find(w => w.id === wid);
+  if (!wo) return;
+  wo.type = type; wo.technician = by; wo.description = desc;
+  addHistory(wo.instrumentId, 'Work order updated', `WO-${wid} · ${type} · Tech: ${by}${desc ? ' · ' + desc.slice(0, 80) : ''}`);
+  saveDB(); openWODetail(wid); toast('Work order updated');
+}
+
+function closeWO(wid) {
+  const wo = db.workOrders.find(w => w.id === wid);
+  if (!wo) return;
+  ui.modal = 'closeworkorder';
+  ui.form  = { woId: wid, closedBy: '' };
+  render();
+
+}
+
+// ── ADMIN ACTIONS ──────────────────────────────────────────
+function addSite() {
+  const val = (ui.newSite || getVal('new-site')).trim().toUpperCase();
+  if (!val) { toast('⚠ Enter a site code first'); return; }
+  if (db.sites.includes(val)) { toast('⚠ Site already exists'); return; }
+  db.sites.push(val);
+  ui.newSite = '';
+  saveDB(); render(); toast(`Site "${val}" added`);
+}
+function archiveSite(idx) {
+  const s = db.sites[idx];
+  if (PROTECTED_SITES.includes(s)) { toast(`⚠ "${s}" is a protected site and cannot be archived`); return; }
+  const n = db.instruments.filter(i => i.site === s && !i.archived).length;
+  if (n > 0) {
+    toast(`⚠ ${n} active instrument(s) are still assigned to "${s}". Move or archive them first.`);
+    return;
+  }
+  showConfirm({
+    title: 'ARCHIVE SITE',
+    icon: '⊟',
+    msg: `Archive site <strong>${esc(s)}</strong>? It will be removed from site lists but can be restored.`,
+    detail: 'Archived sites cannot be assigned to instruments until restored.',
+    onConfirm: () => {
+      db.sites.splice(idx, 1);
+      if (!db.archivedSites) db.archivedSites = [];
+      db.archivedSites.push(s);
+      saveDB(); render(); toast(`Site "${s}" archived`);
+    }
+  });
+}
+function restoreSite(name) {
+  if (!db.archivedSites) return;
+  db.archivedSites = db.archivedSites.filter(s => s !== name);
+  db.sites.push(name);
+  saveDB(); render(); toast(`Site "${name}" restored`);
+}
+function permanentlyDeleteSite(name) {
+  showConfirm({
+    title: 'PERMANENTLY DELETE SITE',
+    icon: '⚠',
+    msg: `<strong style="color:var(--red)">Permanently delete site "${esc(name)}"?</strong> This cannot be undone.`,
+    detail: 'This site is already archived.',
+    onConfirm: () => {
+      db.archivedSites = (db.archivedSites||[]).filter(s => s !== name);
+      saveDB(); render(); toast(`Site "${name}" permanently deleted`);
+    }
+  });
+}
+function archiveInstrument(id) {
+  const i = db.instruments.find(x => x.id === id);
+  if (!i) return;
+  showConfirm({
+    title: 'ARCHIVE INSTRUMENT',
+    icon: '⊟',
+    msg: `Archive <strong>${esc(i.name)}</strong> S/N ${esc(i.serial)}? It will be removed from the registry but all history and work orders will be preserved.`,
+    detail: 'You can restore it any time from the Archived section in Admin.',
+    onConfirm: () => {
+      i.archived = true;
+      i.archivedDate = today();
+      addHistory(id, 'Instrument archived', `${i.name} S/N ${i.serial}`);
+      saveDB(); render(); toast(`${i.serial} archived`);
+    }
+  });
+}
+function restoreInstrument(id) {
+  const i = db.instruments.find(x => x.id === id);
+  if (!i) return;
+  i.archived = false;
+  delete i.archivedDate;
+  addHistory(id, 'Instrument restored', `${i.name} S/N ${i.serial} restored to registry`);
+  saveDB(); render(); toast(`${i.serial} restored`);
+}
+function permanentlyDeleteInstrument(id) {
+  const i = db.instruments.find(x => x.id === id);
+  if (!i || !i.archived) return;
+  showConfirm({
+    title: 'PERMANENTLY DELETE',
+    icon: '⚠',
+    msg: `<strong style="color:var(--red)">Permanently delete ${esc(i.name)} S/N ${esc(i.serial)}?</strong> All history and work orders will be erased. This cannot be undone.`,
+    detail: 'This instrument is already archived. This is the final, permanent deletion.',
+    onConfirm: () => {
+      db.instruments = db.instruments.filter(x => x.id !== id);
+      db.workOrders  = db.workOrders.filter(w => w.instrumentId !== id);
+      delete db.history[id];
+      saveDB(); render(); toast('Instrument permanently deleted');
+    }
+  });
+}
+function addInstType() {
+  const val = (ui.newType || getVal('new-type')).trim().toUpperCase();
+  if (!val) { toast('⚠ Enter a type name first'); return; }
+  if (db.instTypes.includes(val)) { toast('⚠ Type already exists'); return; }
+  db.instTypes.push(val);
+  ui.newType = '';
+  saveDB(); render(); toast(`Type "${val}" added`);
+}
+function archiveInstType(idx) {
+  const t = db.instTypes[idx];
+  if (t === 'BC1060') { toast('⚠ BC1060 cannot be archived — required for EPA certification tracking'); return; }
+  const n = db.instruments.filter(i => i.name === t && !i.archived).length;
+  if (n > 0) { toast(`⚠ ${n} active instrument(s) use type "${t}". Archive or reassign them first.`); return; }
+  showConfirm({
+    title: 'ARCHIVE INSTRUMENT TYPE',
+    icon: '⊟',
+    msg: `Archive instrument type <strong>${esc(t)}</strong>? It will be removed from the type list but can be restored.`,
+    detail: 'Archived types cannot be assigned to new instruments until restored.',
+    onConfirm: () => {
+      db.instTypes.splice(idx, 1);
+      if (!db.archivedTypes) db.archivedTypes = [];
+      db.archivedTypes.push(t);
+      saveDB(); render(); toast(`Type "${t}" archived`);
+    }
+  });
+}
+function restoreInstType(name) {
+  if (!db.archivedTypes) return;
+  db.archivedTypes = db.archivedTypes.filter(t => t !== name);
+  db.instTypes.push(name);
+  saveDB(); render(); toast(`Type "${name}" restored`);
+}
+function permanentlyDeleteType(name) {
+  showConfirm({
+    title: 'PERMANENTLY DELETE TYPE',
+    icon: '⚠',
+    msg: `<strong style="color:var(--red)">Permanently delete type "${esc(name)}"?</strong> This cannot be undone.`,
+    detail: 'This type is already archived.',
+    onConfirm: () => {
+      db.archivedTypes = (db.archivedTypes||[]).filter(t => t !== name);
+      saveDB(); render(); toast(`Type "${name}" permanently deleted`);
+    }
+  });
+}
+function addTech() {
+  const name  = (ui.newTechName  || getVal('new-tech-name')).trim();
+  const role  = (ui.newTechRole  || getVal('new-tech-role')).trim();
+  const email = (ui.newTechEmail || getVal('new-tech-email')).trim();
+  if (!name) { toast('⚠ Enter a name first'); return; }
+  if (db.techs.find(t => t.name.toLowerCase() === name.toLowerCase())) { toast('⚠ Technician already exists'); return; }
+  db.techs.push({ name, role, email });
+  ui.newTechName = ''; ui.newTechRole = ''; ui.newTechEmail = '';
+  saveDB(); render(); toast(`${name} added`);
+}
+function archiveTech(idx) {
+  const t = db.techs[idx];
+  showConfirm({
+    title: 'ARCHIVE TECHNICIAN',
+    icon: '◈',
+    msg: `Archive technician <strong>${esc(t.name)}</strong>? They will be removed from the active list but can be restored.`,
+    detail: t.role ? `${t.name}  ·  ${t.role}` : t.name,
+    onConfirm: () => {
+      db.techs.splice(idx, 1);
+      if (!db.archivedTechs) db.archivedTechs = [];
+      db.archivedTechs.push(t);
+      saveDB(); render(); toast(`${t.name} archived`);
+    }
+  });
+}
+function restoreTech(idx) {
+  if (!db.archivedTechs || !db.archivedTechs[idx]) return;
+  const t = db.archivedTechs.splice(idx, 1)[0];
+  db.techs.push(t);
+  saveDB(); render(); toast(`${t.name} restored`);
+}
+function permanentlyDeleteTech(idx) {
+  const t = (db.archivedTechs||[])[idx];
+  if (!t) return;
+  showConfirm({
+    title: 'PERMANENTLY DELETE TECHNICIAN',
+    icon: '⚠',
+    msg: `<strong style="color:var(--red)">Permanently delete ${esc(t.name)}?</strong> This cannot be undone.`,
+    detail: 'This technician is already archived.',
+    onConfirm: () => {
+      db.archivedTechs.splice(idx, 1);
+      saveDB(); render(); toast(`${t.name} permanently deleted`);
+    }
+  });
+}
+
+function openEditType(idx)  { ui.modal='edittype'; ui.form={idx, val:db.instTypes[idx]}; render(); }
+function openEditTech(idx)  { const t=db.techs[idx]; ui.modal='edittech'; ui.form={idx, name:t.name, role:t.role||'', email:t.email||''}; render(); }
+
+function saveEditType(idx) {
+  const val = getVal('f-val').toUpperCase();
+  if (!val) { ui.form={...ui.form,err:'Type name is required.'}; render(); return; }
+  if (db.instTypes[idx] === 'BC1060') { ui.form={...ui.form,err:'BC1060 cannot be renamed — it is required for EPA certification tracking.'}; render(); return; }
+  if (db.instTypes.includes(val) && val !== db.instTypes[idx]) { ui.form={...ui.form,err:'Type already exists.',val}; render(); return; }
+  const old = db.instTypes[idx];
+  db.instTypes[idx] = val;
+  db.instruments.forEach(i => { if (i.name === old) i.name = val; });
+  saveDB(); closeModal(); toast('Type updated');
+}
+function saveEditTech(idx) {
+  const name  = getVal('f-name');
+  const role  = getVal('f-role');
+  const email = getVal('f-email');
+  if (!name) { ui.form={...ui.form,err:'Name is required.',name,role,email}; render(); return; }
+  const dup = db.techs.findIndex(t => t.name.toLowerCase() === name.toLowerCase());
+  if (dup !== -1 && dup !== idx) { ui.form={...ui.form,err:'A technician with that name already exists.',name,role,email}; render(); return; }
+  db.techs[idx] = { name, role, email };
+  saveDB(); closeModal(); toast('Technician updated');
+}
+
+// ── SELECTIVE CLEAR FUNCTIONS ─────────────────────────────
+function confirmClearHistory() {
+  showConfirm({
+    title: 'CLEAR ALL HISTORY',
+    icon: '⚠',
+    msg: 'This will permanently delete all audit history logs for every instrument.',
+    detail: 'Instruments, sites, work orders, and notes will not be affected.',
+    onConfirm: () => {
+      db.history = {};
+      saveDB(); render(); toast('All history cleared');
+    }
+  });
+}
+
+function confirmClearWorkOrders() {
+  showConfirm({
+    title: 'CLEAR ALL WORK ORDERS',
+    icon: '⚠',
+    msg: 'This will permanently delete all work order records.',
+    detail: 'Instruments, sites, history, and notes will not be affected.',
+    onConfirm: () => {
+      db.workOrders = [];
+      db.woId = 1;
+      saveDB(); render(); toast('All work orders cleared');
+    }
+  });
+}
+
+function confirmClearNotes() {
+  showConfirm({
+    title: 'CLEAR ALL NOTES',
+    icon: '⚠',
+    msg: 'This will remove all notes from every instrument.',
+    detail: 'Instruments, sites, work orders, and history will not be affected.',
+    onConfirm: () => {
+      db.instruments.forEach(i => { i.notes = ''; });
+      saveDB(); render(); toast('All instrument notes cleared');
+    }
+  });
+}
+
+function confirmClearExceptSitesInst() {
+  showConfirm({
+    title: 'CLEAR ALL RECORDS',
+    icon: '⚠',
+    msg: 'This will delete all work orders, history, notes, technicians, and instrument types — keeping only your sites and instruments.',
+    detail: 'Step 1 of 2 — confirm to proceed to final warning',
+    onConfirm: () => {
+      showConfirm({
+        title: 'FINAL CONFIRMATION',
+        icon: '⚠',
+        msg: 'All work orders, history logs, notes, technicians, and types will be permanently deleted.',
+        detail: 'Step 2 of 2 — this cannot be undone',
+        onConfirm: () => {
+          db.workOrders = [];
+          db.history    = {};
+          db.woId       = 1;
+          db.techs      = [];
+          db.instTypes  = ['BC1060', 'ESEQ'];
+          db.instruments.forEach(i => { i.notes = ''; });
+          saveDB(); render(); toast('Records cleared — sites and instruments preserved');
+        }
+      });
+    }
+  });
+}
+
+// ── RESET DB ───────────────────────────────────────────────
+
+// ── EXPORT ─────────────────────────────────────────────────
+function exportCSV() {
+  const rows = [['Serial Number','Type','Status','Site','Notes','Created']];
+  db.instruments.forEach(i => rows.push([i.serial, i.name, i.status, i.site, i.notes||'', i.created]));
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'sdapcd_instruments_' + today() + '.csv';
+  a.click();
+  toast('CSV exported');
+}
+
+function exportWOCSV() {
+  const rows = [['WO #','Instrument Type','Serial Number','WO Type','Status','Technician','Description','Created']];
+  db.workOrders.forEach(wo => {
+    const inst = db.instruments.find(i => i.id === wo.instrumentId);
+    rows.push([
+      `WO-${wo.id}`,
+      inst ? inst.name  : '—',
+      inst ? inst.serial : '—',
+      wo.type, wo.status,
+      wo.technician || '—',
+      wo.description || '',
+      wo.created
+    ]);
+  });
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'sdapcd_workorders_' + today() + '.csv';
+  a.click();
+  toast('Work orders exported');
+}
+
+function exportOpenWOPDF() {
+  const openWOs = db.workOrders.filter(w => w.status !== 'Closed');
+  if (openWOs.length === 0) { toast('⚠ No open work orders to export'); return; }
+  const byInst = {};
+  openWOs.forEach(wo => { if (!byInst[wo.instrumentId]) byInst[wo.instrumentId]=[]; byInst[wo.instrumentId].push(wo); });
+  const generatedDate = new Date().toLocaleString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+
+  const instSections = Object.entries(byInst).map(([instId, wos]) => {
+    const inst = db.instruments.find(i => i.id === parseInt(instId));
+    if (!inst) return '';
+    const certInfo = (inst.name==='BC1060'&&inst.lastCertDate)
+      ? '<div class="wo-ch" style="background:#f5f5f5;border-bottom:1px solid #e5e7eb;padding:5px 14px;font-size:10px;font-family:\'IBM Plex Mono\',monospace;color:#222"><strong>EPA CERT</strong>&nbsp;·&nbsp;Last: '+esc(inst.lastCertDate)+'&nbsp;·&nbsp;Next: '+certDueDate(inst.lastCertDate)+'</div>' : '';
+    const woRows = wos.sort((a,b)=>a.id-b.id).map(wo =>
+      '<div class="wo-card"><div class="wo-ch"><span class="wo-num">WO-'+wo.id+'</span><span class="wo-type">'+esc(wo.type)+'</span><span class="wo-badge">OPEN</span><span class="wo-date">'+esc(wo.created)+'</span></div>'+
+      '<div class="wo-body"><div class="wo-row"><span class="wo-rlbl">Technician:</span><span>'+esc(wo.technician||'—')+'</span></div>'+
+      (wo.description?'<div class="wo-row"><span class="wo-rlbl">Description:</span><span>'+esc(wo.description)+'</span></div>':'')+
+      '</div></div>'
+    ).join('');
+    return '<div class="inst-block"><div class="ib-hdr"><div><div class="ib-name">'+esc(inst.name)+'</div><div class="ib-sn">S/N: '+esc(inst.serial)+'</div></div><div class="ib-meta"><div>Site: <strong>'+esc(inst.site||'—')+'</strong></div><div>Status: <strong>'+esc(inst.status)+'</strong></div><div>Open WOs: <strong>'+wos.length+'</strong></div></div></div>'+certInfo+'<div class="wo-list">'+woRows+'</div></div>';
+  }).join('');
+  const css = '@import url(\'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap\'); *{box-sizing:border-box;margin:0;padding:0} body{font-family:\'IBM Plex Sans\',sans-serif;font-size:12px;color:#000;background:#fff} @media print{*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.no-print{display:none!important}@page{margin:14mm 12mm;size:letter}} .hdr{background:#fff;border-bottom:3px solid #1a56db;padding:16px 28px;display:flex;justify-content:space-between;align-items:center} .brand{font-size:22px;font-weight:700;color:#1a56db;font-family:\'IBM Plex Mono\',monospace;letter-spacing:.04em} .org{font-size:10px;color:#000;margin-top:3px} .rtype{font-size:11px;font-weight:600;color:#000;margin-top:2px} .hdr-r,.hdr-right{text-align:right;font-size:11px;color:#000;line-height:1.9} .hdr-r strong,.hdr-right strong{color:#000;font-weight:700} .hdr-c,.hdr-center{text-align:center} .hdr-c .iname,.hdr-center .iname{font-size:24px;font-weight:700;color:#000} .hdr-c .isn,.hdr-center .isn{font-size:13px;color:#000;margin-top:4px;font-family:\'IBM Plex Mono\',monospace} .info-bar{background:#f5f5f5;border-bottom:1px solid #d1d5db;padding:10px 28px;display:flex;gap:28px;flex-wrap:wrap} .f-lbl,.lbl-top{font-size:9px;font-weight:700;color:#000;letter-spacing:.08em;text-transform:uppercase;font-family:\'IBM Plex Mono\',monospace;display:block;margin-bottom:2px} .f-val,.val-top{font-size:12px;font-weight:600;color:#000;font-family:\'IBM Plex Mono\',monospace} .sum-bar{background:#f5f5f5;border-bottom:1px solid #d1d5db;padding:8px 28px;display:flex;gap:20px;align-items:center;flex-wrap:wrap} .sum-item{display:flex;flex-direction:column;align-items:center;min-width:60px} .sum-lbl{font-size:8.5px;font-weight:700;color:#000;letter-spacing:.08em;text-transform:uppercase;font-family:\'IBM Plex Mono\',monospace;text-align:center} .sum-val{font-size:20px;font-weight:700;color:#000;font-family:\'IBM Plex Mono\',monospace;line-height:1.2} .sum-div{width:1px;height:34px;background:#d1d5db} .box{border:1px solid #d1d5db;border-radius:4px;overflow:hidden;margin:14px 28px} .box-hdr,.ch,.col-hdr{background:#f5f5f5;border-bottom:1px solid #d1d5db;padding:7px 14px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#000} .box-body{padding:12px 14px;font-size:12px;color:#000;line-height:1.7;min-height:38px} .tbl{width:100%;border-collapse:collapse} .tbl td{padding:6px 14px;font-size:11px;border-bottom:1px solid #efefef;vertical-align:top;color:#000} .tbl tr:last-child td{border-bottom:none} .lbl{font-weight:600;color:#000;width:110px;white-space:nowrap} .val{color:#000} .va,.val-accent{color:#000;font-weight:700;font-family:\'IBM Plex Mono\',monospace} .br,.bdr-r{border-right:1px solid #d1d5db} .dtbl,.data-tbl{width:100%;border-collapse:collapse;font-size:11px} .dtbl th,.data-tbl th{background:#f5f5f5;padding:7px 12px;font-size:9.5px;font-weight:700;color:#000;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid #d1d5db;text-align:left;font-family:\'IBM Plex Mono\',monospace} .dtbl td,.data-tbl td{padding:7px 12px;border-bottom:1px solid #efefef;vertical-align:top;color:#000} .dtbl tr:last-child td,.data-tbl tr:last-child td{border-bottom:none} .ts{font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:#000;white-space:nowrap} .act{font-weight:600;color:#000} .det{color:#000} .inst-block{border:1px solid #d1d5db;border-radius:4px;overflow:hidden;margin:0 28px 14px;page-break-inside:avoid} .ib-hdr{background:#f5f5f5;border-bottom:1px solid #d1d5db;padding:9px 14px;display:flex;justify-content:space-between;align-items:flex-start} .ib-name{font-size:14px;font-weight:700;color:#000} .ib-sn{font-size:10px;color:#000;font-family:\'IBM Plex Mono\',monospace;margin-top:2px} .ib-meta{font-size:10px;color:#000;text-align:right;line-height:1.8} .wo-list{padding:8px 14px;display:flex;flex-direction:column;gap:8px} .wo-card{border:1px solid #d1d5db;border-radius:3px;overflow:hidden} .wo-ch,.wo-card-hdr{background:#f5f5f5;border-bottom:1px solid #d1d5db;padding:6px 12px;display:flex;align-items:center;gap:10px} .wo-num{font-family:\'IBM Plex Mono\',monospace;font-size:12px;font-weight:700;color:#000} .wo-type,.wo-type-lbl{font-size:11px;font-weight:600;color:#000} .wo-badge{background:#fff;border:1px solid #d1d5db;color:#000;padding:1px 7px;border-radius:3px;font-size:9px;font-weight:700;font-family:\'IBM Plex Mono\',monospace} .wo-date{margin-left:auto;font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:#000} .wo-body,.wo-card-body{padding:7px 12px;display:flex;flex-direction:column;gap:4px} .wo-row{display:flex;gap:8px;font-size:11px} .wo-rlbl,.wo-row-lbl,.wo-lbl{font-weight:600;color:#000;min-width:90px;flex-shrink:0} .badge{background:#fff;border:1px solid #d1d5db;border-radius:3px;padding:2px 8px;font-size:10px;font-weight:600;font-family:\'IBM Plex Mono\',monospace;color:#000} .sign-row{padding:10px 14px;display:flex;align-items:center;font-family:\'IBM Plex Mono\',monospace;font-size:11px;color:#000} .sign-line{border-bottom:1px solid #000;height:20px} .sec-title{font-size:10px;font-weight:700;color:#000;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid #d1d5db} .footer{background:#f5f5f5;border-top:1px solid #d1d5db;padding:8px 28px;display:flex;justify-content:space-between;font-size:9px;color:#000;font-family:\'IBM Plex Mono\',monospace;margin-top:14px} .print-bar{text-align:center;padding:14px;background:#f5f5f5;border-top:1px solid #d1d5db} .print-btn{background:#1a56db;color:#fff;border:none;padding:9px 24px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;font-family:\'IBM Plex Sans\',sans-serif} ';
+  const html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>SDAPCD — Open Work Orders</title><style> *{box-sizing:border-box;margin:0;padding:0} body{font-family:"IBM Plex Sans",sans-serif;font-size:12px;color:#111;background:#fff} @media print{*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.no-print{display:none!important}@page{margin:14mm 12mm;size:letter}} .rpt-hdr{background:#f5f5f5;border-bottom:3px solid #1a56db;padding:16px 28px;display:flex;justify-content:space-between;align-items:center} .rpt-brand{font-size:22px;font-weight:700;color:#1a56db;font-family:"IBM Plex Mono",monospace} .rpt-org{font-size:10px;color:#555;margin-top:2px} .rpt-info{text-align:right;font-size:11px;color:#444;line-height:1.9} .rpt-info strong{color:#111} .sum-bar{background:#f8f9fa;border-bottom:1px solid #e5e7eb;padding:10px 28px;display:flex;gap:20px;align-items:center;flex-wrap:wrap} .sum-item{display:flex;flex-direction:column;align-items:center;min-width:70px} .sum-lbl{font-size:8.5px;font-weight:700;color:#444;letter-spacing:.08em;text-transform:uppercase;font-family:"IBM Plex Mono",monospace;text-align:center} .sum-val{font-size:20px;font-weight:700;color:#111;font-family:"IBM Plex Mono",monospace;line-height:1.2} .sum-div{width:1px;height:36px;background:#d1d5db} .inst-block{border:1px solid #d1d5db;border-radius:4px;overflow:hidden;margin:0 28px 16px;page-break-inside:avoid} .inst-block-hdr{background:#f1f5f9;border-bottom:1px solid #d1d5db;padding:10px 16px;display:flex;justify-content:space-between;align-items:flex-start} .inst-name{font-size:15px;font-weight:700;color:#111} .inst-sn{font-size:10px;color:#444;font-family:"IBM Plex Mono",monospace;margin-top:2px} .inst-meta{font-size:10px;color:#444;text-align:right;line-height:1.9} .wo-list{padding:10px 16px;display:flex;flex-direction:column;gap:10px} .wo-card{border:1px solid #d1d5db;border-radius:3px;overflow:hidden} .wo-card-hdr{background:#f8f9fa;border-bottom:1px solid #d1d5db;padding:7px 14px;display:flex;align-items:center;gap:10px} .wo-num{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:700;color:#1a56db} .wo-type-lbl{font-size:11px;font-weight:600;color:#222} .wo-badge{background:#f1f5f9;border:1px solid #d1d5db;color:#222;padding:1px 8px;border-radius:3px;font-size:9px;font-weight:700;font-family:"IBM Plex Mono",monospace} .wo-date{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:10px;color:#555} .wo-body{padding:8px 14px;display:flex;flex-direction:column;gap:5px} .wo-row{display:flex;gap:8px;font-size:11px;color:#111} .wo-row-lbl{font-weight:600;color:#444;min-width:90px;flex-shrink:0} .box-hdr{background:#f1f5f9;padding:6px 12px;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#222;border-bottom:1px solid #d1d5db} .footer{background:#f8f9fa;border-top:1px solid #e5e7eb;padding:8px 28px;display:flex;justify-content:space-between;font-size:9px;color:#555;font-family:"IBM Plex Mono",monospace;margin-top:16px} .print-bar{text-align:center;padding:16px;background:#f1f5f9;border-top:1px solid #d1d5db} .print-btn{background:#1a56db;color:#fff;border:none;padding:9px 28px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer} </style></head><body>'+
+    '<div class="hdr"><div><div class="brand">SDAPCD</div><div class="org">San Diego Air Pollution Control District</div><div class="rtype">Open Work Orders Report</div></div>'+
+    '<div class="hdr-r"><div>Generated: <strong>'+generatedDate+'</strong></div><div>Open WOs: <strong>'+openWOs.length+'</strong></div><div>Instruments: <strong>'+Object.keys(byInst).length+' affected</strong></div></div></div>'+
+    '<div class="sum-bar">'+
+      '<div class="sum-item"><span class="sum-lbl">Open WOs</span><span class="sum-val">'+openWOs.length+'</span></div><div class="sum-div"></div>'+
+      '<div class="sum-item"><span class="sum-lbl">Instruments</span><span class="sum-val">'+Object.keys(byInst).length+'</span></div><div class="sum-div"></div>'+
+      '<div class="sum-item"><span class="sum-lbl">Maintenance</span><span class="sum-val">'+openWOs.filter(w=>w.type==='Maintenance').length+'</span></div><div class="sum-div"></div>'+
+      '<div class="sum-item"><span class="sum-lbl">Repair</span><span class="sum-val">'+openWOs.filter(w=>w.type==='Repair').length+'</span></div><div class="sum-div"></div>'+
+      '<div class="sum-item"><span class="sum-lbl">Calibration</span><span class="sum-val">'+openWOs.filter(w=>w.type==='Calibration').length+'</span></div>'+
+    '</div>'+
+    '<div style="padding:8px 0">'+instSections+'</div>'+
+    '<div class="footer"><span>SDAPCD Instrument Management System</span><span>CONFIDENTIAL</span><span>Generated: '+generatedDate+'</span></div>'+
+    '<div class="no-print print-bar"><button class="print-btn" onclick="window.print()">⎙ Print / Save as PDF</button></div>'+
+    '</body></html>';
+  const win = window.open('', '_blank');
+  if (!win) { toast('⚠ Popup blocked — please allow popups and try again'); return; }
+  win.document.write(html); win.document.close();
+  toast('✓ Work orders PDF opened in new tab');
+}
+
+function printWO(wid) {
+  const wo   = db.workOrders.find(w => w.id === wid);
+  if (!wo) return;
+  const inst = db.instruments.find(i => i.id === wo.instrumentId);
+  const gen  = new Date().toLocaleString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+
+  // ── History rows (last 5 events for this WO) ──────────────
+  const histItems = (db.history[wo.instrumentId]||[])
+    .filter(h => h.detail && h.detail.includes('WO-'+wid))
+    .slice(0,5);
+  const histRows = histItems.map(h =>
+    '<tr><td style="font-family:monospace;font-size:10px;color:#444;white-space:nowrap;padding:7px 12px;border-bottom:1px solid #f3f4f6">'+esc(h.ts||'')+'</td>'+
+    '<td style="font-weight:600;color:#111;padding:7px 12px;border-bottom:1px solid #f3f4f6">'+esc(h.action||'')+'</td>'+
+    '<td style="color:#333;padding:7px 12px;border-bottom:1px solid #f3f4f6">'+esc(h.detail||'')+'</td></tr>'
+  ).join('');
+  const histSection = histRows
+    ? '<div class="box"><div class="box-hdr">Work Order History</div>'+
+      '<table style="width:100%;border-collapse:collapse">'+
+      '<thead><tr>'+
+        '<th style="background:#f1f5f9;padding:7px 12px;font-size:9.5px;font-weight:700;color:#222;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid #d1d5db;text-align:left">Date / Time</th>'+
+        '<th style="background:#f1f5f9;padding:7px 12px;font-size:9.5px;font-weight:700;color:#222;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid #d1d5db;text-align:left">Action</th>'+
+        '<th style="background:#f1f5f9;padding:7px 12px;font-size:9.5px;font-weight:700;color:#222;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid #d1d5db;text-align:left">Details</th>'+
+      '</tr></thead><tbody>'+histRows+'</tbody></table></div>'
+    : '';
+
+  // ── EPA Cert row (BC1060 only) ────────────────────────────
+  const epaCertRow = (inst && inst.name === 'BC1060')
+    ? '<tr><td style="font-weight:600;color:#444;width:110px;white-space:nowrap;padding:7px 14px;border-bottom:1px solid #f3f4f6;border-right:1px solid #d1d5db">EPA Cert</td>'+
+      '<td style="color:#111;padding:7px 14px;border-bottom:1px solid #f3f4f6;border-right:1px solid #d1d5db;font-family:monospace;font-size:11px">'+
+        (certDueDate(inst.lastCertDate)||'NO DATE')+
+      '</td>'+
+      '<td style="font-weight:600;color:#444;width:110px;white-space:nowrap;padding:7px 14px;border-bottom:1px solid #f3f4f6;border-right:1px solid #d1d5db">WO Status</td>'+
+      '<td style="padding:7px 14px;border-bottom:1px solid #f3f4f6"><span style="background:#f8f9fa;border:1px solid #d1d5db;border-radius:3px;padding:2px 8px;font-size:10px;font-weight:600;font-family:monospace;color:#222">'+esc(wo.status)+'</span></td></tr>'
+    : '<tr><td style="border-right:1px solid #d1d5db;border-bottom:1px solid #f3f4f6;padding:7px 14px" colspan="2"></td>'+
+      '<td style="font-weight:600;color:#444;width:110px;white-space:nowrap;padding:7px 14px;border-bottom:1px solid #f3f4f6;border-right:1px solid #d1d5db">WO Status</td>'+
+      '<td style="padding:7px 14px;border-bottom:1px solid #f3f4f6"><span style="background:#f8f9fa;border:1px solid #d1d5db;border-radius:3px;padding:2px 8px;font-size:10px;font-weight:600;font-family:monospace;color:#222">'+esc(wo.status)+'</span></td></tr>';
+
+  // ── CSS ───────────────────────────────────────────────────
+  const css = '*{box-sizing:border-box;margin:0;padding:0}body{font-family:"IBM Plex Sans",sans-serif;font-size:12px;color:#111;background:#fff}' +
+    '@media print{*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.no-print{display:none!important}@page{margin:14mm 12mm;size:letter}}' +
+    '.hdr{background:#eff6ff;border-bottom:3px solid #1a56db;padding:16px 28px;display:flex;justify-content:space-between;align-items:center}' +
+    '.brand{font-size:22px;font-weight:700;color:#1a56db;font-family:"IBM Plex Mono",monospace}' +
+    '.org{font-size:10px;color:#555;margin-top:3px}.rtype{font-size:11px;font-weight:600;color:#222;margin-top:2px}' +
+    '.hdr-c{text-align:center}.iname{font-size:24px;font-weight:700;color:#111}.isn{font-size:13px;color:#444;margin-top:3px;font-family:"IBM Plex Mono",monospace}' +
+    '.hdr-r{text-align:right;font-size:11px;color:#444;line-height:1.9}.hdr-r strong{color:#111}' +
+    '.box{border:1px solid #d1d5db;border-radius:4px;overflow:hidden;margin:14px 28px}' +
+    '.box-hdr{background:#f1f5f9;border-bottom:1px solid #d1d5db;padding:7px 14px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#222}' +
+    '.box-body{padding:14px;font-size:12px;color:#111;line-height:1.7;min-height:38px}' +
+    '.sign-row{padding:10px 14px;display:flex;align-items:center;font-family:"IBM Plex Mono",monospace;font-size:11px;color:#444}' +
+    '.sign-line{border-bottom:1px solid #444;height:20px}' +
+    '.footer{background:#f8f9fa;border-top:1px solid #e5e7eb;padding:8px 28px;display:flex;justify-content:space-between;font-size:9px;color:#555;font-family:"IBM Plex Mono",monospace;margin-top:14px}' +
+    '.print-bar{text-align:center;padding:14px;background:#f1f5f9;border-top:1px solid #d1d5db}' +
+    '.print-btn{background:#1a56db;color:#fff;border:none;padding:9px 24px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;font-family:"IBM Plex Sans",sans-serif}';
+
+  // ── HTML ──────────────────────────────────────────────────
+  const html =
+    '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>WO-'+wo.id+' — SDAPCD</title>' +
+    '<style>'+css+'</style></head><body>' +
+    '<div class="hdr">' +
+      '<div><div class="brand">SDAPCD</div><div class="org">San Diego Air Pollution Control District</div><div class="rtype">Work Order Report</div></div>' +
+      '<div class="hdr-c"><div class="iname">'+(inst?esc(inst.name):'—')+'</div><div class="isn">S/N: '+(inst?esc(inst.serial):'—')+'</div></div>' +
+      '<div class="hdr-r"><div>WO Number: <strong>WO-'+wo.id+'</strong></div><div>Generated: <strong>'+gen+'</strong></div><div>Status: <strong>'+esc(wo.status)+'</strong></div></div>' +
+    '</div>' +
+    '<div class="box"><table style="width:100%;border-collapse:collapse">' +
+      '<tr>' +
+        '<td style="background:#f1f5f9;font-size:9.5px;font-weight:700;color:#222;letter-spacing:.08em;text-transform:uppercase;padding:7px 14px;border-bottom:1px solid #d1d5db;border-right:1px solid #d1d5db" colspan="2">Instrument Details</td>' +
+        '<td style="background:#f1f5f9;font-size:9.5px;font-weight:700;color:#222;letter-spacing:.08em;text-transform:uppercase;padding:7px 14px;border-bottom:1px solid #d1d5db" colspan="2">Work Order Details</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<td style="font-weight:600;color:#444;width:110px;white-space:nowrap;padding:7px 14px;border-bottom:1px solid #f3f4f6;border-right:1px solid #d1d5db">WO #</td>' +
+        '<td style="color:#1a56db;font-weight:700;font-family:monospace;padding:7px 14px;border-bottom:1px solid #f3f4f6;border-right:1px solid #d1d5db">WO-'+wo.id+'</td>' +
+        '<td style="font-weight:600;color:#444;width:110px;white-space:nowrap;padding:7px 14px;border-bottom:1px solid #f3f4f6;border-right:1px solid #d1d5db">Type</td>' +
+        '<td style="color:#111;padding:7px 14px;border-bottom:1px solid #f3f4f6">'+esc(wo.type)+'</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<td style="font-weight:600;color:#444;width:110px;white-space:nowrap;padding:7px 14px;border-bottom:1px solid #f3f4f6;border-right:1px solid #d1d5db">Location</td>' +
+        '<td style="color:#111;padding:7px 14px;border-bottom:1px solid #f3f4f6;border-right:1px solid #d1d5db">'+(inst?esc(inst.site):'—')+'</td>' +
+        '<td style="font-weight:600;color:#444;width:110px;white-space:nowrap;padding:7px 14px;border-bottom:1px solid #f3f4f6;border-right:1px solid #d1d5db">Technician</td>' +
+        '<td style="color:#111;padding:7px 14px;border-bottom:1px solid #f3f4f6">'+esc(wo.technician||'—')+'</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<td style="font-weight:600;color:#444;width:110px;white-space:nowrap;padding:7px 14px;border-bottom:1px solid #f3f4f6;border-right:1px solid #d1d5db">Instr. Status</td>' +
+        '<td style="color:#111;padding:7px 14px;border-bottom:1px solid #f3f4f6;border-right:1px solid #d1d5db">'+(inst?esc(inst.status):'—')+'</td>' +
+        '<td style="font-weight:600;color:#444;width:110px;white-space:nowrap;padding:7px 14px;border-bottom:1px solid #f3f4f6;border-right:1px solid #d1d5db">Date Created</td>' +
+        '<td style="color:#111;font-family:monospace;padding:7px 14px;border-bottom:1px solid #f3f4f6">'+esc(wo.created)+'</td>' +
+      '</tr>' +
+      epaCertRow +
+    '</table></div>' +
+    '<div class="box"><div class="box-hdr">Description / Notes</div>' +
+      '<div class="box-body" style="'+(wo.description?'':'color:#94a3b8')+'">'+(wo.description?esc(wo.description):'No description recorded.')+'</div>' +
+    '</div>' +
+    histSection +
+    '<div class="box"><div class="box-hdr">Completed By / Date</div>' +
+      '<div class="sign-row"><span style="white-space:nowrap">Name:&nbsp;</span><span class="sign-line" style="flex:2;margin-right:28px"></span><span style="white-space:nowrap">Date:&nbsp;</span><span class="sign-line" style="flex:1"></span></div>' +
+    '</div>' +
+    '<div class="footer"><span>SDAPCD Instrument Management System</span><span>CONFIDENTIAL — FOR INTERNAL USE ONLY</span><span>WO-'+wo.id+'</span></div>' +
+    '<div class="no-print print-bar"><button class="print-btn" onclick="window.print()">&#8861; Print / Save as PDF</button></div>' +
+    '</body></html>';
+
+  const win = window.open('', '_blank');
+  if (!win) { toast('⚠ Popup blocked — please allow popups'); return; }
+  win.document.write(html);
+  win.document.close();
+}
+
+
+function printHistory(id) {
+  const inst = db.instruments.find(x => x.id === id);
+  if (!inst) return;
+  const hist = db.history[id] || [];
+  const generated = new Date().toLocaleString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+
+  const rows = hist.map(h =>
+    '<tr><td style="font-family:monospace;font-size:10px;color:#111;white-space:nowrap;padding:7px 10px;border-bottom:1px solid #f3f4f6">' + (h.ts||'') + '</td>' +
+    '<td style="font-weight:600;color:#111;padding:7px 10px;border-bottom:1px solid #f3f4f6">' + esc(h.action||'') + '</td>' +
+    '<td style="color:#111;padding:7px 10px;border-bottom:1px solid #f3f4f6">' + esc(h.detail||'') + '</td></tr>'
+  ).join('');
+  const html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">' +
+    '<title>History — ' + esc(inst.name) + ' ' + esc(inst.serial) + '</title>' +
+    '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:\'IBM Plex Sans\',sans-serif;font-size:12px;color:#000;background:#fff}@media print{*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.no-print{display:none!important}@page{margin:14mm 12mm;size:letter}}.hdr{background:#fff;border-bottom:3px solid #1a56db;padding:16px 28px;display:flex;justify-content:space-between;align-items:center}.brand{font-size:22px;font-weight:700;color:#1a56db}.org{font-size:10px;color:#000;margin-top:3px}.rtype{font-size:11px;font-weight:600;color:#000;margin-top:2px}.hdr-right{text-align:right;font-size:11px;color:#000;line-height:1.9}.hdr-right strong{color:#000}.info-bar{background:#f3f4f6;border-bottom:1px solid #d1d5db;padding:10px 28px;display:flex;gap:28px;flex-wrap:wrap}.lbl{font-size:9px;font-weight:700;color:#000;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:2px}.val{font-size:12px;font-weight:600;color:#000}.content{padding:16px 28px}.sec-title{font-size:10px;font-weight:700;color:#000;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid #d1d5db}table{width:100%;border-collapse:collapse}th{background:#f3f4f6;padding:7px 10px;font-size:9.5px;font-weight:700;color:#000;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid #d1d5db;text-align:left}td{padding:7px 10px;border-bottom:1px solid #f1f5f9;vertical-align:top;font-size:11px;color:#000}tr:last-child td{border-bottom:none}.ts{font-family:monospace;font-size:10px;color:#000;white-space:nowrap}.act{font-weight:600;color:#000}.det{color:#000}.empty-msg{text-align:center;padding:28px;color:#555}.footer{background:#f3f4f6;border-top:1px solid #d1d5db;padding:8px 28px;display:flex;justify-content:space-between;font-size:9px;color:#000;margin-top:8px}.print-bar{text-align:center;padding:14px;background:#f3f4f6;border-top:1px solid #d1d5db}.print-btn{background:#1a56db;color:#fff;border:none;padding:9px 24px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer}</style>' +
+    '</head><body>' +
+    '<div class="hdr"><div><div class="brand">SDAPCD</div><div class="org">San Diego Air Pollution Control District</div><div class="rtype">Instrument History Report</div></div>' +
+    '<div class="hdr-right"><div>Report Date</div><strong>' + generated + '</strong></div></div>' +
+    '<div class="info-bar">' +
+    '<div><span class="lbl">Instrument</span><span class="val">' + esc(inst.name) + '</span></div>' +
+    '<div><span class="lbl">Serial</span><span class="val">' + esc(inst.serial) + '</span></div>' +
+    '<div><span class="lbl">Status</span><span class="val">' + esc(inst.status) + '</span></div>' +
+    '<div><span class="lbl">Site</span><span class="val">' + esc(inst.site||'—') + '</span></div>' +
+    '<div><span class="lbl">Events</span><span class="val">' + hist.length + '</span></div>' +
+    '</div>' +
+    '<div class="content"><div class="sec-title">Activity History</div>' +
+    '<table><thead><tr><th>Date / Time</th><th>Action</th><th>Details</th></tr></thead>' +
+    '<tbody>' + (rows || '<tr><td colspan="3" style="text-align:center;padding:28px;color:#555">No history recorded.</td></tr>') + '</tbody></table></div>' +
+    '<div class="footer"><span>SDAPCD Instrument Management</span><span>CONFIDENTIAL</span><span>' + esc(inst.name) + ' · ' + esc(inst.serial) + '</span></div>' +
+    '<div class="no-print print-bar"><button class="print-btn" onclick="window.print()">⊙ Print / Save as PDF</button></div>' +
+    '</body></html>';
+  const win = window.open('', '_blank');
+  if (!win) { toast('⚠ Popup blocked — please allow popups'); return; }
+  win.document.write(html); win.document.close();
+  toast('✓ History report opened in new tab');
+}
+
+
+// ── SITE EDIT FUNCTIONS ─────────────────────────────────────
+function openEditSite(idx) {
+  const code = db.sites[idx];
+  const meta = db.sitesMeta[code] || { type:'Field', address:'', lat:'', lng:'' };
+  ui.modal = 'editsite';
+  ui.form  = { idx, val:code, type:meta.type||'Field', address:meta.address||'', lat:meta.lat||'', lng:meta.lng||'' };
+  render();
+}
+function saveEditSite(idx) {
+  const val     = getVal('f-val').toUpperCase().trim();
+  const typeEl  = document.getElementById('f-site-type');
+  const type    = typeEl ? typeEl.value : (ui.form.type||'Field');
+  const address = getVal('f-site-address').trim();
+  const lat     = getVal('f-site-lat').trim();
+  const lng     = getVal('f-site-lng').trim();
+  if (!val) { ui.form={...ui.form,err:'Site code is required.'}; render(); return; }
+  if (PROTECTED_SITES.includes(db.sites[idx])) { ui.form={...ui.form,err:'Protected site cannot be renamed.'}; render(); return; }
+  if (db.sites.includes(val) && val !== db.sites[idx]) { ui.form={...ui.form,err:'Site already exists.'}; render(); return; }
+  const old = db.sites[idx];
+  if (old !== val) {
+    db.sitesMeta[val] = db.sitesMeta[old] || {};
+    delete db.sitesMeta[old];
+    db.instruments.forEach(i => { if (i.site === old) i.site = val; });
+  }
+  db.sites[idx] = val;
+  db.sitesMeta[val] = { type, address, lat, lng };
+  saveDB(); closeModal(); toast('✓ Site updated');
+}
+
+
+// ── TECH SELECT ──────────────────────────────────────────────────────
+function techDatalist(id) { return ''; }
+function techSelect(elId, selectedVal, placeholder) {
+  const opts = db.techs.map(t =>
+    '<option value="' + esc(t.name) + '"' + (selectedVal===t.name?' selected':'') + '>' + esc(t.name) + '</option>'
+  ).join('');
+  return '<select id="' + elId + '" class="form-input"><option value="" disabled' + (!selectedVal?' selected':'') + '>— ' + (placeholder||'Select technician') + ' —</option>' + opts + '</select>';
+}
+
+// ── STATUS HELPERS ────────────────────────────────────────────────────
+const PROTECTED_STATUSES = ['Operational','Maintenance','Repair','Calibration','Offline','Deployed','At Vendor'];
+function allStatuses()    { return [...PROTECTED_STATUSES, ...(db.customStatuses||[])]; }
+function shopStatuses()   { return ['Operational','Maintenance','Repair','Calibration','Offline',  ...(db.customStatuses||[])]; }
+function fieldStatuses()  { return ['Deployed','Maintenance','Repair','Calibration','Offline',     ...(db.customStatuses||[])]; }
+function vendorStatuses() { return ['At Vendor','Repair','Calibration',                            ...(db.customStatuses||[])]; }
+function addCustomStatus() {
+  const input = document.getElementById('new-status');
+  const val   = (input ? input.value : '').trim();
+  if (!val) { toast('⚠ Please enter a status name'); return; }
+  if (!db.customStatuses) db.customStatuses = [];
+  if (allStatuses().map(s=>s.toLowerCase()).includes(val.toLowerCase())) { toast('⚠ That status already exists'); return; }
+  db.customStatuses.push(val);
+  saveDB(); render(); toast('✓ Status "' + val + '" added');
+}
+function removeCustomStatus(idx) {
+  const s = (db.customStatuses||[])[idx];
+  if (!s) return;
+  const n = db.instruments.filter(i=>i.status===s&&!i.archived).length;
+  if (n > 0) {
+    showConfirm({ title:'STATUS IN USE', icon:'⚠',
+      msg:'<strong>' + esc(s) + '</strong> is used by ' + n + ' instrument' + (n===1?'':'s') + '. Remove anyway?',
+      detail:'Instruments keep this value but it will not appear in dropdowns.',
+      onConfirm: () => { db.customStatuses.splice(idx,1); saveDB(); render(); toast('✓ Status removed'); }
+    }); return;
+  }
+  db.customStatuses.splice(idx,1); saveDB(); render(); toast('✓ Status "' + s + '" removed');
+}
+
+// ── SITE INFO ─────────────────────────────────────────────────────────
+function openAddSite() {
+  ui.modal = 'addsite';
+  ui.form  = { code:'', type:'Field', address:'', lat:'', lng:'' };
+  render();
+}
+function saveAddSite() {
+  const code    = getVal('f-site-code').toUpperCase().trim();
+  const typeEl  = document.getElementById('f-site-type');
+  const type    = typeEl ? typeEl.value : 'Field';
+  const address = getVal('f-site-address').trim();
+  const lat     = getVal('f-site-lat').trim();
+  const lng     = getVal('f-site-lng').trim();
+  if (!code) { ui.form={...ui.form,err:'Site code is required.'}; render(); return; }
+  if (db.sites.includes(code)) { ui.form={...ui.form,err:'Site "'+code+'" already exists.'}; render(); return; }
+  db.sites.push(code);
+  if (!db.sitesMeta) db.sitesMeta = {};
+  db.sitesMeta[code] = { type, address, lat, lng };
+  saveDB(); closeModal(); render(); toast('✓ Site "' + code + '" added');
+}
+function renderSites() {
+  const typeColors = { 'Field':'var(--amber)','HQ/Shop':'var(--blue)','Vendor':'var(--purple)','Storage':'var(--green)','Mobile':'var(--slate)' };
+  const rows = db.sites.filter(s => s !== 'VENDOR').map(s => {
+    const m = (db.sitesMeta||{})[s] || {};
+    return '<tr>' +
+      '<td><div class="inst-name" style="font-size:13px">' + esc(s) + '</div></td>' +
+      '<td style="font-size:12px;color:var(--muted)">' + (m.address ? esc(m.address) : '<span style="color:var(--subtle)">—</span>') + '</td>' +
+      '<td style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">' + (m.lat ? esc(m.lat) : '<span style="color:var(--subtle)">—</span>') + '</td>' +
+      '<td style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">' + (m.lng ? esc(m.lng) : '<span style="color:var(--subtle)">—</span>') + '</td>' +
+      '</tr>';
+  }).join('');
+  return '<div class="section-hdr"><div class="section-title">◈ Monitoring Sites</div></div>' +
+    '<div class="inst-table"><table>' +
+    '<thead><tr><th>SITE CODE</th><th>ADDRESS</th><th>LATITUDE</th><th>LONGITUDE</th></tr></thead>' +
+    '<tbody>' + (rows || '<tr class="empty-row"><td colspan="4" style="text-align:center;padding:24px;color:var(--subtle)">No sites configured</td></tr>') + '</tbody>' +
+    '</table></div>' +
+    '<div style="margin-top:10px;font-family:var(--font-mono);font-size:10px;color:var(--subtle)">Edit metadata in Admin → Monitoring Sites.</div>';
+}
+
+// ── ADMIN COLLAPSIBLE SECTIONS ────────────────────────────────────────
+function toggleAdminSection(el) {
+  const group = el.closest('.group');
+  if (!group) return;
+  if (!ui._openAdminSections) ui._openAdminSections = new Set();
+  const key = group.dataset.sectionKey;
+  if (group.classList.contains('group-collapsed')) {
+    group.classList.remove('group-collapsed');
+    if (key) ui._openAdminSections.add(key);
+  } else {
+    group.classList.add('group-collapsed');
+    if (key) ui._openAdminSections.delete(key);
+  }
+}
+function setupAdminSections() {
+  document.querySelectorAll('#root .group').forEach((group, i) => {
+    const hdr = group.querySelector('.group-hdr');
+    if (!hdr) return;
+    if (!group.querySelector('.group-body')) {
+      const body = document.createElement('div');
+      body.className = 'group-body';
+      Array.from(group.children).forEach(child => { if (child !== hdr) body.appendChild(child); });
+      group.appendChild(body);
+    }
+    const key = 'admin_section_' + i;
+    group.dataset.sectionKey = key;
+    if (ui._openAdminSections && ui._openAdminSections.has(key)) {
+      group.classList.remove('group-collapsed');
+    } else {
+      group.classList.add('group-collapsed');
+    }
+  });
+}
+
+// ── CONFIRM CLOSE WORK ORDER ─────────────────────────────────────────
+function confirmCloseWO() {
+  const woId     = ui.form.woId;
+  const byEl     = document.getElementById('f-close-by');
+  const confEl   = document.getElementById('f-close-confirm');
+  const closedBy = byEl ? byEl.value : '';
+  const confirmed = confEl ? confEl.checked : false;
+  if (!closedBy) { ui.form={...ui.form,err:'Please select the technician who completed this work order.'}; render(); return; }
+  if (!confirmed) { ui.form={...ui.form,err:'Please confirm all tasks are completed before closing.'}; render(); return; }
+  const wo = db.workOrders.find(w => w.id === woId);
+  if (!wo) return;
+  wo.status = 'Closed'; wo.technician = closedBy; wo.closedBy = closedBy; wo.closedDate = today();
+  addHistory(wo.instrumentId, 'Work order closed', 'WO-' + woId + ' · ' + wo.type + ' · Completed by: ' + closedBy);
+  saveDB(); closeModal();
+  toast('✓ Work order WO-' + woId + ' marked complete');
+}
+
+// ── UNSAVED CHANGES — BROWSER CLOSE WARNING ─────────────
+window.addEventListener('beforeunload', e => {
+  if (ui.dirty) {
+    e.preventDefault();
+    e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+    return e.returnValue;
+  }
+});
+
+// ── KEYBOARD ───────────────────────────────────────────────
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && ui.modal) { if (ui.modal === 'confirm') confirmCancel(); else if (ui.modal !== 'adminlogin') closeModal(); } });
+
+// ══════════════════════════════════════════════════════════════
+//  SERVER-SYNC LAYER
+//  Overrides saveDB so every mutation is persisted to SQLite
+//  via the REST API.  The in-memory `db` object still drives
+//  all rendering — this layer just makes it durable.
+// ══════════════════════════════════════════════════════════════
+
+// Debounce timer — batches rapid consecutive saves into one request
+let _syncTimer = null;
+
+// Re-define saveDB to do a full state push (simple & reliable)
+window.saveDB = function saveDB() {
+  clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(syncToServer, 120);
+};
+
+async function syncToServer() {
+  try {
+    // Fetch the current server state so we can diff and patch
+    const srv = await API.get('/db');
+
+    // ── INSTRUMENTS ─────────────────────────────────────────
+    for (const inst of db.instruments) {
+      const match = srv.instruments.find(s => s.id === inst.id);
+      if (!match) {
+        // New instrument
+        const body = {
+          name: inst.name, serial: inst.serial, status: inst.status,
+          site: inst.site, notes: inst.notes || '',
+        };
+        const created = await API.post('/instruments', body);
+        inst.id = created.id; // update local id if it changed
+      } else {
+        // Update if changed
+        const changed =
+          match.name         !== inst.name   ||
+          match.serial       !== inst.serial  ||
+          match.status       !== inst.status  ||
+          match.site         !== inst.site    ||
+          (match.notes||'')  !== (inst.notes||'') ||
+          !!match.archived   !== !!inst.archived  ||
+          match.lastCertDate !== inst.lastCertDate;
+        if (changed) {
+          await API.put('/instruments/' + inst.id, {
+            name: inst.name, serial: inst.serial, status: inst.status,
+            site: inst.site, notes: inst.notes || '',
+            archived: inst.archived ? 1 : 0,
+            last_cert_date: inst.lastCertDate || null
+          });
+        }
+      }
+    }
+    // Delete instruments removed locally
+    for (const s of srv.instruments) {
+      if (!db.instruments.find(i => i.id === s.id)) {
+        await API.del('/instruments/' + s.id);
+      }
+    }
+
+    // ── WORK ORDERS ─────────────────────────────────────────
+    for (const wo of db.workOrders) {
+      const match = srv.workOrders.find(s => s.id === wo.id);
+      if (!match) {
+        const created = await API.post('/work-orders', {
+          instrument_id: wo.instrumentId,
+          type: wo.type || '', description: wo.description || '',
+          tech_name: wo.technician || '', notes: wo.notes || ''
+        });
+        wo.id = created.id;
+      } else {
+        const changed =
+          match.status      !== wo.status ||
+          match.type        !== (wo.type||'') ||
+          match.description !== (wo.description||'') ||
+          match.techName    !== (wo.technician||'');
+        if (changed) {
+          await API.put('/work-orders/' + wo.id, {
+            status: wo.status, type: wo.type||'',
+            description: wo.description||'', tech_name: wo.technician||'',
+            notes: wo.notes||''
+          });
+          if (wo.status === 'Closed' && match.status !== 'Closed') {
+            await API.patch('/work-orders/' + wo.id + '/close', {});
+          }
+        }
+      }
+    }
+    for (const s of srv.workOrders) {
+      if (!db.workOrders.find(w => w.id === s.id)) {
+        await API.del('/work-orders/' + s.id);
+      }
+    }
+
+    // ── SITES ───────────────────────────────────────────────
+    const srvActiveNames   = srv.sites;
+    const srvArchivedNames = srv.archivedSites;
+    for (const name of db.sites) {
+      if (!srvActiveNames.includes(name) && !srvArchivedNames.includes(name)) {
+        await API.post('/sites', { name });
+      }
+    }
+    for (const name of (db.archivedSites||[])) {
+      if (!srvArchivedNames.includes(name)) {
+        // Find id and archive it
+        const siteRow = await API.get('/sites').catch(()=>null);
+        if (siteRow) {
+          const found = siteRow.find(s => s.name === name);
+          if (found) await API.patch('/sites/' + found.id + '/archive', { archived: true });
+        }
+      }
+    }
+
+    // ── INST TYPES ──────────────────────────────────────────
+    for (const name of db.instTypes) {
+      if (!srv.instTypes.includes(name)) {
+        await API.post('/inst-types', { name }).catch(()=>{});
+      }
+    }
+
+    // ── TECHS ───────────────────────────────────────────────
+    for (let ti = 0; ti < db.techs.length; ti++) {
+      const t = db.techs[ti];
+      const match = srv.techs.find(s => s.name === t.name);
+      if (!match) {
+        await API.post('/technicians', { name: t.name, role: t.role||'', email: t.email||'' }).catch(()=>{});
+      }
+    }
+
+    // ── CUSTOM STATUSES ─────────────────────────────────────
+    for (const name of (db.customStatuses||[])) {
+      if (!srv.customStatuses.includes(name)) {
+        await API.post('/custom-statuses', { name }).catch(()=>{});
+      }
+    }
+
+  } catch(e) {
+    console.error('SDAPCD: sync to server failed', e);
+    toast('⚠ Server sync failed — check that the server is running');
+  }
+}
+
+// Replace admin password functions to use server settings
+window.getStoredHash = async function() {
+  try { return await API.get('/settings/admin_pw'); } catch(e) { return null; }
+};
+
+// Admin password check — async version
+window.submitAdminPassword = async function() {
+  const pw = document.getElementById('admin-pw-input')?.value || '';
+  if (!pw) { ui.form = {...ui.form, err: 'Please enter the password.'}; render(); return; }
+  const storedPw = await API.get('/settings/admin_pw').catch(()=>'admin1234');
+  if (hashPW(pw) !== hashPW(storedPw) && pw !== storedPw && hashPW(pw) !== storedPw) {
+    ui.form = {...ui.form, err: 'Incorrect password. Try again.'}; render();
+    setTimeout(() => { const el = document.getElementById('admin-pw-input'); if (el) { el.value=''; el.focus(); } }, 50);
+    return;
+  }
+  ui.adminUnlocked = true; ui.adminUnlockedAt = Date.now();
+  ui.modal = null; ui.form = {}; ui.page = 'admin'; render();
+};
+
+window.saveAdminPassword = async function() {
+  const current = document.getElementById('pw-current')?.value || '';
+  const newPw   = document.getElementById('pw-new')?.value || '';
+  const confirm = document.getElementById('pw-confirm')?.value || '';
+  const storedPw = await API.get('/settings/admin_pw').catch(()=>'admin1234');
+  if (hashPW(current) !== hashPW(storedPw) && current !== storedPw && hashPW(current) !== storedPw) {
+    ui.form = {...ui.form, err: 'Current password is incorrect.'}; render(); return;
+  }
+  if (newPw.length < 4) { ui.form = {...ui.form, err: 'New password must be at least 4 characters.'}; render(); return; }
+  if (newPw !== confirm) { ui.form = {...ui.form, err: 'Passwords do not match.'}; render(); return; }
+  await API.put('/settings/admin_pw', { value: hashPW(newPw) });
+  closeModal(); toast('Admin password updated');
+};
+
+// Danger-zone actions wired to server endpoints
+window.confirmClearNotes = function() {
+  showConfirm({
+    title: 'CLEAR ALL NOTES', icon: '⚠',
+    msg: 'This will remove all notes from every instrument.',
+    detail: 'Instruments, sites, work orders, and history will not be affected.',
+    onConfirm: async () => {
+      db.instruments.forEach(i => { i.notes = ''; });
+      await API.post('/admin/clear-notes', {});
+      render(); toast('All instrument notes cleared');
+    }
+  });
+};
+
+window.confirmClearExceptSitesInst = function() {
+  showConfirm({
+    title: 'CLEAR ALL RECORDS', icon: '⚠',
+    msg: 'This will delete all work orders, history, notes, technicians, and instrument types — keeping only your sites and instruments.',
+    detail: 'Step 1 of 2 — confirm to proceed to final warning',
+    onConfirm: () => {
+      showConfirm({
+        title: 'FINAL CONFIRMATION', icon: '⚠',
+        msg: 'All work orders, history logs, notes, technicians, and types will be permanently deleted.',
+        detail: 'Step 2 of 2 — this cannot be undone',
+        onConfirm: async () => {
+          db.workOrders = []; db.history = {}; db.woId = 1;
+          db.techs = []; db.instTypes = ['BC1060', 'ESEQ'];
+          db.instruments.forEach(i => { i.notes = ''; });
+          await API.post('/admin/soft-reset', {});
+          await loadDBFromServer();
+          toast('Records cleared — sites and instruments preserved');
+        }
+      });
+    }
+  });
+};
+
+// ── BOOTSTRAP ──────────────────────────────────────────────
+// Show a loading state then fetch real data from server
+render(); // initial paint with empty db
+loadDBFromServer(); // fetch from SQLite and re-render
+</script>
+</body>
+</html>
