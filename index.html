@@ -759,9 +759,85 @@ body {
 </style>
 </head>
 <body>
-<nav id="sidebar"></nav>
-<div id="root"></div>
+
+<!-- PASSWORD SCREEN -->
+<div id="pw-screen" style="
+  position:fixed;inset:0;z-index:9999;
+  background:#080c14;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'IBM Plex Sans',system-ui,sans-serif;
+">
+  <div style="
+    background:rgba(16,22,36,0.98);
+    border:1px solid rgba(34,211,238,0.2);
+    border-radius:12px;
+    padding:40px 48px;
+    width:100%;max-width:380px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.7);
+    text-align:center;
+  ">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:#22d3ee;letter-spacing:.08em;margin-bottom:6px;">SDAPCD</div>
+    <div style="font-size:12px;color:#8896ae;margin-bottom:32px;font-family:'IBM Plex Mono',monospace;">Instrument Management</div>
+    <div style="position:relative;margin-bottom:12px;">
+      <input id="pw-input" type="password" placeholder="Enter password"
+        onkeydown="if(event.key==='Enter')checkPassword()"
+        style="
+          width:100%;padding:12px 16px;
+          background:rgba(8,12,20,0.9);
+          border:1px solid rgba(34,211,238,0.25);
+          border-radius:8px;color:#dde4f0;
+          font-family:'IBM Plex Sans',sans-serif;font-size:14px;
+          outline:none;box-sizing:border-box;
+        "
+      />
+    </div>
+    <div id="pw-error" style="color:#f87171;font-size:12px;margin-bottom:12px;min-height:18px;"></div>
+    <button onclick="checkPassword()" style="
+      width:100%;padding:12px;
+      background:#22d3ee;color:#080c14;
+      border:none;border-radius:8px;
+      font-family:'IBM Plex Sans',sans-serif;font-weight:700;font-size:14px;
+      cursor:pointer;transition:background .15s;
+    "
+    onmouseover="this.style.background='#38e8ff'"
+    onmouseout="this.style.background='#22d3ee'"
+    >Sign In</button>
+  </div>
+</div>
+
+<nav id="sidebar" style="display:none"></nav>
+<div id="root" style="display:none"></div>
 <script>
+// ── PASSWORD CHECK ──────────────────────────────────────────
+function checkPassword() {
+  const val = document.getElementById('pw-input').value;
+  const err = document.getElementById('pw-error');
+  // Simple hash check — password is "circuit"
+  if (simpleHash(val) === simpleHash('circuit')) {
+    document.getElementById('pw-screen').style.display = 'none';
+    document.getElementById('sidebar').style.display = '';
+    document.getElementById('root').style.display = '';
+    sessionStorage.setItem('sdapcd_auth', simpleHash('circuit'));
+  } else {
+    err.textContent = 'Incorrect password. Try again.';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+  }
+}
+function simpleHash(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+  return h.toString(16);
+}
+// Auto-unlock if already authenticated this session
+if (sessionStorage.getItem('sdapcd_auth') === simpleHash('circuit')) {
+  document.getElementById('pw-screen').style.display = 'none';
+  document.getElementById('sidebar').style.display = '';
+  document.getElementById('root').style.display = '';
+}
+// Focus password input
+setTimeout(() => { const el = document.getElementById('pw-input'); if (el) el.focus(); }, 100);
+
 const LS             = 'sdapcd_instr_v9';
 
 const STATUSES       = ['Operational','Maintenance','Repair','Calibration','Offline','Deployed','At Vendor'];
@@ -813,21 +889,17 @@ const SEED = [
 // ── GOOGLE APPS SCRIPT API CLIENT ──────────────────────────
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyw4OrLWPQo4J-zul2eKqKFC3A5g2BopsycwD-hxpx7Hdq5kZ74iwfpPZ-BCoTxmx0k/exec';
 
+// All requests go as GET with params (GAS handles CORS best this way)
+// For writes, we encode the body as a param
 async function gasRequest(path, action, params, body) {
   const url = new URL(GAS_URL);
   url.searchParams.set('path', path);
   url.searchParams.set('action', action);
-  if (params) Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
-
-  let response;
+  if (params) Object.entries(params).forEach(([k,v]) => { if (v !== undefined && v !== null) url.searchParams.set(k, v); });
   if (body !== null && body !== undefined) {
-    response = await fetch(url.toString(), {
-      method: 'POST',
-      body: JSON.stringify(body)
-    });
-  } else {
-    response = await fetch(url.toString());
+    url.searchParams.set('body', JSON.stringify(body));
   }
+  const response = await fetch(url.toString());
   const j = await response.json();
   if (!j.ok) throw new Error(j.error || 'API error');
   return j.data;
@@ -835,7 +907,6 @@ async function gasRequest(path, action, params, body) {
 
 const API = {
   async get(path) {
-    // Map /db, /instruments, etc. to GAS path/action params
     const clean = path.replace(/^\//, '');
     const parts = clean.split('/');
     const resource = parts[0];
@@ -848,12 +919,11 @@ const API = {
     const clean = path.replace(/^\//, '');
     const parts = clean.split('/');
     const resource = parts[0];
-    const sub = parts[1]; // e.g. 'history/instrument/123' or 'admin/clear-notes'
     if (resource === 'admin') {
-      const action = (parts[1]||'').replace('-','_');
+      const action = (parts[1]||'').replace(/-/g,'_');
       return gasRequest('admin', action, null, body);
     }
-    return gasRequest(resource, 'post', null, body);
+    return gasRequest(resource.replace(/-/g,'_'), 'post', null, body);
   },
   async put(path, body) {
     const clean = path.replace(/^\//, '');
@@ -861,24 +931,24 @@ const API = {
     const resource = parts[0];
     const id = parts[1];
     if (resource === 'settings') return gasRequest('settings', 'put', {key: id}, body);
-    return gasRequest(resource, 'put', {id}, body);
+    return gasRequest(resource.replace(/-/g,'_'), 'put', {id}, body);
   },
   async patch(path, body) {
     const clean = path.replace(/^\//, '');
     const parts = clean.split('/');
     const resource = parts[0];
     const id = parts[1];
-    const sub = parts[2]; // e.g. 'archive', 'close', 'status', 'site', 'cert'
+    const sub = parts[2];
     const action = sub || 'patch';
     if (resource === 'work-orders') return gasRequest('work_orders', action === 'close' ? 'close' : 'put', {id}, body);
-    return gasRequest(resource.replace('-','_'), action, {id}, body);
+    return gasRequest(resource.replace(/-/g,'_'), action, {id}, body);
   },
   async del(path) {
     const clean = path.replace(/^\//, '');
     const parts = clean.split('/');
     const resource = parts[0];
     const id = parts[1];
-    return gasRequest(resource.replace('-','_'), 'delete', {id}, {});
+    return gasRequest(resource.replace(/-/g,'_'), 'delete', {id}, {});
   }
 };
 
