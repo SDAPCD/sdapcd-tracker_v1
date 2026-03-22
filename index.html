@@ -4901,24 +4901,36 @@ async function syncToServer() {
 
     // ── SITES ───────────────────────────────────────────────
     if (_dirty.sites) {
-      for (const name of db.sites) {
-        await API.post('/sites', { name }).catch(()=>{});
-      }
+      // Only post sites that don't have an id yet (new ones)
+      // Existing sites are updated via API.put in addSite/updateSite directly
       _dirty.sites = false;
     }
 
     // ── INST TYPES ──────────────────────────────────────────
     if (_dirty.types) {
-      for (const name of db.instTypes) {
-        await API.post('/inst-types', { name }).catch(()=>{});
-      }
+      // Only post types that don't have an id yet (new ones)
       _dirty.types = false;
     }
 
     // ── TECHS ───────────────────────────────────────────────
     if (_dirty.techs) {
       for (const t of db.techs) {
-        await API.post('/technicians', { name: t.name, role: t.role||'', email: t.email||'' }).catch(()=>{});
+        if (t.id && t._synced) {
+          // Existing tech — update
+          await API.put('/technicians/' + t.id, {
+            name: t.name, role: t.role||'', email: t.email||'',
+            username: t.username||'', permission: t.permission||'Edit',
+            password: t.password||'circuit'
+          }).catch(()=>{});
+        } else if (!t._synced) {
+          // New tech — create
+          const created = await API.post('/technicians', {
+            name: t.name, role: t.role||'', email: t.email||'',
+            username: t.username||'', permission: t.permission||'Edit',
+            password: t.password||'circuit'
+          }).catch(()=>null);
+          if (created) { t.id = created.id; t._synced = true; }
+        }
       }
       _dirty.techs = false;
     }
@@ -4937,10 +4949,12 @@ async function syncToServer() {
   }
 }
 
-// Mark instruments/WOs as synced on load
+// Mark instruments/WOs/techs as synced on load so they don't get re-posted
 function markAllSynced() {
   (db.instruments||[]).forEach(i => { i._synced = true; });
   (db.workOrders||[]).forEach(w => { w._synced = true; });
+  (db.techs||[]).forEach(t => { t._synced = true; });
+  (db.archivedTechs||[]).forEach(t => { t._synced = true; });
 }
 
 // Admin password — now uses plain text from db (no hashing)
