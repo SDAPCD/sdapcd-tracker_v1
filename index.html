@@ -960,6 +960,8 @@ async function loadDBFromServer() {
       });
     }
     markAllSynced();
+    // Load admin password from settings
+    db.adminPassword = (db.settings && db.settings.admin_password) || 'circuit';
     render();
   } catch(e) {
     console.error('SDAPCD: failed to load from server.', e);
@@ -970,13 +972,32 @@ async function loadDBFromServer() {
 // Kick off load after page is ready (called at bottom of script)
 
 // ── SESSION USER ───────────────────────────────────────────
-const USER_PW_PREFIX = 'sdapcd_upw_';
-function getUserPWKey(name) { return USER_PW_PREFIX + hashPWEarly(name); }
-// Early hash (before hashPW is declared) — duplicate kept minimal
-function hashPWEarly(s) {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
-  return h.toString(16);
+// ── PASSWORD HELPERS (stored in Google Sheets via db) ────────
+// Passwords are stored as plain text in db.techs[].password
+// and db.adminPassword for the admin account.
+// Default password for all accounts is 'circuit'.
+
+function getStoredPassword(username) {
+  if (username === 'admin') {
+    return db.adminPassword || 'circuit';
+  }
+  const tech = [...(db.techs||[]), ...(db.archivedTechs||[])]
+    .find(t => (t.username||'').toLowerCase() === username.toLowerCase());
+  return tech ? (tech.password || 'circuit') : null;
+}
+
+function setStoredPassword(username, newPw) {
+  if (username === 'admin') {
+    db.adminPassword = newPw;
+    API.post('/settings', {key: 'admin_password', value: newPw}).catch(()=>{});
+    return;
+  }
+  const tech = (db.techs||[]).find(t => (t.username||'').toLowerCase() === username.toLowerCase());
+  if (tech) {
+    tech.password = newPw;
+    // Save to GAS — update technician password field
+    API.post('/technicians/password', {username, password: newPw}).catch(()=>{});
+  }
 }
 function getSessionUser() {
   try { return sessionStorage.getItem('sdapcd_user') || ''; } catch(e) { return ''; }
@@ -1563,10 +1584,10 @@ function submitLogin() {
   if (!username) { ui._loginErr = 'Please enter your username.'; render(); return; }
   if (!pw)       { ui._loginErr = 'Please enter your password.'; render(); return; }
 
-  // ── BOOTSTRAP ADMIN ACCOUNT (always available) ──────────
+  // ── BOOTSTRAP ADMIN ACCOUNT ──────────────────────────────
   if (username === 'admin') {
-    const stored = localStorage.getItem(getUserPWKey('admin')) || hashPWEarly('circuit');
-    if (hashPWEarly(pw) !== stored) {
+    const stored = getStoredPassword('admin');
+    if (pw !== stored) {
       ui._loginErr = 'Incorrect password. Try again.';
       render();
       setTimeout(() => { const el = document.getElementById('login-pw'); if (el) { el.value = ''; el.focus(); } }, 50);
@@ -1592,8 +1613,8 @@ function submitLogin() {
     setTimeout(() => { const el = document.getElementById('login-username'); if (el) { el.value = ''; el.focus(); } }, 50);
     return;
   }
-  const stored = localStorage.getItem(getUserPWKey(username)) || hashPWEarly('circuit');
-  if (hashPWEarly(pw) !== stored) {
+  const stored = getStoredPassword(username);
+  if (pw !== stored) {
     ui._loginErr = 'Incorrect password. Try again.';
     render();
     setTimeout(() => { const el = document.getElementById('login-pw'); if (el) { el.value = ''; el.focus(); } }, 50);
@@ -1616,15 +1637,14 @@ function submitChangePassword() {
   const newPw    = (document.getElementById('cp-new')?.value      || '').trim();
   const conf     = (document.getElementById('cp-confirm')?.value  || '').trim();
   if (!username) { ui._cpErr = 'Please enter your username.'; render(); return; }
-  // Validate username exists
   const isAdmin = username === 'admin';
   const tech = !isAdmin && [...db.techs, ...(db.archivedTechs||[])].find(t => (t.username||'').toLowerCase() === username);
   if (!isAdmin && !tech) { ui._cpErr = 'Username not found.'; render(); return; }
-  const stored = localStorage.getItem(getUserPWKey(username)) || hashPWEarly('circuit');
-  if (hashPWEarly(cur) !== stored) { ui._cpErr = 'Current password is incorrect.'; render(); return; }
-  if (newPw.length < 4) { ui._cpErr = 'New password must be at least 4 characters.'; render(); return; }
+  const stored = getStoredPassword(username);
+  if (cur !== stored) { ui._cpErr = 'Current password is incorrect.'; render(); return; }
+  if (newPw.length < 1) { ui._cpErr = 'New password cannot be empty.'; render(); return; }
   if (newPw !== conf)   { ui._cpErr = 'Passwords do not match.'; render(); return; }
-  localStorage.setItem(getUserPWKey(username), hashPWEarly(newPw));
+  setStoredPassword(username, newPw);
   ui._cpErr = ''; ui._loginView = '';
   ui._loginErr = '✓ Password updated — please sign in.';
   render();
@@ -1653,24 +1673,24 @@ function saveChangeUserPassword() {
   const cur    = document.getElementById('upw-current')?.value || '';
   const newPw  = document.getElementById('upw-new')?.value     || '';
   const conf   = document.getElementById('upw-confirm')?.value || '';
-  const username = ui.currentUsername || hashPWEarly(ui.currentUser);
-  const stored   = localStorage.getItem(getUserPWKey(username)) || hashPWEarly('circuit');
-  if (hashPWEarly(cur) !== stored) {
+  const username = ui.currentUsername;
+  const stored   = getStoredPassword(username);
+  if (cur !== stored) {
     ui.form = {...ui.form, err: 'Current password is incorrect.'}; render(); return;
   }
-  if (newPw.length < 4) {
-    ui.form = {...ui.form, err: 'New password must be at least 4 characters.'}; render(); return;
+  if (newPw.length < 1) {
+    ui.form = {...ui.form, err: 'New password cannot be empty.'}; render(); return;
   }
   if (newPw !== conf) {
     ui.form = {...ui.form, err: 'Passwords do not match.'}; render(); return;
   }
-  localStorage.setItem(getUserPWKey(username), hashPWEarly(newPw));
+  setStoredPassword(username, newPw);
   closeModal(); toast('Password updated');
 }
 // Admin reset of any user's password back to default
 function resetUserPassword(username) {
-  localStorage.setItem(getUserPWKey(username), hashPWEarly('circuit'));
-  toast(`Password reset to default for ${username}`);
+  setStoredPassword(username, 'circuit');
+  toast(`Password reset to 'circuit' for ${username}`);
 }
 
 function modalShell(title, body, actions) {
@@ -3309,23 +3329,11 @@ function navigateTo(page) {
   }
 }
 // ── ADMIN PASSWORD ─────────────────────────────────────────
-const ADMIN_PW_KEY = 'sdapcd_admin_pw';
-// Simple hash — not cryptographic, prevents casual access only.
-// For stronger security, replace with a proper auth system.
-function hashPW(pw) {
-  let h = 0;
-  for (let i = 0; i < pw.length; i++) {
-    h = (Math.imul(31, h) + pw.charCodeAt(i)) | 0;
-  }
-  return h.toString(16);
-}
-function getStoredHash() {
-  return localStorage.getItem(ADMIN_PW_KEY) || hashPW('circuit');
-}
 function submitAdminPassword() {
   const pw = document.getElementById('admin-pw-input')?.value || '';
   if (!pw) { ui.form = {...ui.form, err: 'Please enter the password.'}; render(); return; }
-  if (hashPW(pw) !== getStoredHash()) {
+  const stored = getStoredPassword('admin');
+  if (pw !== stored) {
     ui.form = {...ui.form, err: 'Incorrect password. Try again.'};
     render();
     setTimeout(() => {
@@ -3340,26 +3348,23 @@ function submitAdminPassword() {
   ui.page = 'admin';
   render();
 }
-function lockAdmin() {
-  navigateTo('dashboard');
-}
-function openChangePassword() {
-  ui.modal = 'changepw'; ui.form = {}; render();
-}
+function lockAdmin() { navigateTo('dashboard'); }
+function openChangePassword() { ui.modal = 'changepw'; ui.form = {}; render(); }
 function saveAdminPassword() {
-  const current  = document.getElementById('pw-current')?.value || '';
-  const newPw    = document.getElementById('pw-new')?.value || '';
-  const confirm  = document.getElementById('pw-confirm')?.value || '';
-  if (hashPW(current) !== getStoredHash()) {
+  const current = document.getElementById('pw-current')?.value || '';
+  const newPw   = document.getElementById('pw-new')?.value     || '';
+  const confirm = document.getElementById('pw-confirm')?.value || '';
+  const stored  = getStoredPassword('admin');
+  if (current !== stored) {
     ui.form = {...ui.form, err: 'Current password is incorrect.'}; render(); return;
   }
-  if (newPw.length < 4) {
-    ui.form = {...ui.form, err: 'New password must be at least 4 characters.'}; render(); return;
+  if (newPw.length < 1) {
+    ui.form = {...ui.form, err: 'New password cannot be empty.'}; render(); return;
   }
   if (newPw !== confirm) {
     ui.form = {...ui.form, err: 'Passwords do not match.'}; render(); return;
   }
-  localStorage.setItem(ADMIN_PW_KEY, hashPW(newPw));
+  setStoredPassword('admin', newPw);
   closeModal();
   toast('Admin password updated');
 }
@@ -3962,10 +3967,8 @@ function addTech() {
     toast('⚠ A user with that display name already exists'); return;
   }
 
-  // Store temp password as the initial login password
-  localStorage.setItem(getUserPWKey(username), hashPWEarly(tempPw));
-
-  db.techs.push({ name: displayName, role, email, username, permission, tempPassword: tempPw });
+  // Store password directly on the tech object (syncs to Sheets)
+  db.techs.push({ name: displayName, role, email, username, permission, password: tempPw || 'circuit' });
   ui.newTechName = ''; ui.newTechRole = ''; ui.newTechEmail = '';
   ui.newTechUsername = ''; ui.newTechPermission = ''; ui.newTechTempPw = '';
   saveDB('tech'); render(); toast(`${displayName} added · username: ${username}`);
@@ -4038,8 +4041,7 @@ function saveEditTech(idx) {
   const t = db.techs[idx];
   const username = t.username || generateUsername(t.name);
   if (newTempPw) {
-    localStorage.setItem(getUserPWKey(username), hashPWEarly(newTempPw));
-    db.techs[idx] = { ...t, name, role, email, permission, tempPassword: newTempPw };
+    db.techs[idx] = { ...t, name, role, email, permission, password: newTempPw };
   } else {
     db.techs[idx] = { ...t, name, role, email, permission };
   }
@@ -4935,17 +4937,12 @@ function markAllSynced() {
   (db.workOrders||[]).forEach(w => { w._synced = true; });
 }
 
-// Replace admin password functions to use server settings
-window.getStoredHash = async function() {
-  try { return await API.get('/settings/admin_pw'); } catch(e) { return null; }
-};
-
-// Admin password check — async version
-window.submitAdminPassword = async function() {
+// Admin password — now uses plain text from db (no hashing)
+window.submitAdminPassword = function() {
   const pw = document.getElementById('admin-pw-input')?.value || '';
   if (!pw) { ui.form = {...ui.form, err: 'Please enter the password.'}; render(); return; }
-  const storedPw = await API.get('/settings/admin_pw').catch(()=>'circuit');
-  if (hashPW(pw) !== hashPW(storedPw) && pw !== storedPw && hashPW(pw) !== storedPw) {
+  const stored = getStoredPassword('admin');
+  if (pw !== stored) {
     ui.form = {...ui.form, err: 'Incorrect password. Try again.'}; render();
     setTimeout(() => { const el = document.getElementById('admin-pw-input'); if (el) { el.value=''; el.focus(); } }, 50);
     return;
@@ -4954,17 +4951,15 @@ window.submitAdminPassword = async function() {
   ui.modal = null; ui.form = {}; ui.page = 'admin'; render();
 };
 
-window.saveAdminPassword = async function() {
+window.saveAdminPassword = function() {
   const current = document.getElementById('pw-current')?.value || '';
-  const newPw   = document.getElementById('pw-new')?.value || '';
+  const newPw   = document.getElementById('pw-new')?.value     || '';
   const confirm = document.getElementById('pw-confirm')?.value || '';
-  const storedPw = await API.get('/settings/admin_pw').catch(()=>'circuit');
-  if (hashPW(current) !== hashPW(storedPw) && current !== storedPw && hashPW(current) !== storedPw) {
-    ui.form = {...ui.form, err: 'Current password is incorrect.'}; render(); return;
-  }
-  if (newPw.length < 4) { ui.form = {...ui.form, err: 'New password must be at least 4 characters.'}; render(); return; }
-  if (newPw !== confirm) { ui.form = {...ui.form, err: 'Passwords do not match.'}; render(); return; }
-  await API.put('/settings/admin_pw', { value: hashPW(newPw) });
+  const stored  = getStoredPassword('admin');
+  if (current !== stored) { ui.form = {...ui.form, err: 'Current password is incorrect.'}; render(); return; }
+  if (newPw.length < 1)   { ui.form = {...ui.form, err: 'New password cannot be empty.'}; render(); return; }
+  if (newPw !== confirm)  { ui.form = {...ui.form, err: 'Passwords do not match.'}; render(); return; }
+  setStoredPassword('admin', newPw);
   closeModal(); toast('Admin password updated');
 };
 
