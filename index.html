@@ -960,8 +960,8 @@ async function loadDBFromServer() {
       });
     }
     markAllSynced();
-    // Load admin password from settings
-    db.adminPassword = (db.settings && db.settings.admin_password) || 'circuit';
+    // Admin password comes directly from GAS getFullDB as db.adminPassword
+    if (!db.adminPassword) db.adminPassword = 'circuit';
     render();
   } catch(e) {
     console.error('SDAPCD: failed to load from server.', e);
@@ -972,22 +972,24 @@ async function loadDBFromServer() {
 // Kick off load after page is ready (called at bottom of script)
 
 // ── SESSION USER ───────────────────────────────────────────
-// ── PASSWORD HELPERS (stored in Google Sheets via db) ────────
-// Passwords are stored as plain text in db.techs[].password
-// and db.adminPassword for the admin account.
-// Default password for all accounts is 'circuit'.
+// ── PASSWORD HELPERS ────────────────────────────────────────
+// Passwords stored as plain text in Google Sheets (technicians.password)
+// Admin password stored in settings tab as 'admin_password'
+// Default password for all users: circuit
 
 function getStoredPassword(username) {
-  if (username === 'admin') {
+  if (!username) return null;
+  if (username.toLowerCase() === 'admin') {
     return db.adminPassword || 'circuit';
   }
-  const tech = [...(db.techs||[]), ...(db.archivedTechs||[])]
-    .find(t => (t.username||'').toLowerCase() === username.toLowerCase());
+  const all = [...(db.techs||[]), ...(db.archivedTechs||[])];
+  const tech = all.find(t => (t.username||'').toLowerCase() === username.toLowerCase());
   return tech ? (tech.password || 'circuit') : null;
 }
 
 function setStoredPassword(username, newPw) {
-  if (username === 'admin') {
+  if (!username || !newPw) return;
+  if (username.toLowerCase() === 'admin') {
     db.adminPassword = newPw;
     API.post('/settings', {key: 'admin_password', value: newPw}).catch(()=>{});
     return;
@@ -995,9 +997,19 @@ function setStoredPassword(username, newPw) {
   const tech = (db.techs||[]).find(t => (t.username||'').toLowerCase() === username.toLowerCase());
   if (tech) {
     tech.password = newPw;
-    // Save to GAS — update technician password field
     API.post('/technicians/password', {username, password: newPw}).catch(()=>{});
   }
+}
+
+// Returns permission level for current user: 'Full Control' | 'Edit' | 'View'
+function currentUserPermission() {
+  if (ui.currentUsername === 'admin') return 'Full Control';
+  const tech = (db.techs||[]).find(t => (t.username||'') === ui.currentUsername);
+  return tech ? (tech.permission || 'Edit') : 'Edit';
+}
+
+function currentUserHasFullControl() {
+  return currentUserPermission() === 'Full Control';
 }
 function getSessionUser() {
   try { return sessionStorage.getItem('sdapcd_user') || ''; } catch(e) { return ''; }
@@ -1051,12 +1063,6 @@ const statusClass = s  => ({
 const isVendor    = i  => i.site === 'VENDOR';
 const isField     = i  => i.site && i.site !== 'HQ/SHOP' && i.site !== 'VENDOR';
 const isShop      = i  => i.site === 'HQ/SHOP';
-
-function currentUserHasFullControl() {
-  if (ui.currentUsername === 'admin') return true;
-  const tech = db.techs.find(t => (t.username||'') === ui.currentUsername);
-  return tech && tech.permission === 'Full Control';
-}
 
 // ── CERTIFICATION HELPERS ──────────────────────────────────
 // Returns YYYY-MM-DD offset by `months` months after a given date string
@@ -1263,9 +1269,10 @@ function render() {
       <button class="btn-nav ${ui.page==='activity'?'active':''}" onclick="navigateTo('activity')">
         <span class="nav-icon">◎</span>Activity
       </button>
+      ${currentUserHasFullControl() ? `
       <button class="btn-nav ${ui.page==='admin'?'active':''}" onclick="navigateTo('admin')">
         <span class="nav-icon">⚙</span>Admin
-      </button>
+      </button>` : ''}
     </div>
     <div class="sb-footer">
       <div style="padding:8px 12px 6px;border-top:1px solid rgba(34,211,238,.07);margin-bottom:2px">
