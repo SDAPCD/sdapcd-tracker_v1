@@ -1041,17 +1041,25 @@ function currentUserHasFullControl() {
 // Returns YYYY-MM-DD offset by `months` months after a given date string
 function certDueDate(lastDate, months) {
   if (!lastDate || !months) return null;
-  const d = new Date(lastDate + 'T00:00:00');
-  d.setMonth(d.getMonth() + Number(months));
-  return d.toISOString().slice(0, 10);
+  try {
+    const dateStr = String(lastDate).slice(0,10); // ensure YYYY-MM-DD format
+    const d = new Date(dateStr + 'T00:00:00');
+    if (isNaN(d.getTime())) return null;
+    d.setMonth(d.getMonth() + Number(months));
+    if (isNaN(d.getTime())) return null;
+    return d.toISOString().slice(0, 10);
+  } catch(e) { return null; }
 }
 // Returns days remaining (negative = overdue). null if no cert data.
 function certDaysLeft(i) {
-  const due = certDueDate(i.lastCertDate, i.certIntervalMonths);
-  if (!due) return null;
-  const t = new Date(today() + 'T00:00:00');
-  const d = new Date(due   + 'T00:00:00');
-  return Math.round((d - t) / 86400000);
+  try {
+    const due = certDueDate(i.lastCertDate, i.certIntervalMonths);
+    if (!due) return null;
+    const t = new Date(today() + 'T00:00:00');
+    const d = new Date(due   + 'T00:00:00');
+    if (isNaN(t.getTime()) || isNaN(d.getTime())) return null;
+    return Math.round((d - t) / 86400000);
+  } catch(e) { return null; }
 }
 // Returns 'overdue' | 'due-soon' | 'ok' | 'none'
 function certStatus(i) {
