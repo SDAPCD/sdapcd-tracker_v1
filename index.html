@@ -3882,6 +3882,23 @@ function confirmApproveWO() {
   addHistory(wo.instrumentId, 'Work order approved & closed', detail);
   addSecurityLog('APPROVAL', `Approved closure of WO-${String(wo.id).padStart(3,'0')} by ${ui.currentUser}.${notes ? ' Notes: ' + notes : ''}`);
   syncWorkOrder(wo);
+  // When WO is approved & closed — instrument becomes Operational at HQ/SHOP
+  const inst = db.instruments.find(i => String(i.id) === String(wo.instrumentId));
+  if (inst && !inst.archived) {
+    const changes = [];
+    if (inst.status !== 'Operational') {
+      changes.push(`Status: ${inst.status} → Operational`);
+      inst.status = 'Operational';
+    }
+    if (inst.site !== 'HQ/SHOP') {
+      changes.push(`Site: ${inst.site} → HQ/SHOP`);
+      inst.site = 'HQ/SHOP';
+    }
+    if (changes.length > 0) {
+      addHistory(wo.instrumentId, 'Status updated on WO closure', changes.join(' · ') + ` (WO-${wo.id} approved & closed)`);
+      syncInstrument(inst);
+    }
+  }
   try{saveDB('workorder', wo.id);}catch(e){console.warn('saveDB',e);} closeModal(); render();
   toast('✓ WO-' + wo.id + ' approved and closed');
 }
