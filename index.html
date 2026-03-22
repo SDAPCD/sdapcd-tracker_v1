@@ -1119,13 +1119,17 @@ function addHistory(instId, action, detail) {
 }
 function addSecurityLog(type, detail) {
   if (!db.securityLog) db.securityLog = [];
-  db.securityLog.unshift({ ts: nowTs(), epoch: Date.now(), type, user: ui.currentUser || 'Unknown', detail });
+  const entry = { ts: nowTs(), epoch: Date.now(), type, user: ui.currentUser || 'Unknown', detail };
+  db.securityLog.unshift(entry);
   if (db.securityLog.length > 5000) db.securityLog.length = 5000;
+  API.post('/security-log', { type, user: entry.user, detail }).catch(()=>{});
 }
 function addDeleteLog(what, detail) {
   if (!db.deleteLog) db.deleteLog = [];
-  db.deleteLog.unshift({ ts: nowTs(), epoch: Date.now(), user: ui.currentUser || 'Unknown', what, detail });
+  const entry = { ts: nowTs(), epoch: Date.now(), user: ui.currentUser || 'Unknown', what, detail };
+  db.deleteLog.unshift(entry);
   if (db.deleteLog.length > 5000) db.deleteLog.length = 5000;
+  API.post('/delete-log', { user: entry.user, what, detail }).catch(()=>{});
 }
 function getVal(id) {
   const el = document.getElementById(id);
@@ -3408,6 +3412,7 @@ function updateStatus(id, val) {
     onConfirm: () => {
       addHistory(id, 'Status changed', `${prev} → ${val}`);
       i.status = val;
+      syncInstrument(i);
       saveDB('instrument'); render(); toast(`Status → ${val}`);
     }
   });
@@ -3440,11 +3445,66 @@ function updateSite(id, val) {
         addHistory(id, 'Status changed', 'Operational → Deployed');
       }
       saveDB('instrument'); render(); toast(`Moved to ${val}`);
+      syncInstrument(i);
     }
   });
 }
 
-function openAdd()        { ui.modal='add';      ui.form={}; render(); }
+// ── DIRECT SYNC HELPERS ────────────────────────────────────
+// Call these after every mutation to ensure Google Sheets stays in sync
+
+function syncInstrument(i) {
+  if (!i || !i.id) return;
+  API.put('/instruments/' + i.id, {
+    name:                i.name,
+    serial:              i.serial,
+    status:              i.status,
+    site:                i.site,
+    notes:               i.notes || '',
+    archived:            i.archived ? 1 : 0,
+    last_cert_date:      i.lastCertDate || '',
+    cert_interval_months:i.certIntervalMonths || ''
+  }).catch(e => console.warn('syncInstrument failed', e));
+}
+
+function syncWorkOrder(wo) {
+  if (!wo || !wo.id) return;
+  API.put('/work-orders/' + wo.id, {
+    status:          wo.status,
+    type:            wo.type            || '',
+    description:     wo.description     || '',
+    tech_name:       wo.technician      || '',
+    notes:           wo.notes           || '',
+    submitted_by:    wo.submittedBy     || '',
+    submitted_date:  wo.submittedDate   || '',
+    closed_by:       wo.closedBy        || '',
+    approved_by:     wo.approvedBy      || '',
+    restore_reason:  wo.restoreReason   || '',
+    restored_by:     wo.restoredBy      || '',
+    restored_date:   wo.restoredDate    || ''
+  }).catch(e => console.warn('syncWorkOrder failed', e));
+}
+
+function syncSite(name, body) {
+  // Sites are identified by name in the app — find id from GAS
+  API.post('/sites/upsert', { name, ...body }).catch(e => console.warn('syncSite failed', e));
+}
+
+function syncTech(t) {
+  if (!t) return;
+  if (t.id) {
+    API.put('/technicians/' + t.id, {
+      name: t.name, role: t.role||'', email: t.email||'',
+      username: t.username||'', permission: t.permission||'Edit',
+      password: t.password||'circuit'
+    }).catch(e => console.warn('syncTech failed', e));
+  }
+}
+
+function deleteFromSheet(resource, id) {
+  if (!id) return;
+  API.del('/' + resource + '/' + id).catch(e => console.warn('deleteFromSheet failed', e));
+}
 function openEditInstrument(id) {
   const i = db.instruments.find(x => x.id === id);
   if (!i) return;
@@ -3473,6 +3533,7 @@ function saveEditInstrument(id) {
   i.name = name; i.serial = serial; i.status = status; i.site = site; i.notes = notes;
   if (name === 'BC1060' && i.lastCertDate === undefined) i.lastCertDate = null;
   if (changes.length) addHistory(id, 'Instrument edited', changes.join(' · '));
+  syncInstrument(i);
   try{saveDB('instrument');}catch(e){console.warn('saveDB',e);} closeModal(); toast('Instrument updated');
 }
 function openLogWork(id) {
@@ -3663,6 +3724,12 @@ function saveAdd() {
   }
   db.instruments.push(newInst);
   addHistory(id, 'Instrument added', `${name} ${serial} at ${site} — ${newInst.status}`);
+  // POST to GAS and update local id with server-assigned id
+  API.post('/instruments', {
+    name, serial, status: newInst.status, site, notes: notes||''
+  }).then(result => {
+    if (result && result.id) { newInst.id = result.id; newInst._synced = true; }
+  }).catch(e => console.warn('addInstrument failed', e));
   try{saveDB('instrument', id);}catch(e){console.warn('saveDB',e);} closeModal(); toast('Instrument added');
 }
 
@@ -3676,8 +3743,14 @@ function saveWorkEntry(mode) {
   const maxId = db.workOrders.reduce((m, w) => Math.max(m, parseInt(w.id)||0), 0);
   const woId = maxId + 1;
   db.woId = woId + 1;
-  db.workOrders.push({ id:woId, instrumentId:instId, type, description:desc, technician:by, status:'Open', created:today() });
+  const newWO = { id:woId, instrumentId:instId, type, description:desc, technician:by, status:'Open', created:today() };
+  db.workOrders.push(newWO);
   addHistory(instId, 'Work order created', `WO-${woId} · ${type} · Tech: ${by}${desc?' · '+desc.slice(0,80):''}`);
+  API.post('/work-orders', {
+    instrument_id: instId, type, description: desc, tech_name: by
+  }).then(result => {
+    if (result && result.id) { newWO.id = result.id; newWO._synced = true; }
+  }).catch(e => console.warn('createWO failed', e));
   try { saveDB('workorder', woId); } catch(e) { console.warn('saveDB error', e); }
   closeModal();
   toast('Work order WO-'+woId+' created');
@@ -3723,6 +3796,8 @@ function saveLogWork() {
     }
   }
 
+  const _lwInst = db.instruments.find(x => String(x.id) === String(instId));
+  if (_lwInst) syncInstrument(_lwInst);
   try{saveDB('instrument', instId);}catch(e){console.warn('saveDB',e);} closeModal();
   toast('✓ Work entry logged');
 }
@@ -3736,6 +3811,7 @@ function saveEditWO(wid) {
   if (!wo) return;
   wo.type = type; wo.technician = by; wo.description = desc;
   addHistory(wo.instrumentId, 'Work order updated', `WO-${wid} · ${type} · Tech: ${by}${desc ? ' · ' + desc.slice(0, 80) : ''}`);
+  syncWorkOrder(wo);
   saveDB('workorder', wo.id); openWODetail(wid); toast('Work order updated');
 }
 
@@ -3753,6 +3829,7 @@ function submitForClosure(wid) {
       wo.submittedDate = today();
       addHistory(wo.instrumentId, 'Submitted for closure', `WO-${wo.id} · ${wo.type} · Submitted by: ${ui.currentUser}`);
       addSecurityLog('SUBMIT', `WO-${wo.id} submitted for closure by ${ui.currentUser}`);
+      syncWorkOrder(wo);
       try{saveDB('workorder');}catch(e){console.warn('saveDB',e);} closeModal(); render();
       toast('WO-' + wo.id + ' submitted for closure approval');
     }
@@ -3791,6 +3868,7 @@ function confirmRestoreWO() {
   delete wo.submittedDate;
   addHistory(wo.instrumentId, 'Submission restored to Open', `WO-${wo.id} · Restored by: ${ui.currentUser} · Reason: ${notes}`);
   addSecurityLog('RESTORE', `WO-${wo.id} restored to Open by ${ui.currentUser}. Reason: ${notes}`);
+  syncWorkOrder(wo);
   try{saveDB('workorder', wo.id);}catch(e){console.warn('saveDB',e);} closeModal(); render();
   toast('WO-' + wo.id + ' restored to Open');
 }
@@ -3807,6 +3885,7 @@ function confirmApproveWO() {
   const detail  = `WO-${wo.id} · ${wo.type} · Approved by: ${ui.currentUser}${notes ? ' · Notes: ' + notes : ''}`;
   addHistory(wo.instrumentId, 'Work order approved & closed', detail);
   addSecurityLog('APPROVAL', `Approved closure of WO-${String(wo.id).padStart(3,'0')} by ${ui.currentUser}.${notes ? ' Notes: ' + notes : ''}`);
+  syncWorkOrder(wo);
   try{saveDB('workorder', wo.id);}catch(e){console.warn('saveDB',e);} closeModal(); render();
   toast('✓ WO-' + wo.id + ' approved and closed');
 }
@@ -3818,6 +3897,7 @@ function addSite() {
   if (db.sites.includes(val)) { toast('⚠ Site already exists'); return; }
   db.sites.push(val);
   ui.newSite = '';
+  API.post('/sites', {name: val}).catch(e=>console.warn('addSite failed',e));
   saveDB('site'); render(); toast(`Site "${val}" added`);
 }
 function archiveSite(idx) {
@@ -3837,6 +3917,7 @@ function archiveSite(idx) {
       db.sites.splice(idx, 1);
       if (!db.archivedSites) db.archivedSites = [];
       db.archivedSites.push(s);
+      API.post('/sites/archive', {name: s, archived: true}).catch(()=>{});
       saveDB('site'); render(); toast(`Site "${s}" archived`);
     }
   });
@@ -3845,6 +3926,7 @@ function restoreSite(name) {
   if (!db.archivedSites) return;
   db.archivedSites = db.archivedSites.filter(s => s !== name);
   db.sites.push(name);
+  API.post('/sites/archive', {name, archived: false}).catch(()=>{});
   saveDB('site'); render(); toast(`Site "${name}" restored`);
 }
 function permanentlyDeleteSite(name) {
@@ -3855,6 +3937,7 @@ function permanentlyDeleteSite(name) {
     onConfirm: () => {
       addDeleteLog('Site', `Site "${name}" permanently deleted`);
       db.archivedSites = (db.archivedSites||[]).filter(s => s !== name);
+      API.post('/sites/delete', {name}).catch(()=>{});
       saveDB('site'); render(); toast(`Site "${name}" permanently deleted`);
     }
   });
@@ -3871,6 +3954,7 @@ function archiveInstrument(id) {
       i.archived = true;
       i.archivedDate = today();
       addHistory(id, 'Instrument archived', `${i.name} S/N ${i.serial}`);
+      syncInstrument(i);
       saveDB('instrument'); render(); toast(`${i.serial} archived`);
     }
   });
@@ -3881,6 +3965,7 @@ function restoreInstrument(id) {
   i.archived = false;
   delete i.archivedDate;
   addHistory(id, 'Instrument restored', `${i.name} S/N ${i.serial} restored to registry`);
+  syncInstrument(i);
   saveDB('instrument'); render(); toast(`${i.serial} restored`);
 }
 function permanentlyDeleteInstrument(id) {
@@ -3896,6 +3981,7 @@ function permanentlyDeleteInstrument(id) {
       db.instruments = db.instruments.filter(x => x.id !== id);
       db.workOrders  = db.workOrders.filter(w => w.instrumentId !== id);
       delete db.history[id];
+      API.del('/instruments/' + id).catch(()=>{});
       saveDB('instrument'); render(); toast('Instrument permanently deleted');
     }
   });
@@ -3906,6 +3992,7 @@ function addInstType() {
   if (db.instTypes.includes(val)) { toast('⚠ Type already exists'); return; }
   db.instTypes.push(val);
   ui.newType = '';
+  API.post('/inst-types', {name: val}).catch(()=>{});
   saveDB('type'); render(); toast(`Type "${val}" added`);
 }
 function archiveInstType(idx) {
@@ -3922,6 +4009,7 @@ function archiveInstType(idx) {
       db.instTypes.splice(idx, 1);
       if (!db.archivedTypes) db.archivedTypes = [];
       db.archivedTypes.push(t);
+      API.post('/inst-types/archive', {name: t, archived: true}).catch(()=>{});
       saveDB('type'); render(); toast(`Type "${t}" archived`);
     }
   });
@@ -3930,6 +4018,7 @@ function restoreInstType(name) {
   if (!db.archivedTypes) return;
   db.archivedTypes = db.archivedTypes.filter(t => t !== name);
   db.instTypes.push(name);
+  API.post('/inst-types/archive', {name, archived: false}).catch(()=>{});
   saveDB('type'); render(); toast(`Type "${name}" restored`);
 }
 function permanentlyDeleteType(name) {
@@ -3941,6 +4030,7 @@ function permanentlyDeleteType(name) {
     onConfirm: () => {
       addDeleteLog('Instrument Type', `Type "${name}" permanently deleted`);
       db.archivedTypes = (db.archivedTypes||[]).filter(t => t !== name);
+      API.post('/inst-types/delete', {name}).catch(()=>{});
       saveDB('type'); render(); toast(`Type "${name}" permanently deleted`);
     }
   });
@@ -3997,6 +4087,7 @@ function archiveTech(idx) {
       db.techs.splice(idx, 1);
       if (!db.archivedTechs) db.archivedTechs = [];
       db.archivedTechs.push(t);
+      if (t.id) API.put('/technicians/' + t.id, {name:t.name,role:t.role||'',email:t.email||'',username:t.username||'',permission:t.permission||'Edit',password:t.password||'circuit',archived:true}).catch(()=>{});
       saveDB('tech'); render(); toast(`${t.name} archived`);
     }
   });
@@ -4005,6 +4096,7 @@ function restoreTech(idx) {
   if (!db.archivedTechs || !db.archivedTechs[idx]) return;
   const t = db.archivedTechs.splice(idx, 1)[0];
   db.techs.push(t);
+  if (t.id) API.put('/technicians/' + t.id, {name:t.name,role:t.role||'',email:t.email||'',username:t.username||'',permission:t.permission||'Edit',password:t.password||'circuit',archived:false}).catch(()=>{});
   saveDB('tech'); render(); toast(`${t.name} restored`);
 }
 function permanentlyDeleteTech(idx) {
@@ -4017,6 +4109,7 @@ function permanentlyDeleteTech(idx) {
     detail: 'This technician is already archived.',
     onConfirm: () => {
       db.archivedTechs.splice(idx, 1);
+      if (t.id) API.del('/technicians/' + t.id).catch(()=>{});
       saveDB('tech'); render(); toast(`${t.name} permanently deleted`);
     }
   });
@@ -4040,6 +4133,7 @@ function saveEditType(idx) {
   const old = db.instTypes[idx];
   db.instTypes[idx] = val;
   db.instruments.forEach(i => { if (i.name === old) i.name = val; });
+  API.post('/inst-types/rename', {old_name: old, new_name: val}).catch(()=>{});
   try{saveDB('instrument');}catch(e){console.warn('saveDB',e);} closeModal(); toast('Type updated');
 }
 function saveEditTech(idx) {
@@ -4389,6 +4483,7 @@ function saveEditSite(idx) {
   const existing = db.sitesMeta[val] || {};
   db.sitesMeta[val] = { ...existing, siteName, type, address, lat, lng };
   if (ui.selectedSite === old) ui.selectedSite = val;
+  API.post('/sites/update', {old_code: old, code: val, site_name: siteName, type, address, lat, lng}).catch(()=>{});
   try{saveDB('site');}catch(e){console.warn('saveDB',e);} closeModal(); toast('✓ Site updated');
 }
 
@@ -4415,6 +4510,7 @@ function addCustomStatus() {
   if (!db.customStatuses) db.customStatuses = [];
   if (allStatuses().map(s=>s.toLowerCase()).includes(val.toLowerCase())) { toast('⚠ That status already exists'); return; }
   db.customStatuses.push(val);
+  API.post('/custom-statuses', {name: val}).catch(()=>{});
   saveDB('status'); render(); toast('✓ Status "' + val + '" added');
 }
 function removeCustomStatus(idx) {
@@ -4425,10 +4521,10 @@ function removeCustomStatus(idx) {
     showConfirm({ title:'STATUS IN USE', icon:'⚠',
       msg:'<strong>' + esc(s) + '</strong> is used by ' + n + ' instrument' + (n===1?'':'s') + '. Remove anyway?',
       detail:'Instruments keep this value but it will not appear in dropdowns.',
-      onConfirm: () => { db.customStatuses.splice(idx,1); saveDB('instrument'); render(); toast('✓ Status removed'); }
+      onConfirm: () => { const _s=db.customStatuses[idx]; db.customStatuses.splice(idx,1); API.post('/custom-statuses/delete',{name:_s}).catch(()=>{}); saveDB('status'); render(); toast('✓ Status removed'); }
     }); return;
   }
-  db.customStatuses.splice(idx,1); saveDB('status'); render(); toast('✓ Status "' + s + '" removed');
+  db.customStatuses.splice(idx,1); API.post('/custom-statuses/delete',{name:s}).catch(()=>{}); saveDB('status'); render(); toast('✓ Status "' + s + '" removed');
 }
 
 // ── SITE INFO ─────────────────────────────────────────────────────────
@@ -4497,6 +4593,7 @@ function saveAddSite() {
   if (!db.sitesMeta) db.sitesMeta = {};
   db.sitesMeta[code] = { siteName, type, address, lat, lng };
   ui.selectedSite = code;
+  API.post('/sites', {name: code, site_name: siteName, type, address, lat, lng}).catch(()=>{});
   try{saveDB('site');}catch(e){console.warn('saveDB',e);} closeModal(); render(); toast('✓ Site "' + code + '" added');
 }
 // ── SERVICE LOG ────────────────────────────────────────────
