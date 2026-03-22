@@ -2298,7 +2298,13 @@ function renderWorkOrders() {
   const isFullControl = currentUserHasFullControl();
 
   // Short-circuit: cert tab has its own renderer
-  if (ui.woFilter === 'cert') return renderCertSection();
+  if (ui.woFilter === 'cert') {
+    try { return renderCertSection(); }
+    catch(e) {
+      console.error('renderCertSection error:', e);
+      return `<div style="padding:40px;color:var(--red);font-family:var(--font-mono)">⚠ Cert Tracker error: ${e.message}</div>`;
+    }
+  }
 
   const filtered = db.workOrders.filter(wo => {
     const inst = db.instruments.find(i => String(i.id) === String(wo.instrumentId));
@@ -2627,9 +2633,10 @@ function renderActivity() {
 
 // ── CERT TRACKER ───────────────────────────────────────────
 function renderCertSection() {
-  const openCount   = db.workOrders.filter(w => w.status !== 'Closed').length;
-  const closedCount = db.workOrders.filter(w => w.status === 'Closed').length;
-  const allCount    = db.workOrders.length;
+  const openCount    = db.workOrders.filter(w => w.status !== 'Closed' && w.status !== 'Pending Closure').length;
+  const closedCount  = db.workOrders.filter(w => w.status === 'Closed').length;
+  const pendingCount = db.workOrders.filter(w => w.status === 'Pending Closure').length;
+  const allCount     = db.workOrders.length;
 
   const q          = (ui.certSearch   || '').toLowerCase();
   const statusF    =  ui.certStatusF  || 'All Status';
@@ -2746,9 +2753,10 @@ function renderCertSection() {
   </div>
   <div style="display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap" class="print-hide">
     <div class="wo-tabs">
-      <button class="wo-tab ${ui.woFilter==='Open'?'active':''}"   onclick="ui.woFilter='Open';render()">OPEN (${openCount})</button>
-      <button class="wo-tab ${ui.woFilter==='Closed'?'active':''}" onclick="ui.woFilter='Closed';render()">CLOSED (${closedCount})</button>
-      <button class="wo-tab ${ui.woFilter==='All'?'active':''}"    onclick="ui.woFilter='All';render()">ALL (${allCount})</button>
+      <button class="wo-tab ${ui.woFilter==='Open'?'active':''}"    onclick="ui.woFilter='Open';render()">OPEN (${openCount})</button>
+      <button class="wo-tab ${ui.woFilter==='Pending'?'active':''}" onclick="ui.woFilter='Pending';render()" style="${pendingCount>0?'color:var(--amber)':''}">⏳ PENDING${pendingCount>0?` (${pendingCount})`:''}</button>
+      <button class="wo-tab ${ui.woFilter==='Closed'?'active':''}"  onclick="ui.woFilter='Closed';render()">CLOSED (${closedCount})</button>
+      <button class="wo-tab ${ui.woFilter==='All'?'active':''}"     onclick="ui.woFilter='All';render()">ALL (${allCount})</button>
       <button class="wo-tab cert-tab ${ui.woFilter==='cert'?'active':''}" onclick="ui.woFilter='cert';render()">◈ CERT TRACKER</button>
     </div>
   </div>
