@@ -1300,7 +1300,7 @@ function render() {
     <div class="section-hdr">
       <div class="section-title">Dashboard</div>
       <div style="display:flex;gap:8px">
-        <button class="btn-add" onclick="openAdd()">+ ADD INSTRUMENT</button>
+        ${currentUserHasFullControl() ? `<button class="btn-add" onclick="openAdd()">+ ADD INSTRUMENT</button>` : ''}
         <button class="btn-export" onclick="exportCSV()">↓ EXPORT CSV</button>
       </div>
     </div>
@@ -3283,13 +3283,6 @@ function renderAdmin() {
         <button class="btn-del-sm" style="padding:6px 16px;font-size:12px;flex-shrink:0" onclick="confirmClearNotes()">CLEAR NOTES</button>
       </div>
 
-      <div class="dz-row dz-row-last">
-        <div>
-          <div style="font-size:13px;font-weight:600;color:var(--text)">Delete All Records</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px">Wipe all work orders, history, notes, and technicians — keeping only sites and instruments.</div>
-        </div>
-        <button class="btn-del-sm" style="padding:6px 16px;font-size:12px;flex-shrink:0" onclick="confirmClearExceptSitesInst()">DELETE ALL RECORDS</button>
-      </div>
 
     </div>
   </div>`;
@@ -4210,31 +4203,7 @@ function confirmClearNotes() {
   });
 }
 
-function confirmClearExceptSitesInst() {
-  showConfirm({
-    title: 'CLEAR ALL RECORDS',
-    icon: '⚠',
-    msg: 'This will delete all work orders, history, notes, technicians, and instrument types — keeping only your sites and instruments.',
-    detail: 'Step 1 of 2 — confirm to proceed to final warning',
-    onConfirm: () => {
-      showConfirm({
-        title: 'FINAL CONFIRMATION',
-        icon: '⚠',
-        msg: 'All work orders, history logs, notes, technicians, and types will be permanently deleted.',
-        detail: 'Step 2 of 2 — this cannot be undone',
-        onConfirm: () => {
-          db.workOrders = [];
-          db.history    = {};
-          db.woId       = 1;
-          db.techs      = [];
-          db.instTypes  = ['BC1060', 'ESEQ'];
-          db.instruments.forEach(i => { i.notes = ''; });
-          saveDB('type'); render(); toast('Records cleared — sites and instruments preserved');
-        }
-      });
-    }
-  });
-}
+
 
 // ── RESET DB ───────────────────────────────────────────────
 
@@ -4531,6 +4500,8 @@ function removeCustomStatus(idx) {
 }
 
 // ── SITE INFO ─────────────────────────────────────────────────────────
+function openAdd() { ui.modal = 'add'; ui.form = {}; render(); }
+
 function openAddSite() {
   ui.modal = 'addsite';
   ui.form  = { code:'', type:'Field', address:'', lat:'', lng:'' };
@@ -5006,13 +4977,21 @@ async function syncToServer() {
         }).catch(()=>null);
         if (created) { wo.id = created.id; wo._synced = true; }
       } else {
+        // Already synced via syncWorkOrder() which includes all closure fields
         await API.put('/work-orders/' + wo.id, {
-          status: wo.status, type: wo.type||'',
-          description: wo.description||'', tech_name: wo.technician||'', notes: wo.notes||''
+          status:         wo.status,
+          type:           wo.type            || '',
+          description:    wo.description     || '',
+          tech_name:      wo.technician      || '',
+          notes:          wo.notes           || '',
+          submitted_by:   wo.submittedBy     || '',
+          submitted_date: wo.submittedDate   || '',
+          closed_by:      wo.closedBy        || '',
+          approved_by:    wo.approvedBy      || '',
+          restore_reason: wo.restoreReason   || '',
+          restored_by:    wo.restoredBy      || '',
+          restored_date:  wo.restoredDate    || ''
         }).catch(()=>{});
-        if (wo.status === 'Closed') {
-          await API.patch('/work-orders/' + wo.id + '/close', {}).catch(()=>{});
-        }
       }
     }
     _dirty.workOrders.clear();
@@ -5115,28 +5094,7 @@ window.confirmClearNotes = function() {
   });
 };
 
-window.confirmClearExceptSitesInst = function() {
-  showConfirm({
-    title: 'CLEAR ALL RECORDS', icon: '⚠',
-    msg: 'This will delete all work orders, history, notes, technicians, and instrument types — keeping only your sites and instruments.',
-    detail: 'Step 1 of 2 — confirm to proceed to final warning',
-    onConfirm: () => {
-      showConfirm({
-        title: 'FINAL CONFIRMATION', icon: '⚠',
-        msg: 'All work orders, history logs, notes, technicians, and types will be permanently deleted.',
-        detail: 'Step 2 of 2 — this cannot be undone',
-        onConfirm: async () => {
-          db.workOrders = []; db.history = {}; db.woId = 1;
-          db.techs = []; db.instTypes = ['BC1060', 'ESEQ'];
-          db.instruments.forEach(i => { i.notes = ''; });
-          await API.post('/admin/soft-reset', {});
-          await loadDBFromServer();
-          toast('Records cleared — sites and instruments preserved');
-        }
-      });
-    }
-  });
-};
+
 
 // ── SESSION TIMEOUT ────────────────────────────────────────
 const SESSION_TIMEOUT_MS  = 20 * 60 * 1000; // 20 minutes
