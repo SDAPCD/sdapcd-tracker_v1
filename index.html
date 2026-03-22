@@ -60,12 +60,12 @@
 
 /* ── LIGHT MODE ─────────────────────────────────────────── */
 [data-theme="light"] {
-  --bg:        #eef2fb;
+  --bg:        #d1d5db;
   --surface:   rgba(255,255,255,0.98);
-  --surface2:  rgba(248,250,253,0.98);
-  --surface3:  rgba(240,244,250,0.9);
-  --border:    rgba(196,210,228,0.88);
-  --border2:   rgba(220,230,242,0.82);
+  --surface2:  rgba(242,244,247,0.98);
+  --surface3:  rgba(228,232,238,0.9);
+  --border:    rgba(160,172,188,0.88);
+  --border2:   rgba(180,190,204,0.82);
 
   --blue:      #1a56db;
   --blue-dim:  rgba(26,86,219,0.08);
@@ -93,17 +93,17 @@
   --glow-sm:   0 0 7px rgba(26,86,219,.1);
 }
 [data-theme="light"] body {
-  background-color: #eef2fb;
+  background-color: #d1d5db;
   background-image:
-    radial-gradient(ellipse 90% 55% at 15% -8%, rgba(99,102,241,.11) 0%, transparent 62%),
-    radial-gradient(ellipse 65% 45% at 85% 108%, rgba(16,185,129,.07) 0%, transparent 58%),
-    linear-gradient(168deg, #eef2fb 0%, #f4f1ff 42%, #ebfcf5 100%);
+    radial-gradient(ellipse 90% 55% at 15% -8%, rgba(148,163,184,.08) 0%, transparent 62%),
+    radial-gradient(ellipse 65% 45% at 85% 108%, rgba(148,163,184,.06) 0%, transparent 58%),
+    linear-gradient(168deg, #d1d5db 0%, #c8cdd6 50%, #ced3da 100%);
 }
 [data-theme="light"] #sidebar,
 [data-theme="light"] .sidebar {
-  background: rgba(255,255,255,0.99);
-  border-right-color: rgba(26,86,219,0.1);
-  box-shadow: 3px 0 24px rgba(0,0,0,.06);
+  background: #c8cdd6;
+  border-right-color: rgba(100,116,139,0.25);
+  box-shadow: 3px 0 24px rgba(0,0,0,.1);
 }
 [data-theme="light"] #sidebar::before,
 [data-theme="light"] .sidebar::before { opacity:.28; }
@@ -123,7 +123,22 @@
 [data-theme="light"] .sidebar-card    { backdrop-filter: none; }
 [data-theme="light"] .filter-sel option       { background: #fff; color: #0e1626; }
 [data-theme="light"] .status-sel option       { background: #fff; color: #0e1626; }
-[data-theme="light"] .form-input option        { background: #fff; color: #0e1626; }
+[data-theme="light"] .form-input option       { background: #fff; color: #0e1626; }
+[data-theme="light"] .form-input {
+  background: #ffffff;
+  border-color: rgba(100,116,139,.3);
+  color: #0e1626;
+}
+[data-theme="light"] .form-input:focus {
+  border-color: rgba(26,86,219,.45);
+  box-shadow: 0 0 0 3px rgba(26,86,219,.08);
+  background: #ffffff;
+}
+[data-theme="light"] .form-input::placeholder { color: #94a3b8; }
+[data-theme="light"] .modal-actions { background: rgba(220,224,230,.6); }
+[data-theme="light"] .modal-sub { color: var(--muted); }
+[data-theme="light"] .form-label { color: var(--muted); }
+[data-theme="light"] .wo-field-label { color: var(--subtle); }
 [data-theme="light"] .c-blue  { text-shadow: none; }
 [data-theme="light"] .c-green { text-shadow: none; }
 [data-theme="light"] .c-amber { text-shadow: none; }
@@ -351,11 +366,11 @@ body {
 }
 .stat-card:hover { transform: translateY(-2px); border-color: rgba(34,211,238,.38); box-shadow: 0 6px 28px rgba(0,0,0,.55), var(--glow-sm); }
 .stat-card:hover::after { opacity: 1; transform: scaleX(1); }
-.stat-card.active { border-color: rgba(34,211,238,.5); background: linear-gradient(145deg, rgba(34,211,238,.1) 0%, rgba(14,20,34,.96) 60%); box-shadow: 0 4px 24px rgba(0,0,0,.5), var(--glow); }
-.stat-card.active::after { opacity: 1; transform: scaleX(1); background: var(--blue); }
+.stat-card.active { border-color: rgba(148,163,184,.5); background: linear-gradient(145deg, rgba(148,163,184,.1) 0%, rgba(14,20,34,.96) 60%); box-shadow: 0 4px 24px rgba(0,0,0,.5), 0 0 14px rgba(148,163,184,.15); }
+.stat-card.active::after { opacity: 1; transform: scaleX(1); background: var(--slate); }
 .stat-label { font-size: 9.5px; font-weight: 600; color: var(--subtle); letter-spacing: .11em; margin-bottom: 10px; text-transform: uppercase; font-family: var(--font-mono); }
 .stat-num { font-size: 32px; font-weight: 600; line-height: 1; color: var(--text); font-family: var(--font-mono); letter-spacing: -.02em; }
-.stat-card.active .stat-num { color: var(--blue); text-shadow: 0 0 22px rgba(34,211,238,.5); }
+.stat-card.active .stat-num { color: var(--slate); text-shadow: 0 0 18px rgba(148,163,184,.35); }
 .c-blue  { color: var(--blue);   text-shadow: 0 0 12px rgba(34,211,238,.4); }
 .c-green { color: var(--green);  text-shadow: 0 0 12px rgba(52,211,153,.35); }
 .c-amber { color: var(--amber);  text-shadow: 0 0 12px rgba(251,191,36,.3); }
@@ -680,8 +695,13 @@ body {
 .wo-tab { padding: 6px 18px; border-radius: var(--radius); font-size: 11px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .06em; cursor: pointer; border: none; background: transparent; color: var(--subtle); transition: all .15s; }
 .wo-tab:hover { color: var(--text); }
 .wo-tab.active { background: var(--surface); color: var(--blue); box-shadow: var(--shadow-xs); border: 1px solid rgba(34,211,238,.2); }
-.wo-status-open   { background: rgba(34,211,238,.09); color: var(--blue);  border: 1px solid rgba(34,211,238,.2);  padding: 3px 8px; border-radius: var(--radius); font-size: 10px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .04em; }
-.wo-status-closed { background: rgba(52,211,153,.09); color: var(--green); border: 1px solid rgba(52,211,153,.2);  padding: 3px 8px; border-radius: var(--radius); font-size: 10px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .04em; }
+.wo-status-open    { background: rgba(34,211,238,.09); color: var(--blue);  border: 1px solid rgba(34,211,238,.2);  padding: 3px 8px; border-radius: var(--radius); font-size: 10px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .04em; }
+.wo-status-closed  { background: rgba(52,211,153,.09); color: var(--green); border: 1px solid rgba(52,211,153,.2);  padding: 3px 8px; border-radius: var(--radius); font-size: 10px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .04em; }
+.wo-status-pending { background: rgba(251,191,36,.1);  color: var(--amber); border: 1px solid rgba(251,191,36,.28); padding: 3px 8px; border-radius: var(--radius); font-size: 10px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .04em; }
+.btn-submit-closure { background: rgba(251,191,36,.1); color: var(--amber); border: 1px solid rgba(251,191,36,.3); padding: 7px 16px; border-radius: var(--radius); font-size: 12px; font-weight: 500; font-family: var(--font-mono); cursor: pointer; transition: all .15s; }
+.btn-submit-closure:hover { background: rgba(251,191,36,.18); box-shadow: 0 0 9px rgba(251,191,36,.2); }
+.btn-approve-close { background: rgba(52,211,153,.1); color: var(--green); border: 1px solid rgba(52,211,153,.3); padding: 7px 16px; border-radius: var(--radius); font-size: 12px; font-weight: 500; font-family: var(--font-mono); cursor: pointer; transition: all .15s; }
+.btn-approve-close:hover { background: rgba(52,211,153,.18); box-shadow: 0 0 9px rgba(52,211,153,.15); }
 .wo-id   { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--blue); cursor: pointer; }
 .wo-id:hover { text-decoration: underline; text-underline-offset: 2px; }
 .wo-inst { font-family: var(--font-mono); font-size: 11px; color: var(--subtle); margin-top: 2px; }
@@ -756,88 +776,23 @@ body {
 .group-body { overflow:hidden; transition:max-height .25s ease, opacity .2s ease; max-height:4000px; opacity:1; }
 .group-collapsed .group-body { max-height:0!important; opacity:0; pointer-events:none; }
 .group-hdr:hover .group-title { color:var(--blue); }
+
+/* ── SITE GALLERY ───────────────────────────────────────── */
+.site-gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:18px; }
+.site-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; box-shadow:var(--shadow); transition:transform .18s,box-shadow .18s,border-color .18s; display:flex; flex-direction:column; }
+.site-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); border-color:rgba(34,211,238,.3); }
+.site-card-photo { width:100%; height:156px; object-fit:cover; display:block; }
+.site-card-photo-placeholder { width:100%; height:156px; display:flex; align-items:center; justify-content:center; background:linear-gradient(145deg,var(--surface2),var(--surface3)); color:var(--subtle); font-size:30px; flex-direction:column; gap:6px; }
+.site-card-body { padding:14px 16px; flex:1; display:flex; flex-direction:column; gap:5px; }
+.site-card-code { font-family:var(--font-mono); font-size:14px; font-weight:700; color:var(--blue); }
+.site-card-meta { font-family:var(--font-mono); font-size:11px; color:var(--muted); line-height:1.6; }
+.site-card-footer { padding:10px 16px; border-top:1px solid var(--border2); display:flex; justify-content:space-between; align-items:center; gap:8px; background:var(--surface2); }
 </style>
 </head>
 <body>
-
-<!-- PASSWORD SCREEN -->
-<div id="pw-screen" style="
-  position:fixed;inset:0;z-index:9999;
-  background:#080c14;
-  display:flex;align-items:center;justify-content:center;
-  font-family:'IBM Plex Sans',system-ui,sans-serif;
-">
-  <div style="
-    background:rgba(16,22,36,0.98);
-    border:1px solid rgba(34,211,238,0.2);
-    border-radius:12px;
-    padding:40px 48px;
-    width:100%;max-width:380px;
-    box-shadow:0 20px 60px rgba(0,0,0,0.7);
-    text-align:center;
-  ">
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:#22d3ee;letter-spacing:.08em;margin-bottom:6px;">SDAPCD</div>
-    <div style="font-size:12px;color:#8896ae;margin-bottom:32px;font-family:'IBM Plex Mono',monospace;">Instrument Management</div>
-    <div style="position:relative;margin-bottom:12px;">
-      <input id="pw-input" type="password" placeholder="Enter password"
-        onkeydown="if(event.key==='Enter')checkPassword()"
-        style="
-          width:100%;padding:12px 16px;
-          background:rgba(8,12,20,0.9);
-          border:1px solid rgba(34,211,238,0.25);
-          border-radius:8px;color:#dde4f0;
-          font-family:'IBM Plex Sans',sans-serif;font-size:14px;
-          outline:none;box-sizing:border-box;
-        "
-      />
-    </div>
-    <div id="pw-error" style="color:#f87171;font-size:12px;margin-bottom:12px;min-height:18px;"></div>
-    <button onclick="checkPassword()" style="
-      width:100%;padding:12px;
-      background:#22d3ee;color:#080c14;
-      border:none;border-radius:8px;
-      font-family:'IBM Plex Sans',sans-serif;font-weight:700;font-size:14px;
-      cursor:pointer;transition:background .15s;
-    "
-    onmouseover="this.style.background='#38e8ff'"
-    onmouseout="this.style.background='#22d3ee'"
-    >Sign In</button>
-  </div>
-</div>
-
-<nav id="sidebar" style="display:none"></nav>
-<div id="root" style="display:none"></div>
+<nav id="sidebar"></nav>
+<div id="root"></div>
 <script>
-// ── PASSWORD CHECK ──────────────────────────────────────────
-function checkPassword() {
-  const val = document.getElementById('pw-input').value;
-  const err = document.getElementById('pw-error');
-  // Simple hash check — password is "circuit"
-  if (simpleHash(val) === simpleHash('circuit')) {
-    document.getElementById('pw-screen').style.display = 'none';
-    document.getElementById('sidebar').style.display = '';
-    document.getElementById('root').style.display = '';
-    sessionStorage.setItem('sdapcd_auth', simpleHash('circuit'));
-  } else {
-    err.textContent = 'Incorrect password. Try again.';
-    document.getElementById('pw-input').value = '';
-    document.getElementById('pw-input').focus();
-  }
-}
-function simpleHash(str) {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
-  return h.toString(16);
-}
-// Auto-unlock if already authenticated this session
-if (sessionStorage.getItem('sdapcd_auth') === simpleHash('circuit')) {
-  document.getElementById('pw-screen').style.display = 'none';
-  document.getElementById('sidebar').style.display = '';
-  document.getElementById('root').style.display = '';
-}
-// Focus password input
-setTimeout(() => { const el = document.getElementById('pw-input'); if (el) el.focus(); }, 100);
-
 const LS             = 'sdapcd_instr_v9';
 
 const STATUSES       = ['Operational','Maintenance','Repair','Calibration','Offline','Deployed','At Vendor'];
@@ -889,24 +844,40 @@ const SEED = [
 // ── GOOGLE APPS SCRIPT API CLIENT ──────────────────────────
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyw4OrLWPQo4J-zul2eKqKFC3A5g2BopsycwD-hxpx7Hdq5kZ74iwfpPZ-BCoTxmx0k/exec';
 
-// All requests go as GET with params (GAS handles CORS best this way)
-// For writes, we encode the body as a param
 async function gasRequest(path, action, params, body) {
   const url = new URL(GAS_URL);
   url.searchParams.set('path', path);
   url.searchParams.set('action', action);
-  if (params) Object.entries(params).forEach(([k,v]) => { if (v !== undefined && v !== null) url.searchParams.set(k, v); });
+  if (params) Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
+
+  let response;
   if (body !== null && body !== undefined) {
-    url.searchParams.set('body', JSON.stringify(body));
+    response = await fetch(url.toString(), {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+  } else {
+    response = await fetch(url.toString());
   }
-  const response = await fetch(url.toString());
   const j = await response.json();
   if (!j.ok) throw new Error(j.error || 'API error');
   return j.data;
 }
 
 const API = {
+  async uploadFile(fileData, fileName, mimeType, instrName, instrSerial, workType) {
+    return gasRequest('upload', 'file', null, {
+      data:        fileData,
+      fileName:    fileName,
+      mimeType:    mimeType,
+      instrName:   instrName  || '',
+      instrSerial: instrSerial|| '',
+      workType:    workType   || '',
+      uploadDate:  new Date().toISOString().slice(0,10)
+    });
+  },
   async get(path) {
+    // Map /db, /instruments, etc. to GAS path/action params
     const clean = path.replace(/^\//, '');
     const parts = clean.split('/');
     const resource = parts[0];
@@ -919,11 +890,12 @@ const API = {
     const clean = path.replace(/^\//, '');
     const parts = clean.split('/');
     const resource = parts[0];
+    const sub = parts[1]; // e.g. 'history/instrument/123' or 'admin/clear-notes'
     if (resource === 'admin') {
-      const action = (parts[1]||'').replace(/-/g,'_');
+      const action = (parts[1]||'').replace('-','_');
       return gasRequest('admin', action, null, body);
     }
-    return gasRequest(resource.replace(/-/g,'_'), 'post', null, body);
+    return gasRequest(resource, 'post', null, body);
   },
   async put(path, body) {
     const clean = path.replace(/^\//, '');
@@ -931,24 +903,24 @@ const API = {
     const resource = parts[0];
     const id = parts[1];
     if (resource === 'settings') return gasRequest('settings', 'put', {key: id}, body);
-    return gasRequest(resource.replace(/-/g,'_'), 'put', {id}, body);
+    return gasRequest(resource, 'put', {id}, body);
   },
   async patch(path, body) {
     const clean = path.replace(/^\//, '');
     const parts = clean.split('/');
     const resource = parts[0];
     const id = parts[1];
-    const sub = parts[2];
+    const sub = parts[2]; // e.g. 'archive', 'close', 'status', 'site', 'cert'
     const action = sub || 'patch';
     if (resource === 'work-orders') return gasRequest('work_orders', action === 'close' ? 'close' : 'put', {id}, body);
-    return gasRequest(resource.replace(/-/g,'_'), action, {id}, body);
+    return gasRequest(resource.replace('-','_'), action, {id}, body);
   },
   async del(path) {
     const clean = path.replace(/^\//, '');
     const parts = clean.split('/');
     const resource = parts[0];
     const id = parts[1];
-    return gasRequest(resource.replace(/-/g,'_'), 'delete', {id}, {});
+    return gasRequest(resource.replace('-','_'), 'delete', {id}, {});
   }
 };
 
@@ -963,7 +935,8 @@ let db = {
   sites: [...DEFAULT_SITES], instTypes: ['BC1060','ESEQ'],
   techs: [{name:'User 1',role:'',email:''},{name:'User 2',role:'',email:''}],
   archivedSites: [], archivedTypes: [], archivedTechs: [],
-  sitesMeta: {}, customStatuses: []
+  sitesMeta: {}, customStatuses: [],
+  securityLog: [], deleteLog: []
 };
 
 async function loadDBFromServer() {
@@ -972,6 +945,21 @@ async function loadDBFromServer() {
     db = d;
     if (!db.customStatuses) db.customStatuses = [];
     if (!db.sitesMeta)      db.sitesMeta = {};
+    if (!db.securityLog)    db.securityLog = [];
+    if (!db.deleteLog)      db.deleteLog = [];
+    if (!db.history)        db.history = {};
+    // Map snake_case server fields → camelCase used throughout the app
+    if (db.instruments) {
+      db.instruments.forEach(i => {
+        if (i.cert_interval_months !== undefined && i.certIntervalMonths === undefined)
+          i.certIntervalMonths = i.cert_interval_months ? Number(i.cert_interval_months) : null;
+        if (i.last_cert_date !== undefined && i.lastCertDate === undefined)
+          i.lastCertDate = i.last_cert_date || null;
+        if (i.work_attachments !== undefined && i.workAttachments === undefined)
+          i.workAttachments = i.work_attachments || [];
+      });
+    }
+    markAllSynced();
     render();
   } catch(e) {
     console.error('SDAPCD: failed to load from server.', e);
@@ -981,21 +969,46 @@ async function loadDBFromServer() {
 
 // Kick off load after page is ready (called at bottom of script)
 
+// ── SESSION USER ───────────────────────────────────────────
+const USER_PW_PREFIX = 'sdapcd_upw_';
+function getUserPWKey(name) { return USER_PW_PREFIX + hashPWEarly(name); }
+// Early hash (before hashPW is declared) — duplicate kept minimal
+function hashPWEarly(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+  return h.toString(16);
+}
+function getSessionUser() {
+  try { return sessionStorage.getItem('sdapcd_user') || ''; } catch(e) { return ''; }
+}
+function setSessionUser(name) {
+  try { sessionStorage.setItem('sdapcd_user', name); } catch(e) {}
+}
+function clearSessionUser() {
+  try { sessionStorage.removeItem('sdapcd_user'); } catch(e) {}
+}
+
 // ── UI STATE ───────────────────────────────────────────────
 let ui = {
   page: 'dashboard', modal: null, form: {},
   search: '', statusF: 'All Statuses', typeF: 'All Types', locationF: 'Field & Shop',
   activeStatCard: null, adminInstrSearch: '',
-  woFilter: 'Open', woSearch: '',
+  woFilter: 'Open', woSearch: '', woTypeF: 'All Status', woDateFrom: '', woDateTo: '',
+  certSearch: '', certStatusF: 'All Status', certDateFrom: '', certDateTo: '',
   actFilter: 'All', actSearch: '', actDateFrom: '', actDateTo: '',
+  slSearch: '', slTypeF: 'All Types', slTechF: 'All Techs', slDateFrom: '', slDateTo: '',
+  selectedSite: '',
   dirty: false,
   theme: (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('sdapcd_theme')) || 'dark',
+  currentUser: getSessionUser(),
+  currentUsername: (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('sdapcd_username')) || '',
   adminUnlocked: false,
   adminUnlockedAt: null,
   _openAdminSections: new Set(),
   newStatus: '',
   newSite: '', newType: '',
-  newTechName: '', newTechRole: '', newTechEmail: ''
+  newTechName: '', newTechRole: '', newTechEmail: '',
+  newTechUsername: '', newTechPermission: '', newTechTempPw: ''
 };
 
 // Apply saved theme immediately before first render
@@ -1018,42 +1031,66 @@ const isVendor    = i  => i.site === 'VENDOR';
 const isField     = i  => i.site && i.site !== 'HQ/SHOP' && i.site !== 'VENDOR';
 const isShop      = i  => i.site === 'HQ/SHOP';
 
+function currentUserHasFullControl() {
+  if (ui.currentUsername === 'admin') return true;
+  const tech = db.techs.find(t => (t.username||'') === ui.currentUsername);
+  return tech && tech.permission === 'Full Control';
+}
+
 // ── CERTIFICATION HELPERS ──────────────────────────────────
-// Returns YYYY-MM-DD that is exactly 2 years after a given date string
-function certDueDate(lastDate) {
-  if (!lastDate) return null;
+// Returns YYYY-MM-DD offset by `months` months after a given date string
+function certDueDate(lastDate, months) {
+  if (!lastDate || !months) return null;
   const d = new Date(lastDate + 'T00:00:00');
-  d.setFullYear(d.getFullYear() + 2);
+  d.setMonth(d.getMonth() + Number(months));
   return d.toISOString().slice(0, 10);
+}
+// Returns days remaining (negative = overdue). null if no cert data.
+function certDaysLeft(i) {
+  const due = certDueDate(i.lastCertDate, i.certIntervalMonths);
+  if (!due) return null;
+  const t = new Date(today() + 'T00:00:00');
+  const d = new Date(due   + 'T00:00:00');
+  return Math.round((d - t) / 86400000);
 }
 // Returns 'overdue' | 'due-soon' | 'ok' | 'none'
 function certStatus(i) {
-  if (i.name !== 'BC1060') return 'none';
-  const due = certDueDate(i.lastCertDate);
-  if (!due) return 'none';
-  const today2 = new Date(today() + 'T00:00:00');
-  const dueD   = new Date(due  + 'T00:00:00');
-  const daysLeft = Math.round((dueD - today2) / 86400000);
-  if (daysLeft < 0)                   return 'overdue';
-  if (daysLeft <= CERT_WARN_DAYS)     return 'due-soon';
+  if (!i.certIntervalMonths) return 'none';
+  if (!i.lastCertDate)       return 'none';
+  const days = certDaysLeft(i);
+  if (days === null)           return 'none';
+  if (days < 0)                return 'overdue';
+  if (days <= CERT_WARN_DAYS)  return 'due-soon';
   return 'ok';
 }
 function certBadge(i) {
-  if (i.name !== 'BC1060') return '';
-  const due = certDueDate(i.lastCertDate);
-  const st  = certStatus(i);
-  if (st === 'none')     return `<span class="cert-none">NO CERT DATE</span>`;
-  if (st === 'overdue')  return `<span class="cert-overdue">⚠ OVERDUE · ${due}</span>`;
-  if (st === 'due-soon') return `<span class="cert-due-soon">◉ DUE SOON · ${due}</span>`;
-  return                        `<span class="cert-ok">✓ CERT OK · ${due}</span>`;
+  const due  = certDueDate(i.lastCertDate, i.certIntervalMonths);
+  const st   = certStatus(i);
+  const days = certDaysLeft(i);
+  if (!i.certIntervalMonths) return `<span class="cert-none">NOT TRACKED</span>`;
+  if (st === 'none')         return `<span class="cert-none">NO CERT DATE</span>`;
+  if (st === 'overdue')      return `<span class="cert-overdue">⚠ OVERDUE ${Math.abs(days)}d · ${due}</span>`;
+  if (st === 'due-soon')     return `<span class="cert-due-soon">◉ DUE IN ${days}d · ${due}</span>`;
+  return                            `<span class="cert-ok">✓ OK · ${due}</span>`;
 }
 
 function addHistory(instId, action, detail) {
   if (!db.history[instId]) db.history[instId] = [];
-  db.history[instId].unshift({ ts: nowTs(), epoch: Date.now(), action, detail });
-  if (db.history[instId].length > 100) db.history[instId].length = 100;
-  // Persist to server (fire-and-forget)
-  API.post('/history', { instrument_id: instId, action, detail }).catch(e => console.warn('history save failed', e));
+  const user = ui.currentUser || 'Unknown';
+  const detailWithUser = detail ? `${detail} · by: ${user}` : `by: ${user}`;
+  db.history[instId].unshift({ ts: nowTs(), epoch: Date.now(), action, detail: detailWithUser, user });
+  if (db.history[instId].length > 10000) db.history[instId].length = 10000;
+  API.post('/history', { instrument_id: instId, action, detail: detailWithUser }).catch(e => console.warn('history save failed', e));
+}
+function addSecurityLog(type, detail) {
+  if (!db.securityLog) db.securityLog = [];
+  db.securityLog.unshift({ ts: nowTs(), epoch: Date.now(), type, user: ui.currentUser || 'Unknown', detail });
+  if (db.securityLog.length > 5000) db.securityLog.length = 5000;
+}
+function addDeleteLog(what, detail) {
+  if (!db.deleteLog) db.deleteLog = [];
+  db.deleteLog.unshift({ ts: nowTs(), epoch: Date.now(), user: ui.currentUser || 'Unknown', what, detail });
+  if (db.deleteLog.length > 5000) db.deleteLog.length = 5000;
 }
 function getVal(id) {
   const el = document.getElementById(id);
@@ -1070,8 +1107,71 @@ function toast(msg) {
   _toastTimer = setTimeout(() => { el.style.display = 'none'; }, 2200);
 }
 
-// ── RENDER ─────────────────────────────────────────────────
+// ── LIVE SEARCH — filters rows directly without re-rendering ──
+function filterTable(tableId, q) {
+  const s = (q || '').toLowerCase().trim();
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  const rows = table.querySelectorAll('tbody tr');
+  rows.forEach(row => {
+    if (row.classList.contains('empty-row')) return;
+    const text = row.textContent.toLowerCase();
+    row.style.display = (!s || text.includes(s)) ? '' : 'none';
+  });
+}
+
+function filterCertTracker(q) {
+  const s = (q || '').toLowerCase().trim();
+  document.querySelectorAll('.group-body table tbody tr').forEach(row => {
+    if (row.classList.contains('empty-row')) return;
+    const text = row.textContent.toLowerCase();
+    row.style.display = (!s || text.includes(s)) ? '' : 'none';
+  });
+}
+
+function filterActivity(q) {
+  const s = (q || '').toLowerCase().trim();
+  const feed = document.getElementById('act-feed');
+  if (!feed) return;
+  feed.querySelectorAll('.feed-item').forEach(item => {
+    const text = item.textContent.toLowerCase();
+    item.style.display = (!s || text.includes(s)) ? '' : 'none';
+  });
+}
+
+function filterDashboard(q) {
+  const s = (q || '').toLowerCase().trim();
+  // Filter all instrument tables on the dashboard
+  ['inst-table--field','inst-table--shop','inst-table--storage','inst-table--vendor'].forEach(cls => {
+    const tables = document.querySelectorAll('.' + cls);
+    tables.forEach(table => {
+      const rows = table.querySelectorAll('tbody tr');
+      let visibleCount = 0;
+      rows.forEach(row => {
+        if (row.classList.contains('empty-row')) return;
+        const text = row.textContent.toLowerCase();
+        const show = !s || text.includes(s);
+        row.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
+      });
+    });
+  });
+}
+// Track which search input has focus so we can restore it after render
+let _focusedSearchId = null;
+let _focusedSearchCursor = null;
+
 function render() {
+  // ── LOGIN GATE ─────────────────────────────────────────
+  if (!ui.currentUser) {
+    document.getElementById('sidebar').innerHTML = '';
+    document.getElementById('root').innerHTML = renderLoginScreen();
+    setTimeout(() => {
+      const sel = document.getElementById('login-username');
+      if (sel) sel.focus();
+    }, 50);
+    return;
+  }
   const inst      = db.instruments.filter(i => !i.archived);
   const field     = inst.filter(isField);
   const shop      = inst.filter(isShop);
@@ -1119,8 +1219,14 @@ function render() {
       <button class="btn-dash ${ui.page==='dashboard'?'active':''}" onclick="navigateTo('dashboard')">
         <span class="nav-icon">⊞</span>Dashboard
       </button>
-      <button class="btn-nav ${ui.page==='workorders'?'active':''}" onclick="navigateTo('workorders')">
+      <button class="btn-nav ${ui.page==='workorders' && ui.woFilter!=='cert'?'active':''}" onclick="navigateTo('workorders')">
         <span class="nav-icon">⊡</span>Work Orders
+      </button>
+      <button class="btn-nav ${ui.page==='workorders' && ui.woFilter==='cert'?'active':''}" onclick="ui.woFilter='cert';ui.page='workorders';render()">
+        <span class="nav-icon">◈</span>Certification Tracker
+      </button>
+      <button class="btn-nav ${ui.page==='servicelog'?'active':''}" onclick="navigateTo('servicelog')">
+        <span class="nav-icon">▣</span>Service Log
       </button>
       <button class="btn-nav ${ui.page==='sites'?'active':''}" onclick="navigateTo('sites')">
         <span class="nav-icon">◈</span>Site Info
@@ -1128,24 +1234,28 @@ function render() {
       <button class="btn-nav ${ui.page==='activity'?'active':''}" onclick="navigateTo('activity')">
         <span class="nav-icon">◎</span>Activity
       </button>
-    </div>
-    <div class="sb-footer">
       <button class="btn-nav ${ui.page==='admin'?'active':''}" onclick="navigateTo('admin')">
         <span class="nav-icon">⚙</span>Admin
       </button>
-      <button class="btn-theme" onclick="toggleTheme()">
-        <span class="nav-icon">${ui.theme==='light' ? '☀' : '🌙'}</span>
-        ${ui.theme==='light' ? 'Light Mode' : 'Dark Mode'}
+    </div>
+    <div class="sb-footer">
+      <div style="padding:8px 12px 6px;border-top:1px solid rgba(34,211,238,.07);margin-bottom:2px">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);letter-spacing:.06em;margin-bottom:4px">SIGNED IN AS</div>
+        <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(ui.currentUser)}</div>
+      </div>
+      <button class="btn-nav" onclick="signOut()" style="color:var(--subtle);font-size:11px">
+        <span class="nav-icon">⎋</span>Sign Out
       </button>
     </div>
   `;
 
   document.getElementById('root').innerHTML = `
   <div class="main">
-  ${ui.page === 'admin' ? renderAdmin() : ui.page === 'workorders' ? renderWorkOrders() : ui.page === 'activity' ? renderActivity() : ui.page === 'sites' ? renderSites() : `
+  <button onclick="toggleTheme()" title="Toggle theme" style="position:fixed;top:16px;right:20px;z-index:300;background:${ui.theme==='light' ? 'rgba(100,116,139,.12)' : 'var(--surface)'};border:1px solid ${ui.theme==='light' ? 'rgba(100,116,139,.35)' : 'var(--border)'};color:${ui.theme==='light' ? '#64748b' : 'var(--muted)'};border-radius:var(--radius);padding:6px 10px;font-size:15px;cursor:pointer;transition:all .15s;box-shadow:var(--shadow-xs)" onmouseover="this.style.borderColor='rgba(34,211,238,.35)'" onmouseout="this.style.borderColor='${ui.theme==='light' ? 'rgba(100,116,139,.35)' : 'var(--border)'}'">${ui.theme==='light' ? '☀' : '🌙'}</button>
+  ${ui.page === 'admin' ? renderAdmin() : ui.page === 'workorders' ? renderWorkOrders() : ui.page === 'activity' ? renderActivity() : ui.page === 'sites' ? renderSites() : ui.page === 'servicelog' ? renderServiceLog() : `
 
     <div class="section-hdr">
-      <div class="section-title">System Overview</div>
+      <div class="section-title">Dashboard</div>
       <div style="display:flex;gap:8px">
         <button class="btn-add" onclick="openAdd()">+ ADD INSTRUMENT</button>
         <button class="btn-export" onclick="exportCSV()">↓ EXPORT CSV</button>
@@ -1155,17 +1265,17 @@ function render() {
     <div class="stat-grid">
       <div class="stat-card ${ui.activeStatCard==='total'?'active':''}"       onclick="setStatFilter('total')">
         <div class="stat-label">Total Instruments</div>
-        <div class="stat-num c-blue">${inst.length}</div>
+        <div class="stat-num c-slate">${inst.length}</div>
         <div class="stat-hint">Click to show all</div>
       </div>
       <div class="stat-card ${ui.activeStatCard==='operational'?'active':''}" onclick="setStatFilter('operational')">
         <div class="stat-label">Operational</div>
-        <div class="stat-num c-green">${opCount}</div>
+        <div class="stat-num c-slate">${opCount}</div>
         <div class="stat-hint">Click to filter</div>
       </div>
       <div class="stat-card ${ui.activeStatCard==='field'?'active':''}"       onclick="setStatFilter('field')">
         <div class="stat-label">In the Field</div>
-        <div class="stat-num c-amber">${field.length}</div>
+        <div class="stat-num c-slate">${field.length}</div>
         <div class="stat-hint">Click to filter</div>
       </div>
       <div class="stat-card ${ui.activeStatCard==='shop'?'active':''}"        onclick="setStatFilter('shop')">
@@ -1175,7 +1285,7 @@ function render() {
       </div>
       <div class="stat-card ${ui.activeStatCard==='nowork'?'active':''}"      onclick="setStatFilter('nowork')">
         <div class="stat-label">Open Work Orders</div>
-        <div class="stat-num c-red">${openWOCount}</div>
+        <div class="stat-num c-slate">${openWOCount}</div>
         <div class="stat-hint">Click to filter</div>
       </div>
     </div>
@@ -1183,7 +1293,8 @@ function render() {
     <div class="toolbar">
       <div class="search-box">
         <span class="search-icon">⌕</span>
-        <input placeholder="Search type, serial, site..." value="${esc(ui.search)}" oninput="ui.search=this.value;render()"/>
+        <input placeholder="Search type, serial, site..." value="${esc(ui.search)}" id="main-search" oninput="ui.search=this.value;filterDashboard(this.value)"/>
+        ${ui.search ? `<button onclick="ui.search='';document.getElementById('main-search').value='';filterDashboard('')" style="background:none;border:none;color:var(--subtle);cursor:pointer;padding:0 6px;font-size:13px;line-height:1" title="Clear search">✕</button>` : ''}
       </div>
       <select class="filter-sel" onchange="ui.statusF=this.value;ui.activeStatCard=null;render()">
         ${['All Statuses',...allStatuses()].map(s=>`<option ${ui.statusF===s?'selected':''}>${s}</option>`).join('')}
@@ -1194,8 +1305,7 @@ function render() {
       <select class="filter-sel" onchange="ui.locationF=this.value;ui.activeStatCard=null;render()">
         ${['Field & Shop','In the Field','In the Shop','Storage / Operational','At Vendor'].map(l=>`<option ${ui.locationF===l?'selected':''}>${l}</option>`).join('')}
       </select>
-      ${(ui.search || ui.statusF !== 'All Statuses' || ui.typeF !== 'All Types' || ui.locationF !== 'Field & Shop' || ui.activeStatCard) ? `
-      <button class="btn-reset" onclick="ui.search='';ui.statusF='All Statuses';ui.typeF='All Types';ui.locationF='Field & Shop';ui.activeStatCard=null;render()">✕ Reset</button>` : ''}
+      <button class="btn-act" onclick="ui.search='';ui.statusF='All Statuses';ui.typeF='All Types';ui.locationF='Field & Shop';ui.activeStatCard=null;filterDashboard('');render()" style="white-space:nowrap">✕ Clear</button>
     </div>
 
     ${(ui.locationF==='Field & Shop'||ui.locationF==='In the Field') ? `
@@ -1254,10 +1364,6 @@ function render() {
   `}
   </div>
   `;
-  if (ui.page === 'admin' && ui.adminUnlocked) setTimeout(setupAdminSections, 0);
-
-  if (ui.page === 'admin' && ui.adminUnlocked) { setTimeout(setupAdminSections, 0); }
-  // Setup admin collapsible sections
   if (ui.page === 'admin' && ui.adminUnlocked) setTimeout(setupAdminSections, 0);
 
   // Inject modal directly into body so position:fixed works correctly
@@ -1368,6 +1474,197 @@ function renderVendorRow(i) {
     </td>
   </tr>`;
 }
+function renderLoginScreen() {
+  const err = ui._loginErr || '';
+
+  // Change password view
+  if (ui._loginView === 'changepw') {
+    const cpErr = ui._cpErr || '';
+    return `
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px">
+      <div style="width:100%;max-width:380px">
+        <div style="text-align:center;margin-bottom:32px">
+          <div style="font-family:var(--font-mono);font-size:22px;font-weight:700;color:var(--blue);letter-spacing:.1em;text-shadow:0 0 22px rgba(34,211,238,.5)">SDAPCD</div>
+          <div style="font-family:var(--font-mono);font-size:11px;color:var(--subtle);margin-top:6px;letter-spacing:.06em">INSTRUMENT MANAGEMENT · SAN DIEGO APCD</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:28px;box-shadow:var(--shadow-lg)">
+          <div style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--text);margin-bottom:20px;letter-spacing:.04em">Change Password</div>
+          ${cpErr ? `<div class="err-msg" style="margin-bottom:14px">${esc(cpErr)}</div>` : ''}
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <input id="cp-username" class="form-input" placeholder="Username" autocapitalize="none" spellcheck="false"/>
+          </div>
+          <div class="form-group" style="margin-top:12px">
+            <label class="form-label">Current Password</label>
+            <input id="cp-current" class="form-input" type="password" placeholder="Current password"/>
+          </div>
+          <div class="form-group" style="margin-top:12px">
+            <label class="form-label">New Password</label>
+            <input id="cp-new" class="form-input" type="password" placeholder="New password" onkeydown="if(event.key==='Enter')submitChangePassword()"/>
+          </div>
+          <div class="form-group" style="margin-top:12px">
+            <label class="form-label">Confirm New Password</label>
+            <input id="cp-confirm" class="form-input" type="password" placeholder="Confirm new password" onkeydown="if(event.key==='Enter')submitChangePassword()"/>
+          </div>
+          <button class="btn-save" onclick="submitChangePassword()" style="width:100%;margin-top:18px;justify-content:center">
+            Update Password
+          </button>
+          <div style="text-align:center;margin-top:14px">
+            <button onclick="ui._loginView='';ui._cpErr='';render()" style="background:none;border:none;font-family:var(--font-mono);font-size:10px;color:var(--subtle);cursor:pointer;letter-spacing:.03em;text-decoration:underline;text-underline-offset:3px">← Back to Sign In</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+  return `
+  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px">
+    <div style="width:100%;max-width:380px">
+      <div style="text-align:center;margin-bottom:32px">
+        <div style="font-family:var(--font-mono);font-size:22px;font-weight:700;color:var(--blue);letter-spacing:.1em;text-shadow:0 0 22px rgba(34,211,238,.5)">SDAPCD</div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--subtle);margin-top:6px;letter-spacing:.06em">INSTRUMENT MANAGEMENT · SAN DIEGO APCD</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:28px;box-shadow:var(--shadow-lg)">
+        <div style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--text);margin-bottom:20px;letter-spacing:.04em">Sign In</div>
+        ${err ? `<div class="err-msg" style="margin-bottom:14px">${esc(err)}</div>` : ''}
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input id="login-username" class="form-input" placeholder="Username"
+            autocomplete="username" autocapitalize="none" spellcheck="false"
+            onkeydown="if(event.key==='Enter')document.getElementById('login-pw').focus()"/>
+        </div>
+        <div class="form-group" style="margin-top:12px">
+          <label class="form-label">Password</label>
+          <input id="login-pw" class="form-input" type="password" placeholder="Password"
+            autocomplete="current-password"
+            onkeydown="if(event.key==='Enter')submitLogin()"/>
+        </div>
+        <button class="btn-save" onclick="submitLogin()" style="width:100%;margin-top:18px;justify-content:center">
+          Sign In →
+        </button>
+        <div style="text-align:center;margin-top:14px">
+          <button onclick="ui._loginView='changepw';render()" style="background:none;border:none;font-family:var(--font-mono);font-size:10px;color:var(--subtle);cursor:pointer;letter-spacing:.03em;text-decoration:underline;text-underline-offset:3px">Change Password</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function submitLogin() {
+  const username = (document.getElementById('login-username')?.value || '').trim().toLowerCase();
+  const pw       = (document.getElementById('login-pw')?.value      || '').trim();
+  if (!username) { ui._loginErr = 'Please enter your username.'; render(); return; }
+  if (!pw)       { ui._loginErr = 'Please enter your password.'; render(); return; }
+
+  // ── BOOTSTRAP ADMIN ACCOUNT (always available) ──────────
+  if (username === 'admin') {
+    const stored = localStorage.getItem(getUserPWKey('admin')) || hashPWEarly('circuit');
+    if (hashPWEarly(pw) !== stored) {
+      ui._loginErr = 'Incorrect password. Try again.';
+      render();
+      setTimeout(() => { const el = document.getElementById('login-pw'); if (el) { el.value = ''; el.focus(); } }, 50);
+      return;
+    }
+    ui._loginErr = '';
+    ui.currentUser = 'Admin';
+    ui.currentUsername = 'admin';
+    setSessionUser('Admin');
+    sessionStorage.setItem('sdapcd_username', 'admin');
+    addSecurityLog('LOGIN', 'User logged in successfully.');
+    ui.page = 'dashboard';
+    resetSessionTimer();
+    render();
+    return;
+  }
+
+  // ── REGULAR USERS ────────────────────────────────────────
+  const tech = [...db.techs, ...(db.archivedTechs||[])].find(t => (t.username||'').toLowerCase() === username);
+  if (!tech) {
+    ui._loginErr = 'Username not found. Contact your admin.';
+    render();
+    setTimeout(() => { const el = document.getElementById('login-username'); if (el) { el.value = ''; el.focus(); } }, 50);
+    return;
+  }
+  const stored = localStorage.getItem(getUserPWKey(username)) || hashPWEarly('circuit');
+  if (hashPWEarly(pw) !== stored) {
+    ui._loginErr = 'Incorrect password. Try again.';
+    render();
+    setTimeout(() => { const el = document.getElementById('login-pw'); if (el) { el.value = ''; el.focus(); } }, 50);
+    return;
+  }
+  ui._loginErr = '';
+  ui.currentUser = tech.name;
+  ui.currentUsername = username;
+  setSessionUser(tech.name);
+  sessionStorage.setItem('sdapcd_username', username);
+  addSecurityLog('LOGIN', 'User logged in successfully.');
+  ui.page = 'dashboard';
+  resetSessionTimer();
+  render();
+}
+
+function submitChangePassword() {
+  const username = (document.getElementById('cp-username')?.value || '').trim().toLowerCase();
+  const cur      = (document.getElementById('cp-current')?.value  || '').trim();
+  const newPw    = (document.getElementById('cp-new')?.value      || '').trim();
+  const conf     = (document.getElementById('cp-confirm')?.value  || '').trim();
+  if (!username) { ui._cpErr = 'Please enter your username.'; render(); return; }
+  // Validate username exists
+  const isAdmin = username === 'admin';
+  const tech = !isAdmin && [...db.techs, ...(db.archivedTechs||[])].find(t => (t.username||'').toLowerCase() === username);
+  if (!isAdmin && !tech) { ui._cpErr = 'Username not found.'; render(); return; }
+  const stored = localStorage.getItem(getUserPWKey(username)) || hashPWEarly('circuit');
+  if (hashPWEarly(cur) !== stored) { ui._cpErr = 'Current password is incorrect.'; render(); return; }
+  if (newPw.length < 4) { ui._cpErr = 'New password must be at least 4 characters.'; render(); return; }
+  if (newPw !== conf)   { ui._cpErr = 'Passwords do not match.'; render(); return; }
+  localStorage.setItem(getUserPWKey(username), hashPWEarly(newPw));
+  ui._cpErr = ''; ui._loginView = '';
+  ui._loginErr = '✓ Password updated — please sign in.';
+  render();
+}
+
+function signOut() {
+  addSecurityLog('LOGOUT', `User ${ui.currentUser} signed out.`);
+  clearTimeout(_sessionTimer);
+  clearTimeout(_sessionWarnTimer);
+  const warnEl = document.getElementById('_session_warn');
+  if (warnEl) warnEl.remove();
+  ui.currentUser = '';
+  ui.currentUsername = '';
+  ui.adminUnlocked = false;
+  ui.adminUnlockedAt = null;
+  clearSessionUser();
+  try { sessionStorage.removeItem('sdapcd_username'); } catch(e) {}
+  render();
+}
+
+// ── USER PASSWORD MANAGEMENT ────────────────────────────────
+function openChangeUserPassword() {
+  ui.modal = 'changeuserpw'; ui.form = {}; render();
+}
+function saveChangeUserPassword() {
+  const cur    = document.getElementById('upw-current')?.value || '';
+  const newPw  = document.getElementById('upw-new')?.value     || '';
+  const conf   = document.getElementById('upw-confirm')?.value || '';
+  const username = ui.currentUsername || hashPWEarly(ui.currentUser);
+  const stored   = localStorage.getItem(getUserPWKey(username)) || hashPWEarly('circuit');
+  if (hashPWEarly(cur) !== stored) {
+    ui.form = {...ui.form, err: 'Current password is incorrect.'}; render(); return;
+  }
+  if (newPw.length < 4) {
+    ui.form = {...ui.form, err: 'New password must be at least 4 characters.'}; render(); return;
+  }
+  if (newPw !== conf) {
+    ui.form = {...ui.form, err: 'Passwords do not match.'}; render(); return;
+  }
+  localStorage.setItem(getUserPWKey(username), hashPWEarly(newPw));
+  closeModal(); toast('Password updated');
+}
+// Admin reset of any user's password back to default
+function resetUserPassword(username) {
+  localStorage.setItem(getUserPWKey(username), hashPWEarly('circuit'));
+  toast(`Password reset to default for ${username}`);
+}
+
 function modalShell(title, body, actions) {
   return `<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="modal">
     <div class="modal-hdr">
@@ -1436,26 +1733,70 @@ function renderModal() {
   }
 
   if (ui.modal === 'logwork') {
+    const WORK_TYPES = ['Maintenance','Calibration','Repair','Inspection','Other'];
+    const selType = f.workType || 'Maintenance';
+    const attachments = f.attachments || [];
     return modalShell('LOG WORK', `
       <div class="modal-sub">${esc(f.instName)} &nbsp;·&nbsp; <span style="font-family:var(--font-mono);color:var(--subtle)">${esc(f.serial)}</span></div>
       ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
 
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Performed By (Technician) *</label>
+          <label class="form-label">Type of Work *</label>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            ${WORK_TYPES.map(t => `<button type="button"
+              onclick="ui.form.workType='${t}';render()"
+              style="padding:5px 12px;border-radius:var(--radius);font-size:11px;font-family:var(--font-mono);cursor:pointer;border:1px solid ${selType===t?'rgba(34,211,238,.5)':'var(--border)'};background:${selType===t?'rgba(34,211,238,.12)':'var(--surface2)'};color:${selType===t?'var(--blue)':'var(--muted)'};transition:all .12s">${t}</button>`).join('')}
+          </div>
+        </div>
+      </div>
+      ${selType === 'Other' ? `
+      <div class="form-group">
+        <label class="form-label">Specify Reason *</label>
+        <input id="f-lw-other" class="form-input" value="${esc(f.otherReason||'')}" placeholder="Describe the type of work..." oninput="ui.form.otherReason=this.value"/>
+      </div>` : ''}
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Performed By *</label>
           ${techSelect('f-lw-by', f.by||'', 'Select technician')}
         </div>
         <div class="form-group">
           <label class="form-label">Date Performed</label>
-          <input id="f-lw-date" class="form-input" type="date" value="${today()}"/>
+          <input id="f-lw-date" class="form-input" type="date" value="${f.date||today()}"/>
         </div>
       </div>
+
       <div class="form-group">
         <label class="form-label">Description of Work *</label>
-        <textarea id="f-lw-desc" class="form-input" rows="4" placeholder="Describe the work performed, parts replaced, observations...">${esc(f.desc||'')}</textarea>
+        <textarea id="f-lw-desc" class="form-input" rows="3" placeholder="Describe the work performed, parts replaced, observations...">${esc(f.desc||'')}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Attachments <span style="color:var(--subtle);font-weight:400">(PDF, images)</span></label>
+        <label style="display:inline-flex;align-items:center;gap:7px;cursor:pointer;background:rgba(34,211,238,.07);border:1px dashed rgba(34,211,238,.3);color:var(--blue);font-family:var(--font-mono);font-size:11px;padding:8px 14px;border-radius:var(--radius);transition:all .15s" onmouseover="this.style.background='rgba(34,211,238,.13)'" onmouseout="this.style.background='rgba(34,211,238,.07)'">
+          <input type="file" accept="image/*,.pdf" multiple style="display:none" onchange="attachLogWorkFiles(this)"/>
+          📎 Upload Files
+        </label>
+        ${attachments.length > 0 ? `
+        <div style="margin-top:8px;display:flex;flex-direction:column;gap:5px">
+          ${attachments.map((a, ai) => `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius)">
+            <span style="font-family:var(--font-mono);font-size:11px;color:${a.uploading?'var(--amber)':a.localOnly?'var(--red)':'var(--muted)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px">
+              ${a.type==='image'?'🖼':'📄'} ${esc(a.name)}
+              ${a.uploading?'<span style="color:var(--amber)"> ⏳ uploading...</span>':''}
+              ${a.fileId?'<span style="color:var(--green)"> ✓</span>':''}
+              ${a.localOnly?'<span style="color:var(--red)" title="Drive upload failed"> ⚠</span>':''}
+            </span>
+            <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+              ${a.fileUrl?`<a href="${esc(a.fileUrl)}" target="_blank" style="font-family:var(--font-mono);font-size:10px;color:var(--blue);text-decoration:none;padding:2px 6px;border:1px solid rgba(34,211,238,.2);border-radius:var(--radius)">↗ View</a>`:''}
+              <button onclick="(function(){var b=document.getElementById('f-lw-by'),d=document.getElementById('f-lw-desc'),dt=document.getElementById('f-lw-date'),o=document.getElementById('f-lw-other');if(b)ui.form.by=b.value;if(d)ui.form.desc=d.value;if(dt)ui.form.date=dt.value;if(o)ui.form.otherReason=o.value;ui.form.attachments.splice(${ai},1);render()})()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;padding:0 4px">✕</button>
+            </div>
+          </div>`).join('')}
+        </div>` : ''}
       </div>`,
       `<button class="btn-cancel" onclick="closeModal()">Cancel</button>
-       <button class="btn-save" onclick="saveLogWork()">&#10003; Save Work Entry</button>`
+       <button class="btn-save" onclick="saveLogWork()">✓ Save Work Entry</button>`
     );
   }
 
@@ -1470,22 +1811,79 @@ function renderModal() {
   }
 
   if (ui.modal === 'history') {
-    const hist = db.history[f.instId] || [];
-    return modalShell('HISTORY', `
+    const hist  = db.history[f.instId] || [];
+    const inst  = db.instruments.find(x => String(x.id) === String(f.instId));
+    const attachments = (inst && inst.workAttachments) || [];
+
+    // Color and icon by action type
+    function entryStyle(action) {
+      const a = (action||'').toLowerCase();
+      if (a.includes('work performed'))   return { color:'var(--blue)',   icon:'▣', bg:'rgba(34,211,238,.06)'  };
+      if (a.includes('work order'))       return { color:'var(--purple)', icon:'⊡', bg:'rgba(167,139,250,.06)' };
+      if (a.includes('status'))           return { color:'var(--amber)',  icon:'◎', bg:'rgba(251,191,36,.06)'  };
+      if (a.includes('cert'))             return { color:'var(--green)',  icon:'◈', bg:'rgba(52,211,153,.06)'  };
+      if (a.includes('site'))             return { color:'var(--amber)',  icon:'◈', bg:'rgba(251,191,36,.06)'  };
+      if (a.includes('archived')||a.includes('restored')) return { color:'var(--red)', icon:'⊟', bg:'rgba(248,113,113,.06)' };
+      return { color:'var(--muted)', icon:'·', bg:'transparent' };
+    }
+
+    const entries = hist.map(h => {
+      const st = entryStyle(h.action);
+      // Find attachments matching this history entry (by date proximity)
+      const entryAttach = attachments.filter(a => a.date === (h.ts||'').slice(0,10));
+      return `
+      <div style="padding:12px 14px;border-bottom:1px solid var(--border2);background:${st.bg};border-left:3px solid ${st.color}20;margin-bottom:1px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px">
+          <div style="display:flex;align-items:center;gap:7px">
+            <span style="font-size:13px;color:${st.color}">${st.icon}</span>
+            <strong style="font-family:var(--font-mono);font-size:12px;color:${st.color}">${esc(h.action)}</strong>
+          </div>
+          <span style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);flex-shrink:0">${esc(h.ts)}</span>
+        </div>
+        ${h.detail ? `<div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);line-height:1.6;padding-left:20px">${esc(h.detail)}</div>` : ''}
+        ${entryAttach.length > 0 ? `
+        <div style="padding-left:20px;margin-top:6px;display:flex;flex-wrap:wrap;gap:6px">
+          ${entryAttach.map(a => `
+          <a href="${a.fileUrl||a.data||'#'}" ${a.fileUrl?'target="_blank"':'download="'+esc(a.name)+'"'} style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-mono);font-size:10px;color:var(--blue);text-decoration:none" title="${a.fileUrl?'Open in Drive':('Download '+esc(a.name))}">
+            ${a.type==='image'?'🖼':'📄'} ${esc(a.name)}${a.fileUrl?' ↗':''}
+          </a>`).join('')}
+        </div>` : ''}
+      </div>`;
+    }).join('');
+
+    // Show all attachments for this instrument at the bottom
+    const allAttachSection = attachments.length > 0 ? `
+    <div style="margin-top:16px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg)">
+      <div style="font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--subtle);margin-bottom:10px">ALL ATTACHMENTS (${attachments.length})</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${attachments.map(a => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius)">
+          <div style="display:flex;align-items:center;gap:8px;overflow:hidden">
+            <span style="font-size:14px">${a.type==='image'?'🖼':'📄'}</span>
+            <div style="overflow:hidden">
+              <div style="font-family:var(--font-mono);font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.name)}</div>
+              <div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle)">${esc(a.date||'')} · ${esc(a.tech||'')} · ${esc(a.workType||'')}</div>
+            </div>
+          </div>
+          <a href="${a.fileUrl||a.data||'#'}" ${a.fileUrl?'target="_blank"':'download="'+esc(a.name)+'"'} style="flex-shrink:0;margin-left:10px;padding:4px 10px;background:rgba(34,211,238,.09);border:1px solid rgba(34,211,238,.22);border-radius:var(--radius);font-family:var(--font-mono);font-size:10px;color:var(--blue);text-decoration:none">${a.fileUrl?'↗ View in Drive':'↓ Download'}</a>
+        </div>`).join('')}
+      </div>
+    </div>` : '';
+
+    return modalShell('INSTRUMENT HISTORY', `
       <div class="modal-sub">${esc(f.instName)} · ${esc(f.serial)}</div>
       ${hist.length === 0
         ? '<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">No history recorded yet.</div>'
-        : hist.map(h => `<div class="history-item">
-            <div class="history-date">${esc(h.ts)}</div>
-            <div class="history-action"><strong style="color:var(--cyan)">${esc(h.action)}</strong>${h.detail ? ` — ${esc(h.detail)}` : ''}</div>
-          </div>`).join('')}`,
-      `<button class="btn-export" onclick="printHistory(${f.instId})">⎙ Print PDF</button> <button class="btn-save" onclick="closeModal()">Close</button>`
+        : `<div style="border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">${entries}</div>`}
+      ${allAttachSection}`,
+      `<button class="btn-export" onclick="printHistory(${f.instId})">⎙ Print PDF</button>
+       <button class="btn-save" onclick="closeModal()">Close</button>`
     );
   }
 
   if (ui.modal === 'wodetail') {
-    const wo   = db.workOrders.find(w => w.id === f.woId);
-    const inst = wo ? db.instruments.find(i => i.id === wo.instrumentId) : null;
+    const wo   = db.workOrders.find(w => String(w.id) === String(f.woId));
+    const inst = wo ? db.instruments.find(i => String(i.id) === String(wo.instrumentId)) : null;
     if (!wo) return modalShell('WORK ORDER', '<div style="color:var(--muted)">Work order not found.</div>',
       '<button class="btn-save" onclick="closeModal()">Close</button>');
     return modalShell(`WO-${wo.id} DETAIL`, `
@@ -1496,11 +1894,19 @@ function renderModal() {
         <div><div class="wo-field-label">TECHNICIAN</div><div class="wo-field-val inst-sn">${esc(wo.technician||'—')}</div></div>
         <div><div class="wo-field-label">STATUS</div><span class="${statusClass(wo.status)}" style="padding:3px 8px;border-radius:var(--radius);font-size:11px;font-weight:600">${esc(wo.status)}</span></div>
         <div><div class="wo-field-label">CREATED</div><div class="wo-field-val" style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">${esc(wo.created)}</div></div>
-        ${wo.closedDate ? `<div><div class="wo-field-label">COMPLETED</div><div class="wo-field-val" style="font-family:var(--font-mono);font-size:11px;color:var(--green)">${esc(wo.closedDate)}</div></div>` : ''}
-        ${wo.closedBy   ? `<div><div class="wo-field-label">CLOSED BY</div><div class="wo-field-val inst-sn">${esc(wo.closedBy)}</div></div>` : ''}
+        ${wo.closedDate    ? `<div><div class="wo-field-label">COMPLETED</div><div class="wo-field-val" style="font-family:var(--font-mono);font-size:11px;color:var(--green)">${esc(wo.closedDate)}</div></div>` : ''}
+        ${wo.closedBy      ? `<div><div class="wo-field-label">CLOSED BY</div><div class="wo-field-val inst-sn">${esc(wo.closedBy)}</div></div>` : ''}
+        ${wo.restoredBy    ? `<div><div class="wo-field-label">RESTORED BY</div><div class="wo-field-val inst-sn">${esc(wo.restoredBy)} · ${esc(wo.restoredDate||'')}</div></div>` : ''}
       </div>
-      ${wo.description ? `<div class="form-group"><div class="wo-field-label">DESCRIPTION</div><div style="font-size:13px;color:var(--muted);margin-top:4px;line-height:1.5">${esc(wo.description)}</div></div>` : ''}`,
-      `${wo.status !== 'Closed' ? `<button class="btn-close-wo" onclick="closeWO(${wo.id})">✓ Mark Complete</button>` : ''}
+      ${wo.description   ? `<div class="form-group"><div class="wo-field-label">DESCRIPTION</div><div style="font-size:13px;color:var(--muted);margin-top:4px;line-height:1.5">${esc(wo.description)}</div></div>` : ''}
+      ${wo.restoreReason ? `<div class="form-group" style="margin-top:8px"><div class="wo-field-label" style="color:var(--amber)">RESTORE REASON</div><div style="font-size:13px;color:var(--amber);margin-top:4px;line-height:1.5;padding:8px 10px;background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.2);border-left:3px solid var(--amber);border-radius:var(--radius)">${esc(wo.restoreReason)}</div></div>` : ''}`,
+      `${wo.status === 'Pending Closure'
+          ? (currentUserHasFullControl()
+              ? `<button class="btn-approve-close" onclick="openApproveWO(${wo.id})">✓ Approve & Close</button>`
+              : `<span style="font-family:var(--font-mono);font-size:11px;color:var(--amber);padding:7px 0">⏳ Awaiting approval from Full Control user</span>`)
+          : wo.status !== 'Closed'
+            ? `<button class="btn-submit-closure" onclick="submitForClosure(${wo.id})">↑ Submit for Closure</button>`
+            : ''}
        <button class="btn-edit-md" onclick="openEditWO(${wo.id})">EDIT</button>
        <button class="btn-edit-md" onclick="printWO(${wo.id})">⎙ PRINT</button>
        <button class="btn-save" onclick="closeModal()">Close</button>`
@@ -1569,16 +1975,37 @@ function renderModal() {
   }
 
   if (ui.modal === 'edittech') {
-    return modalShell('EDIT TECHNICIAN', `
+    const uname = f.username || generateUsername(f.name||'');
+    return modalShell('EDIT USER', `
       ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
-      <div class="form-group"><label class="form-label">Full Name *</label>
-        <input id="f-name" class="form-input" value="${esc(f.name||'')}" placeholder="Full name"/>
+      <div class="modal-sub">Username: <strong style="color:var(--blue);font-family:var(--font-mono)">${esc(uname)}</strong></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Display Name *</label>
+          <input id="f-name" class="form-input" value="${esc(f.name||'')}" placeholder="Full name"/>
+        </div>
+        <div class="form-group"><label class="form-label">Email</label>
+          <input id="f-email" class="form-input" value="${esc(f.email||'')}" placeholder="user@sdapcd.gov"/>
+        </div>
       </div>
-      <div class="form-group"><label class="form-label">Role</label>
-        <input id="f-role" class="form-input" value="${esc(f.role||'')}" placeholder="e.g. Field Tech"/>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Role</label>
+          <select id="f-role" class="form-input">
+            <option value="Operator"   ${(f.role||'Operator')==='Operator'  ?'selected':''}>Operator</option>
+            <option value="Supervisor" ${f.role==='Supervisor'?'selected':''}>Supervisor</option>
+            <option value="Chief"      ${f.role==='Chief'     ?'selected':''}>Chief</option>
+            <option value="Admin"      ${f.role==='Admin'     ?'selected':''}>Admin</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Permission</label>
+          <select id="f-permission" class="form-input">
+            <option value="View"         ${(f.permission||'Edit')==='View'        ?'selected':''}>View</option>
+            <option value="Edit"         ${f.permission==='Edit'        ?'selected':''}>Edit</option>
+            <option value="Full Control" ${f.permission==='Full Control'?'selected':''}>Full Control</option>
+          </select>
+        </div>
       </div>
-      <div class="form-group"><label class="form-label">Email</label>
-        <input id="f-email" class="form-input" value="${esc(f.email||'')}" placeholder="Email (optional)"/>
+      <div class="form-group"><label class="form-label">Reset Temporary Password <span style="color:var(--subtle);font-weight:400">(leave blank to keep current — default is circuit)</span></label>
+        <input id="f-temppw" class="form-input" placeholder="New temp password (default: circuit)"/>
       </div>`,
       `<button class="btn-cancel" onclick="closeModal()">Cancel</button>
        <button class="btn-save" onclick="saveEditTech(${f.idx})">Save Changes</button>`
@@ -1586,40 +2013,88 @@ function renderModal() {
   }
 
   if (ui.modal === 'logcert') {
-    const due = certDueDate(f.certDate || today());
-    const isEdit = !!f.editMode;
-    const inst = db.instruments.find(x => x.id === f.instId);
-    return modalShell(isEdit ? 'EDIT CERTIFICATION RECORD' : 'LOG VENDOR CERTIFICATION', `
+    const months  = f.certIntervalMonths || '';
+    const due     = certDueDate(f.certDate || today(), months);
+    const isEdit  = !!f.editMode;
+    const inst    = db.instruments.find(x => x.id === f.instId);
+    const PRESET_MONTHS = [
+      {label:'1 month',  val:1},  {label:'3 months', val:3},
+      {label:'6 months', val:6},  {label:'1 year',   val:12},
+      {label:'18 months',val:18}, {label:'2 years',  val:24},
+      {label:'3 years',  val:36}, {label:'5 years',  val:60},
+    ];
+    return modalShell(isEdit ? 'EDIT CERTIFICATION RECORD' : 'LOG CERTIFICATION', `
       <div class="modal-sub">${esc(f.instName)} · ${esc(f.serial)}</div>
-      <div class="cert-info-panel">
-        BC1060 instruments require vendor factory certification every <strong style="color:var(--purple)">2 years</strong> per EPA requirements.<br>
-        ${isEdit ? `Current cert date: <strong style="color:var(--purple)">${inst && inst.lastCertDate ? inst.lastCertDate : '—'}</strong> &nbsp;·&nbsp; ` : ''}Next due date: <strong style="color:var(--purple)">${due}</strong>
-      </div>
+      ${due ? `<div class="cert-info-panel">
+        ${isEdit ? `Previous cert date: <strong style="color:var(--purple)">${inst && inst.lastCertDate ? inst.lastCertDate : '—'}</strong><br>` : ''}
+        Next due date: <strong style="color:var(--purple)">${due}</strong>
+      </div>` : ''}
       ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
       <div class="form-group"><label class="form-label">Certification Date *</label>
         <div style="display:flex;gap:8px">
-          <select id="f-cert-month" class="form-input" style="flex:2">
-            ${['January','February','March','April','May','June','July','August','September','October','November','December'].map((mn,i)=>{const v=String(i+1).padStart(2,'0');return '<option value="'+v+'"'+(((f.certDate||today()).split('-')[1])===v?' selected':'')+'>'+mn+'</option>';}).join('')}
+          <select id="f-cert-month" class="form-input" style="flex:2" onchange="ui.form.certDate=document.getElementById('f-cert-year').value+'-'+this.value+'-'+document.getElementById('f-cert-day').value;render()">
+            ${['January','February','March','April','May','June','July','August','September','October','November','December'].map((mn,idx)=>{const v=String(idx+1).padStart(2,'0');return '<option value="'+v+'"'+(((f.certDate||today()).split('-')[1])===v?' selected':'')+'>'+mn+'</option>';}).join('')}
           </select>
-          <select id="f-cert-day" class="form-input" style="flex:1">
-            ${Array.from({length:31},(_,i)=>String(i+1).padStart(2,'0')).map(d=>'<option value="'+d+'"'+((f.certDate||today()).split('-')[2]===d?' selected':'')+'>'+d+'</option>').join('')}
+          <select id="f-cert-day" class="form-input" style="flex:1" onchange="ui.form.certDate=document.getElementById('f-cert-year').value+'-'+document.getElementById('f-cert-month').value+'-'+this.value;render()">
+            ${Array.from({length:31},(_,idx)=>String(idx+1).padStart(2,'0')).map(d=>'<option value="'+d+'"'+((f.certDate||today()).split('-')[2]===d?' selected':'')+'>'+d+'</option>').join('')}
           </select>
-          <select id="f-cert-year" class="form-input" style="flex:1">
-            ${Array.from({length:21},(_,i)=>2020+i).map(y=>'<option value="'+y+'"'+(parseInt((f.certDate||today()).split('-')[0])===y?' selected':'')+'>'+y+'</option>').join('')}
+          <select id="f-cert-year" class="form-input" style="flex:1" onchange="ui.form.certDate=this.value+'-'+document.getElementById('f-cert-month').value+'-'+document.getElementById('f-cert-day').value;render()">
+            ${Array.from({length:21},(_,idx)=>2020+idx).map(y=>'<option value="'+y+'"'+(parseInt((f.certDate||today()).split('-')[0])===y?' selected':'')+'>'+y+'</option>').join('')}
           </select>
         </div>
       </div>
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Certified By / Tech</label>
-          ${techSelect('f-cert-by', f.certBy||'', 'Select technician')}
+      <div class="form-group"><label class="form-label">Certification Interval *</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+          ${PRESET_MONTHS.map(p=>`<button type="button"
+            style="padding:4px 10px;border-radius:var(--radius);font-size:11px;font-family:var(--font-mono);cursor:pointer;border:1px solid ${Number(months)===p.val?'rgba(167,139,250,.5)':'var(--border)'};background:${Number(months)===p.val?'rgba(167,139,250,.15)':'var(--surface2)'};color:${Number(months)===p.val?'var(--purple)':'var(--muted)'};transition:all .12s"
+            onclick="ui.form.certIntervalMonths=${p.val};render()">${p.label}</button>`).join('')}
         </div>
-        <div class="form-group"><label class="form-label">Notes</label>
-          <input id="f-cert-notes" class="form-input" value="${esc(f.certNotes||'')}" placeholder="Certificate number, notes..."/>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input id="f-interval-months-cert" class="form-input" type="number" min="1" max="120"
+            value="${esc(String(months))}" placeholder="Custom (months)"
+            oninput="ui.form.certIntervalMonths=parseInt(this.value)||'';render()"
+            style="max-width:160px"/>
+          <span style="font-family:var(--font-mono);font-size:11px;color:var(--subtle)">months</span>
+          ${months ? `<span style="font-family:var(--font-mono);font-size:11px;color:var(--purple)">→ next due: ${due || '—'}</span>` : ''}
         </div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label>
+        <input id="f-cert-notes" class="form-input" value="${esc(f.certNotes||'')}" placeholder="Certificate number, lab, notes..."/>
       </div>`,
       `<button class="btn-cancel" onclick="closeModal()">Cancel</button>
        ${!isEdit && inst && inst.lastCertDate ? `<button class="btn-edit-md" onclick="openEditCert(${f.instId})">EDIT EXISTING</button>` : ''}
        <button class="btn-cert" onclick="saveLogCert()">◈ ${isEdit ? 'Update Certification' : 'Save Certification'}</button>`
+    );
+  }
+
+  if (ui.modal === 'setcertinterval') {
+    const PRESET_MONTHS = [
+      {label:'1 month',  val:1},  {label:'3 months', val:3},
+      {label:'6 months', val:6},  {label:'1 year',   val:12},
+      {label:'18 months',val:18}, {label:'2 years',  val:24},
+      {label:'3 years',  val:36}, {label:'5 years',  val:60},
+    ];
+    const months = f.certIntervalMonths || '';
+    return modalShell('SET CERT INTERVAL', `
+      <div class="modal-sub">${esc(f.instName)} · ${esc(f.serial)}</div>
+      <div class="cert-info-panel" style="margin-bottom:14px">
+        Set how often this instrument requires calibration / certification. Once set, the tracker will flag it when due or overdue.
+      </div>
+      ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
+      <div class="form-group"><label class="form-label">Certification Interval *</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+          ${PRESET_MONTHS.map(p=>`<button type="button"
+            style="padding:4px 10px;border-radius:var(--radius);font-size:11px;font-family:var(--font-mono);cursor:pointer;border:1px solid ${Number(months)===p.val?'rgba(167,139,250,.5)':'var(--border)'};background:${Number(months)===p.val?'rgba(167,139,250,.15)':'var(--surface2)'};color:${Number(months)===p.val?'var(--purple)':'var(--muted)'}"
+            onclick="ui.form.certIntervalMonths=${p.val};render()">${p.label}</button>`).join('')}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input id="f-interval-months" class="form-input" type="number" min="1" max="120"
+            value="${esc(String(months))}" placeholder="Custom (months)" style="max-width:160px"/>
+          <span style="font-family:var(--font-mono);font-size:11px;color:var(--subtle)">months</span>
+        </div>
+      </div>`,
+      `<button class="btn-cancel" onclick="closeModal()">Cancel</button>
+       <button class="btn-cert" onclick="saveSetCertInterval()">⚙ Save Interval</button>`
     );
   }
 
@@ -1662,6 +2137,24 @@ function renderModal() {
     );
   }
 
+  if (ui.modal === 'changeuserpw') {
+    return modalShell('CHANGE MY PASSWORD', `
+      <div class="modal-sub">Changing password for: <strong style="color:var(--blue)">${esc(ui.currentUser)}</strong></div>
+      ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
+      <div class="form-group"><label class="form-label">Current Password</label>
+        <input id="upw-current" class="form-input" type="password" placeholder="Current password"/>
+      </div>
+      <div class="form-group"><label class="form-label">New Password *</label>
+        <input id="upw-new" class="form-input" type="password" placeholder="New password (min 4 chars)"/>
+      </div>
+      <div class="form-group"><label class="form-label">Confirm New Password *</label>
+        <input id="upw-confirm" class="form-input" type="password" placeholder="Re-enter new password"/>
+      </div>`,
+      `<button class="btn-cancel" onclick="closeModal()">Cancel</button>
+       <button class="btn-save" onclick="saveChangeUserPassword()">Save Password</button>`
+    );
+  }
+
   if (ui.modal === 'confirm') {
     return `<div class="overlay" onclick="if(event.target===this)confirmCancel()"><div class="modal confirm-modal">
       <div class="modal-hdr">
@@ -1682,8 +2175,13 @@ function renderModal() {
     const SITE_TYPES = ['Field','HQ/Shop','Vendor','Storage','Mobile'];
     return modalShell('ADD MONITORING SITE', `
       ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
-      <div class="form-group"><label class="form-label">Site Code *</label>
-        <input id="f-site-code" class="form-input" value="${esc(f.code||'')}" placeholder="e.g. SES - 1" oninput="markDirty()"/>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Site Code *</label>
+          <input id="f-site-code" class="form-input" value="${esc(f.code||'')}" placeholder="e.g. SES - 1" oninput="markDirty()"/>
+        </div>
+        <div class="form-group"><label class="form-label">Site Name</label>
+          <input id="f-site-name" class="form-input" value="${esc(f.siteName||'')}" placeholder="e.g. Sesame / El Cajon" oninput="markDirty()"/>
+        </div>
       </div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Type</label>
@@ -1713,8 +2211,13 @@ function renderModal() {
     const SITE_TYPES = ['Field','HQ/Shop','Vendor','Storage','Mobile'];
     return modalShell('EDIT MONITORING SITE', `
       ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
-      <div class="form-group"><label class="form-label">Site Code *</label>
-        <input id="f-val" class="form-input" value="${esc(f.val||'')}" placeholder="e.g. SES - 1"/>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Site Code *</label>
+          <input id="f-val" class="form-input" value="${esc(f.val||'')}" placeholder="e.g. SES - 1"/>
+        </div>
+        <div class="form-group"><label class="form-label">Site Name</label>
+          <input id="f-site-name" class="form-input" value="${esc(f.siteName||'')}" placeholder="e.g. Sesame / El Cajon"/>
+        </div>
       </div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Site Type</label>
@@ -1739,72 +2242,107 @@ function renderModal() {
     );
   }
 
-  if (ui.modal === 'closeworkorder') {
-    const wo = db.workOrders.find(w => w.id === f.woId);
-    const inst = wo ? db.instruments.find(i => i.id === wo.instrumentId) : null;
-    if (!wo) return modalShell('COMPLETE WORK ORDER', '<div>Work order not found.</div>',
+  if (ui.modal === 'approveworkorder') {
+    const wo   = db.workOrders.find(w => String(w.id) === String(f.woId));
+    const inst = wo ? db.instruments.find(i => String(i.id) === String(wo.instrumentId)) : null;
+    if (!wo) return modalShell('APPROVE & CLOSE', '<div>Work order not found.</div>',
       '<button class="btn-cancel" onclick="closeModal()">Cancel</button>');
-    return modalShell('COMPLETE WORK ORDER', `
+    return modalShell('APPROVE & CLOSE', `
       <div class="modal-sub">WO-${esc(String(wo.id))} &nbsp;·&nbsp; ${esc(wo.type)} &nbsp;·&nbsp; ${esc(inst?inst.name:'—')} ${esc(inst?inst.serial:'')}</div>
       ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-bottom:16px;line-height:1.6">
+        Submitted by <strong style="color:var(--text)">${esc(wo.submittedBy||'—')}</strong> on ${esc(wo.submittedDate||'—')}
+        ${wo.technician ? ` &nbsp;·&nbsp; Work by <strong style="color:var(--text)">${esc(wo.technician)}</strong>` : ''}
+      </div>
+      ${wo.description ? `<div style="font-size:12px;color:var(--muted);padding:8px 10px;background:var(--surface2);border-radius:var(--radius);margin-bottom:16px;line-height:1.5">${esc(wo.description)}</div>` : ''}
       <div class="form-group">
-        <label class="form-label">Completed By (Technician) *</label>
-        ${techSelect('f-close-by', '', 'Select technician who completed the work')}
-      </div>
-      <div style="background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.2);border-radius:var(--radius);padding:14px 16px;margin-bottom:14px">
-        <div style="font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--subtle);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">Task Completion Checklist</div>
-        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
-          <input type="checkbox" id="f-close-confirm" style="margin-top:2px;accent-color:var(--green);width:15px;height:15px;flex-shrink:0"/>
-          <span style="font-size:12px;color:var(--muted);line-height:1.5">
-            I confirm all tasks for <strong style="color:var(--text)">WO-${esc(String(wo.id))}</strong> have been completed and this work order is ready to be closed.
-          </span>
-        </label>
-      </div>
-      ${wo.description ? `<div class="form-group"><div class="form-label">Work Description</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px;line-height:1.5;padding:8px 10px;background:var(--surface2);border-radius:var(--radius)">${esc(wo.description)}</div></div>` : ''}`,
+        <label class="form-label">Notes <span style="color:var(--subtle);font-weight:400">(optional)</span></label>
+        <textarea id="f-approve-notes" class="form-input" rows="2" placeholder="Add any closing notes..." style="resize:none"></textarea>
+      </div>`,
       `<button class="btn-cancel" onclick="closeModal()">Cancel</button>
-       <button class="btn-save" style="background:linear-gradient(135deg,rgba(52,211,153,.18),rgba(52,211,153,.08));color:var(--green);border-color:rgba(52,211,153,.35)" onclick="confirmCloseWO()">✓ Mark as Complete</button>`
+       <button class="btn-approve-close" onclick="confirmApproveWO()">✓ Approve & Close</button>`
     );
   }
 
+  if (ui.modal === 'restoreworkorder') {
+    const wo   = db.workOrders.find(w => String(w.id) === String(f.woId));
+    const inst = wo ? db.instruments.find(i => String(i.id) === String(wo.instrumentId)) : null;
+    if (!wo) return modalShell('RESTORE TO OPEN', '<div>Work order not found.</div>',
+      '<button class="btn-cancel" onclick="closeModal()">Cancel</button>');
+    return modalShell('RESTORE TO OPEN', `
+      <div class="modal-sub">WO-${esc(String(wo.id))} &nbsp;·&nbsp; ${esc(wo.type)} &nbsp;·&nbsp; ${esc(inst?inst.name:'—')} ${esc(inst?inst.serial:'')}</div>
+      ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-bottom:16px;line-height:1.6">
+        Submitted by <strong style="color:var(--text)">${esc(wo.submittedBy||'—')}</strong> on ${esc(wo.submittedDate||'—')}
+        ${wo.technician ? ` &nbsp;·&nbsp; Work by <strong style="color:var(--text)">${esc(wo.technician)}</strong>` : ''}
+      </div>
+      ${wo.description ? `<div style="font-size:12px;color:var(--muted);padding:8px 10px;background:var(--surface2);border-radius:var(--radius);margin-bottom:16px;line-height:1.5">${esc(wo.description)}</div>` : ''}
+      <div class="form-group">
+        <label class="form-label">Reason for Restoring *</label>
+        <textarea id="f-restore-notes" class="form-input" rows="2" placeholder="Why is this being returned to Open?" style="resize:none"></textarea>
+      </div>`,
+      `<button class="btn-cancel" onclick="closeModal()">Cancel</button>
+       <button class="btn-submit-closure" onclick="confirmRestoreWO()">↩ Restore to Open</button>`
+    );
+  }
 
   return '';
 }
 
 // ── WORK ORDERS PAGE ───────────────────────────────────────
 function renderWorkOrders() {
-  const q = (ui.woSearch || '').toLowerCase();
+  const q         = (ui.woSearch    || '').toLowerCase();
+  const typeF     = (ui.woTypeF     || 'All Status');
+  const dateFrom  =  ui.woDateFrom  || '';
+  const dateTo    =  ui.woDateTo    || '';
+  const isFullControl = currentUserHasFullControl();
 
   // Short-circuit: cert tab has its own renderer
   if (ui.woFilter === 'cert') return renderCertSection();
 
   const filtered = db.workOrders.filter(wo => {
-    const inst = db.instruments.find(i => i.id === wo.instrumentId);
+    const inst = db.instruments.find(i => String(i.id) === String(wo.instrumentId));
     const matchStatus =
-      ui.woFilter === 'All'    ? true :
-      ui.woFilter === 'Open'   ? wo.status !== 'Closed' :
-      ui.woFilter === 'Closed' ? wo.status === 'Closed' : true;
+      ui.woFilter === 'All'     ? true :
+      ui.woFilter === 'Open'    ? (wo.status !== 'Closed' && wo.status !== 'Pending Closure') :
+      ui.woFilter === 'Closed'  ? wo.status === 'Closed' :
+      ui.woFilter === 'Pending' ? wo.status === 'Pending Closure' : true;
     const matchSearch = !q
       || `WO-${wo.id}`.toLowerCase().includes(q)
       || (wo.type||'').toLowerCase().includes(q)
       || (wo.technician||'').toLowerCase().includes(q)
       || (wo.description||'').toLowerCase().includes(q)
       || (inst ? inst.serial.toLowerCase().includes(q) : false)
-      || (inst ? inst.name.toLowerCase().includes(q) : false);
-    return matchStatus && matchSearch;
-  }).sort((a, b) => b.id - a.id); // newest first
+      || (inst ? inst.name.toLowerCase().includes(q) : false)
+      || (inst ? (inst.site||'').toLowerCase().includes(q) : false);
+    const matchType = typeF === 'All Status' || wo.type === typeF;
+    const woDate = (wo.created || '').slice(0,10);
+    const matchFrom = !dateFrom || woDate >= dateFrom;
+    const matchTo   = !dateTo   || woDate <= dateTo;
+    return matchStatus && matchSearch && matchType && matchFrom && matchTo;
+  }).sort((a, b) => b.id - a.id);
 
-  const openCount   = db.workOrders.filter(w => w.status !== 'Closed').length;
-  const closedCount = db.workOrders.filter(w => w.status === 'Closed').length;
-  const allCount    = db.workOrders.length;
+  const openCount    = db.workOrders.filter(w => w.status !== 'Closed' && w.status !== 'Pending Closure').length;
+  const closedCount  = db.workOrders.filter(w => w.status === 'Closed').length;
+  const pendingCount = db.workOrders.filter(w => w.status === 'Pending Closure').length;
+  const allCount     = db.workOrders.length;
 
   const rows = filtered.length === 0
     ? `<tr class="empty-row"><td colspan="6">No work orders match your filter</td></tr>`
     : filtered.map(wo => {
-        const inst = db.instruments.find(i => i.id === wo.instrumentId);
-        const statusBadge = wo.status === 'Closed'
-          ? `<span class="wo-status-closed">CLOSED</span>`
-          : `<span class="wo-status-open">OPEN</span>`;
+        const inst = db.instruments.find(i => String(i.id) === String(wo.instrumentId));
+        const statusBadge =
+          wo.status === 'Closed'          ? `<span class="wo-status-closed">CLOSED</span>` :
+          wo.status === 'Pending Closure' ? `<span class="wo-status-pending">⏳ PENDING CLOSURE</span>` :
+                                            `<span class="wo-status-open">OPEN</span>`;
+        const actionBtn =
+          wo.status === 'Closed'          ? '' :
+          wo.status === 'Pending Closure' ? (isFullControl
+            ? `<button class="btn-approve-close" onclick="openApproveWO(${wo.id})">✓ Approve & Close</button>
+               <button class="btn-act" style="color:var(--amber);border-color:rgba(251,191,36,.25)" onclick="openRestoreWO(${wo.id})">↩ Restore</button>`
+            : `<span style="font-family:var(--font-mono);font-size:10px;color:var(--amber)">Awaiting approval</span>`)
+          : `<button class="btn-submit-closure" onclick="submitForClosure(${wo.id})">↑ Submit for Closure</button>`;
+
         return `<tr>
           <td>
             <div class="wo-id" onclick="openWODetail(${wo.id})">WO-${wo.id}</div>
@@ -1818,9 +2356,7 @@ function renderWorkOrders() {
             <div class="actions">
               <button class="btn-act btn-history" onclick="openWODetail(${wo.id})">▤ VIEW</button>
               <button class="btn-act" onclick="printWO(${wo.id})">⎙ PRINT</button>
-              ${wo.status !== 'Closed'
-                ? `<button class="btn-act btn-logwork" onclick="closeWO(${wo.id})">✓ Mark Complete</button>`
-                : ''}
+              ${actionBtn}
             </div>
           </td>
         </tr>`;
@@ -1842,15 +2378,33 @@ function renderWorkOrders() {
 
   <div style="display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap" class="print-hide">
     <div class="wo-tabs">
-      <button class="wo-tab ${ui.woFilter==='Open'?'active':''}"   onclick="ui.woFilter='Open';render()">OPEN (${openCount})</button>
-      <button class="wo-tab ${ui.woFilter==='Closed'?'active':''}" onclick="ui.woFilter='Closed';render()">CLOSED (${closedCount})</button>
-      <button class="wo-tab ${ui.woFilter==='All'?'active':''}"    onclick="ui.woFilter='All';render()">ALL (${allCount})</button>
-      <button class="wo-tab cert-tab ${ui.woFilter==='cert'?'active':''}" onclick="ui.woFilter='cert';render()">◈ VENDOR CERT</button>
+      <button class="wo-tab ${ui.woFilter==='Open'?'active':''}"    onclick="ui.woFilter='Open';render()">OPEN (${openCount})</button>
+      <button class="wo-tab ${ui.woFilter==='Pending'?'active':''}" onclick="ui.woFilter='Pending';render()" style="${pendingCount>0?'color:var(--amber)':''}">
+        ⏳ PENDING CLOSURE${pendingCount>0?` (${pendingCount})`:''}
+      </button>
+      <button class="wo-tab ${ui.woFilter==='Closed'?'active':''}"  onclick="ui.woFilter='Closed';render()">CLOSED (${closedCount})</button>
+      <button class="wo-tab ${ui.woFilter==='All'?'active':''}"     onclick="ui.woFilter='All';render()">ALL (${allCount})</button>
+      <button class="wo-tab cert-tab ${ui.woFilter==='cert'?'active':''}" onclick="ui.woFilter='cert';render()">◈ CERT TRACKER</button>
     </div>
-    <div class="search-box" style="max-width:280px">
+  </div>
+
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap" class="print-hide">
+    <div class="search-box" style="min-width:220px;flex:1;max-width:320px">
       <span class="search-icon">⌕</span>
-      <input placeholder="Search WO#, serial, tech, type..." value="${esc(ui.woSearch||'')}" oninput="ui.woSearch=this.value;render()"/>
+      <input placeholder="Search name / serial / site..." value="${esc(ui.woSearch||'')}" id="wo-search" oninput="ui.woSearch=this.value;filterTable('wo-table',this.value)"/>
+      ${ui.woSearch ? `<button onclick="ui.woSearch='';document.getElementById('wo-search').value='';filterTable('wo-table','')" style="background:none;border:none;color:var(--subtle);cursor:pointer;padding:0 6px;font-size:13px" title="Clear">✕</button>` : ''}
     </div>
+    <select class="filter-sel" onchange="ui.woTypeF=this.value;render()">
+      <option value="All Status" ${(ui.woTypeF||'All Status')==='All Status'?'selected':''}>All Status</option>
+      ${WO_TYPES.map(t => `<option value="${esc(t)}" ${ui.woTypeF===t?'selected':''}>${esc(t)}</option>`).join('')}
+    </select>
+    <input type="date" class="filter-sel" style="font-family:var(--font-mono);font-size:11px;cursor:pointer"
+      value="${esc(ui.woDateFrom||'')}" title="From date"
+      onchange="ui.woDateFrom=this.value;render()"/>
+    <input type="date" class="filter-sel" style="font-family:var(--font-mono);font-size:11px;cursor:pointer"
+      value="${esc(ui.woDateTo||'')}" title="To date"
+      onchange="ui.woDateTo=this.value;render()"/>
+    <button class="btn-act" onclick="ui.woSearch='';ui.woTypeF='All Status';ui.woDateFrom='';ui.woDateTo='';filterTable('wo-table','');render()" style="white-space:nowrap">✕ Clear</button>
   </div>
 
   <div class="group">
@@ -1859,7 +2413,7 @@ function renderWorkOrders() {
       <div class="group-count">${plural(filtered.length, 'record')}</div>
     </div>
     <div class="inst-table">
-      <table>
+      <table id="wo-table">
         <thead>
           <tr>
             <th>WO # / INSTRUMENT</th>
@@ -1880,9 +2434,9 @@ function renderWorkOrders() {
 function renderActivity() {
   // Flatten all history across all instruments into one sorted array
   const allEvents = [];
-  Object.entries(db.history).forEach(([instId, events]) => {
+  Object.entries(db.history || {}).forEach(([instId, events]) => {
     const inst = db.instruments.find(i => i.id === Number(instId));
-    events.forEach(ev => allEvents.push({ ...ev, instId: Number(instId), inst }));
+    (events || []).forEach(ev => allEvents.push({ ...ev, instId: Number(instId), inst }));
   });
 
   // Sort by timestamp descending (most recent first)
@@ -1918,7 +2472,7 @@ function renderActivity() {
     return matchFilter && matchDate && matchSearch;
   });
 
-  const displayed = filtered.slice(0, 50); // show up to 50 events
+  const displayed = filtered.slice(0, 500); // show up to 500 events
 
   // Icon + color per action type
   function feedIcon(action) {
@@ -1954,7 +2508,7 @@ function renderActivity() {
 
   // Sidebar stats
   const totalEvents  = allEvents.length;
-  const instActive   = new Set(allEvents.slice(0, 20).map(e => e.instId)).size;
+  const instActive   = new Set(allEvents.slice(0, 100).map(e => e.instId)).size;
   const woEvents     = allEvents.filter(ev => ev.action.toLowerCase().includes('work') || ev.action.toLowerCase().includes('wo')).length;
   const certEvents   = allEvents.filter(ev => ev.action.toLowerCase().includes('cert')).length;
 
@@ -1965,7 +2519,7 @@ function renderActivity() {
   });
   const topInst = Object.entries(instEventCount)
     .sort((a,b) => b[1]-a[1])
-    .slice(0,5)
+    .slice(0,10)
     .map(([id,count]) => {
       const inst = db.instruments.find(i => i.id === Number(id));
       return inst ? { inst, count } : null;
@@ -1992,16 +2546,18 @@ function renderActivity() {
         </div>
         <div class="search-box" style="max-width:220px;margin-left:auto">
           <span class="search-icon">⌕</span>
-          <input placeholder="Search events..." value="${esc(ui.actSearch||'')}" oninput="ui.actSearch=this.value;render()"/>
+          <input placeholder="Search events..." value="${esc(ui.actSearch||'')}" id="act-search" oninput="ui.actSearch=this.value;filterActivity(this.value)"/>
+          ${ui.actSearch ? `<button onclick="ui.actSearch='';document.getElementById('act-search').value='';filterActivity('')" style="background:none;border:none;color:var(--subtle);cursor:pointer;padding:0 6px;font-size:13px" title="Clear">✕</button>` : ''}
         </div>
+        <button class="btn-act" onclick="ui.actFilter='All';ui.actSearch='';ui.actDateFrom='';ui.actDateTo='';filterActivity('');render()" style="white-space:nowrap;font-size:10px">✕ Clear</button>
       </div>
 
-      <div class="feed-card">
+      <div class="feed-card" id="act-feed">
         <div class="feed-hdr">
           <span style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);letter-spacing:.06em;text-transform:uppercase">
-            ${ui.actFilter === 'All' ? 'All Events' : ui.actFilter} · showing ${Math.min(displayed.length,50)} of ${filtered.length}
+            ${ui.actFilter === 'All' ? 'All Events' : ui.actFilter} · showing ${Math.min(displayed.length,500)} of ${filtered.length}
           </span>
-          ${filtered.length > 50 ? `<span style="font-family:var(--font-mono);font-size:10px;color:var(--amber)">Showing latest 50 — use search to narrow</span>` : ''}
+          ${filtered.length > 500 ? `<span style="font-family:var(--font-mono);font-size:10px;color:var(--amber)">Showing latest 500 — use search to narrow</span>` : ''}
         </div>
         ${feedItems}
       </div>
@@ -2026,7 +2582,7 @@ function renderActivity() {
         </div>
         <div class="mini-stat-row">
           <span class="mini-stat-label">Instruments w/ History</span>
-          <span class="mini-stat-val">${Object.keys(db.history).length}</span>
+          <span class="mini-stat-val">${Object.keys(db.history||{}).length}</span>
         </div>
         <div class="mini-stat-row">
           <span class="mini-stat-label">Active Last 20 Events</span>
@@ -2069,110 +2625,178 @@ function renderActivity() {
   </div>`;
 }
 
-// ── VENDOR CERTIFICATION TABLE ────────────────────────────
+// ── CERT TRACKER ───────────────────────────────────────────
 function renderCertSection() {
-  return `
-  <div class="section-hdr print-hide">
-    <div class="section-title">Work Orders</div>
-    <div style="display:flex;gap:8px">
-      <button class="btn-export" onclick="exportOpenWOPDF()">⎙ EXPORT OPEN WOs PDF</button>
-      <button class="btn-export" onclick="exportWOCSV()">↓ EXPORT CSV</button>
-    </div>
-  </div>
-  <div style="display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap" class="print-hide">
-    <div class="wo-tabs">
-      ${renderWOTabs()}
-    </div>
-  </div>
-  ${renderCertTable()}`;
-}
-
-function renderWOTabs() {
   const openCount   = db.workOrders.filter(w => w.status !== 'Closed').length;
   const closedCount = db.workOrders.filter(w => w.status === 'Closed').length;
   const allCount    = db.workOrders.length;
+
+  const q          = (ui.certSearch   || '').toLowerCase();
+  const statusF    =  ui.certStatusF  || 'All Status';
+  const dateFrom   =  ui.certDateFrom || '';
+  const dateTo     =  ui.certDateTo   || '';
+
+  // Apply filters to instruments
+  function instMatches(i) {
+    const matchSearch = !q
+      || i.name.toLowerCase().includes(q)
+      || i.serial.toLowerCase().includes(q)
+      || (i.site||'').toLowerCase().includes(q);
+    const st = certStatus(i);
+    const matchStatus =
+      statusF === 'All Status' ? true :
+      statusF === 'Overdue'    ? st === 'overdue' :
+      statusF === 'Due Soon'   ? st === 'due-soon' :
+      statusF === 'OK'         ? st === 'ok' :
+      statusF === 'Not Tracked'? !i.certIntervalMonths :
+      statusF === 'No Date'    ? (i.certIntervalMonths && st === 'none') : true;
+    const lcd = i.lastCertDate || '';
+    const matchFrom = !dateFrom || lcd >= dateFrom;
+    const matchTo   = !dateTo   || lcd <= dateTo;
+    return matchSearch && matchStatus && matchFrom && matchTo;
+  }
+
+  // Summary counts across ALL tracked instruments (pre-filter)
+  const tracked    = db.instruments.filter(i => !i.archived && i.certIntervalMonths);
+  const overdueAll = tracked.filter(i => certStatus(i) === 'overdue').length;
+  const dueSoonAll = tracked.filter(i => certStatus(i) === 'due-soon').length;
+  const noCertAll  = tracked.filter(i => certStatus(i) === 'none').length;
+
+  // Group by instrument type, applying filters per row
+  const allTypes = [...new Set(db.instruments.filter(i => !i.archived).map(i => i.name))].sort();
+
+  const groups = allTypes.map(type => {
+    const instruments = db.instruments
+      .filter(i => !i.archived && i.name === type && instMatches(i))
+      .sort((a, b) => {
+        const order = { overdue: 0, 'due-soon': 1, none: 2, ok: 3 };
+        return (order[certStatus(a)] ?? 4) - (order[certStatus(b)] ?? 4);
+      });
+
+    if (instruments.length === 0) return '';
+
+    const typeTracked = instruments.filter(i => i.certIntervalMonths);
+    const typeOverdue = typeTracked.filter(i => certStatus(i) === 'overdue').length;
+    const typeDueSoon = typeTracked.filter(i => certStatus(i) === 'due-soon').length;
+
+    const statusDot = typeOverdue > 0
+      ? `<span class="cert-overdue" style="padding:2px 7px">⚠ ${typeOverdue} OVERDUE</span>`
+      : typeDueSoon > 0
+        ? `<span class="cert-due-soon" style="padding:2px 7px">◉ ${typeDueSoon} DUE SOON</span>`
+        : typeTracked.length > 0
+          ? `<span class="cert-ok" style="padding:2px 7px">✓ ALL OK</span>`
+          : `<span class="cert-none" style="padding:2px 7px">NOT CONFIGURED</span>`;
+
+    const rows = instruments.map(i => {
+      const due      = certDueDate(i.lastCertDate, i.certIntervalMonths);
+      const intLabel = i.certIntervalMonths
+        ? (i.certIntervalMonths % 12 === 0 ? `${i.certIntervalMonths/12} yr` : `${i.certIntervalMonths} mo`)
+        : '—';
+      return `<tr>
+        <td>
+          <div class="inst-name">${esc(i.name)}</div>
+          <div class="inst-sn">${esc(i.serial)}</div>
+        </td>
+        <td style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">
+          ${i.lastCertDate ? esc(String(i.lastCertDate).slice(0,10)) : '<span style="color:var(--subtle)">—</span>'}
+        </td>
+        <td style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">
+          ${due ? esc(String(due).slice(0,10)) : '<span style="color:var(--subtle)">—</span>'}
+        </td>
+        <td style="font-family:var(--font-mono);font-size:11px;color:var(--subtle);text-align:center">${intLabel}</td>
+        <td>${certBadge(i)}</td>
+        <td>
+          <div class="actions">
+            <button class="btn-cert" onclick="openLogCert(${i.id})">◈ LOG CERT</button>
+            <button class="btn-act btn-history" onclick="openHistory(${i.id})">▤ HISTORY</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    return `
+    <div class="group" style="margin-bottom:16px">
+      <div class="group-hdr" onclick="toggleGroup('cert-${type}')" style="cursor:pointer">
+        <div class="group-title">◈ ${esc(type)} <span class="group-count" style="margin-left:8px">${plural(instruments.length,'instrument')}</span></div>
+        <div style="display:flex;align-items:center;gap:10px">${statusDot}<span class="group-chevron">▾</span></div>
+      </div>
+      <div class="group-body" id="cert-group-${type.replace(/\s/g,'_')}">
+        <div class="inst-table">
+          <table>
+            <thead><tr>
+              <th>INSTRUMENT / SERIAL</th>
+              <th>LAST CERT DATE</th>
+              <th>NEXT DUE</th>
+              <th style="text-align:center">INTERVAL</th>
+              <th>STATUS</th>
+              <th>ACTIONS</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const hasFilters = q || (statusF && statusF !== 'All Status') || dateFrom || dateTo;
+
   return `
-    <button class="wo-tab ${ui.woFilter==='Open'?'active':''}"   onclick="ui.woFilter='Open';render()">OPEN (${openCount})</button>
-    <button class="wo-tab ${ui.woFilter==='Closed'?'active':''}" onclick="ui.woFilter='Closed';render()">CLOSED (${closedCount})</button>
-    <button class="wo-tab ${ui.woFilter==='All'?'active':''}"    onclick="ui.woFilter='All';render()">ALL (${allCount})</button>
-    <button class="wo-tab cert-tab ${ui.woFilter==='cert'?'active':''}" onclick="ui.woFilter='cert';render()">◈ VENDOR CERT</button>`;
-}
-
-function renderCertTable() {
-  const bc = db.instruments
-    .filter(i => i.name === 'BC1060')
-    .sort((a, b) => {
-      // sort order: overdue → due-soon → none → ok
-      const order = { overdue: 0, 'due-soon': 1, none: 2, ok: 3 };
-      return (order[certStatus(a)] ?? 4) - (order[certStatus(b)] ?? 4);
-    });
-
-  const overdueCount  = bc.filter(i => certStatus(i) === 'overdue').length;
-  const dueSoonCount  = bc.filter(i => certStatus(i) === 'due-soon').length;
-  const noCertCount   = bc.filter(i => certStatus(i) === 'none').length;
-
-  const certRows = bc.length === 0
-    ? `<tr class="empty-row"><td colspan="5">No BC1060 instruments found</td></tr>`
-    : bc.map(i => {
-        const due = certDueDate(i.lastCertDate);
-        return `<tr>
-          <td>
-            <div class="inst-name">${esc(i.name)}</div>
-            <div class="inst-sn">${esc(i.serial)}</div>
-          </td>
-          <td style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">
-            ${i.lastCertDate ? esc(i.lastCertDate) : '<span style="color:var(--subtle)">—</span>'}
-          </td>
-          <td style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">
-            ${due ? esc(due) : '<span style="color:var(--subtle)">—</span>'}
-          </td>
-          <td>${certBadge(i)}</td>
-          <td>
-            <div class="actions">
-              <button class="btn-cert" onclick="openLogCert(${i.id})">◈ LOG CERTIFICATION</button>
-              <button class="btn-act btn-history" onclick="openHistory(${i.id})" title="View History (H)">▤ HISTORY</button>
-            </div>
-          </td>
-        </tr>`;
-      }).join('');
-
-  return `
-  <div class="group">
-    <div class="group-hdr">
-      <div class="group-title">◈ Vendor (BC1060) — EPA Certification Tracker</div>
-      <div class="group-count">${plural(bc.length, 'instrument')}</div>
+  <div class="section-hdr print-hide">
+    <div class="section-title">Instrument Certification Tracker</div>
+  </div>
+  <div style="display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap" class="print-hide">
+    <div class="wo-tabs">
+      <button class="wo-tab ${ui.woFilter==='Open'?'active':''}"   onclick="ui.woFilter='Open';render()">OPEN (${openCount})</button>
+      <button class="wo-tab ${ui.woFilter==='Closed'?'active':''}" onclick="ui.woFilter='Closed';render()">CLOSED (${closedCount})</button>
+      <button class="wo-tab ${ui.woFilter==='All'?'active':''}"    onclick="ui.woFilter='All';render()">ALL (${allCount})</button>
+      <button class="wo-tab cert-tab ${ui.woFilter==='cert'?'active':''}" onclick="ui.woFilter='cert';render()">◈ CERT TRACKER</button>
     </div>
-    ${overdueCount > 0 || dueSoonCount > 0 || noCertCount > 0 ? `
-    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-      ${overdueCount > 0  ? `<span class="cert-overdue">⚠ ${overdueCount} OVERDUE</span>` : ''}
-      ${dueSoonCount > 0  ? `<span class="cert-due-soon">◉ ${dueSoonCount} DUE WITHIN 90 DAYS</span>` : ''}
-      ${noCertCount > 0   ? `<span class="cert-none">${noCertCount} NO DATE ON FILE</span>` : ''}
-    </div>` : ''}
-    <div class="inst-table">
-      <table>
-        <thead>
-          <tr>
-            <th>INSTRUMENT / SERIAL</th>
-            <th>LAST CERTIFIED</th>
-            <th>CERT DUE (2-YR EPA)</th>
-            <th>STATUS</th>
-            <th>ACTIONS</th>
-          </tr>
-        </thead>
-        <tbody>${certRows}</tbody>
-      </table>
+  </div>
+
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap" class="print-hide">
+    <div class="search-box" style="min-width:220px;flex:1;max-width:320px">
+      <span class="search-icon">⌕</span>
+      <input placeholder="Search name / serial / site..." value="${esc(ui.certSearch||'')}" id="cert-search"
+        oninput="ui.certSearch=this.value;filterCertTracker(this.value)"/>
+      ${ui.certSearch ? `<button onclick="ui.certSearch='';document.getElementById('cert-search').value='';filterCertTracker('')" style="background:none;border:none;color:var(--subtle);cursor:pointer;padding:0 6px;font-size:13px" title="Clear">✕</button>` : ''}
     </div>
-    <div class="cert-table-footer">
-      ◈ BC1060 instruments require vendor factory certification every 2 years per EPA requirements. &nbsp;·&nbsp; Instruments due within 90 days are flagged amber.
-    </div>
+    <select class="filter-sel" onchange="ui.certStatusF=this.value;render()">
+      <option value="All Status"   ${statusF==='All Status'  ?'selected':''}>All Status</option>
+      <option value="Overdue"      ${statusF==='Overdue'     ?'selected':''}>Overdue</option>
+      <option value="Due Soon"     ${statusF==='Due Soon'    ?'selected':''}>Due Soon</option>
+      <option value="OK"           ${statusF==='OK'          ?'selected':''}>OK</option>
+      <option value="No Date"      ${statusF==='No Date'     ?'selected':''}>No Date on File</option>
+      <option value="Not Tracked"  ${statusF==='Not Tracked' ?'selected':''}>Not Tracked</option>
+    </select>
+    <input type="date" class="filter-sel" style="font-family:var(--font-mono);font-size:11px;cursor:pointer"
+      value="${esc(dateFrom)}" title="Last cert from"
+      onchange="ui.certDateFrom=this.value;render()"/>
+    <input type="date" class="filter-sel" style="font-family:var(--font-mono);font-size:11px;cursor:pointer"
+      value="${esc(dateTo)}" title="Last cert to"
+      onchange="ui.certDateTo=this.value;render()"/>
+    <button class="btn-act" onclick="ui.certSearch='';ui.certStatusF='All Status';ui.certDateFrom='';ui.certDateTo='';filterCertTracker('');render()" style="white-space:nowrap">✕ Clear</button>
+  </div>
+
+  ${overdueAll > 0 || dueSoonAll > 0 ? `
+  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+    <span style="font-family:var(--font-mono);font-size:11px;color:var(--subtle)">SUMMARY:</span>
+    ${overdueAll > 0 ? `<span class="cert-overdue">⚠ ${overdueAll} OVERDUE</span>` : ''}
+    ${dueSoonAll > 0 ? `<span class="cert-due-soon">◉ ${dueSoonAll} DUE WITHIN 90 DAYS</span>` : ''}
+    ${noCertAll  > 0 ? `<span class="cert-none">${noCertAll} NO DATE ON FILE</span>` : ''}
+  </div>` : ''}
+
+  ${groups.replace(/^\s*$/, '') === '' ? `<div style="text-align:center;padding:40px;color:var(--subtle);font-family:var(--font-mono)">No instruments match your filters</div>` : groups}
+
+  <div class="cert-table-footer" style="margin-top:8px">
+    ◈ Instruments flagged amber are due within ${CERT_WARN_DAYS} days. Click ⚙ SET INTERVAL on any instrument to enable cert tracking. Intervals are set per instrument.
   </div>`;
 }
 
 // ── ADMIN TABLE HELPER ─────────────────────────────────────
-function adminTable(cols, rows, addRow) {
+function adminTable(cols, rows, addRow, tableId) {
   return `
     <div class="inst-table">
-      <table>
+      <table${tableId ? ` id="${tableId}"` : ''}>
         <thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead>
         <tbody>${rows.length === 0
           ? `<tr class="empty-row"><td colspan="${cols.length}">Nothing configured yet</td></tr>`
@@ -2199,7 +2823,7 @@ function renderAdmin() {
     <td>${PROTECTED_SITES.includes(s)
       ? '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">protected</span>'
       : `<div style="display:flex;gap:6px">
-           <button class="btn-edit-sm" onclick="openEditSite(${idx})">EDIT</button>
+           <button class="btn-edit-sm" onclick="openEditSite('${esc(s)}')">EDIT</button>
            <button class="btn-del-sm"  onclick="archiveSite(${idx})">ARCHIVE</button>
          </div>`}
     </td>
@@ -2226,16 +2850,45 @@ function renderAdmin() {
     </td>
   </tr>`);
 
-  const techRows = db.techs.map((t, idx) => `<tr>
-    <td><div class="inst-name" style="font-size:13px">${esc(t.name)}</div><div class="inst-sn">${esc(t.role||'Technician')}</div></td>
-    <td style="color:var(--muted);font-family:var(--font-mono);font-size:11px">${esc(t.email||'—')}</td>
-    <td>
-      <div style="display:flex;gap:6px">
-        <button class="btn-edit-sm" onclick="openEditTech(${idx})">EDIT</button>
-        <button class="btn-del-sm"  onclick="archiveTech(${idx})">ARCHIVE</button>
-      </div>
-    </td>
-  </tr>`);
+  // ── USER CREDENTIALS TABLE ──────────────────────────────
+  const ROLES        = ['Operator','Supervisor','Chief','Admin'];
+  const PERMISSIONS  = ['View','Edit','Full Control'];
+  const permColor    = p => p==='Full Control' ? 'var(--purple)' : p==='Edit' ? 'var(--blue)' : 'var(--slate)';
+  const permBg       = p => p==='Full Control' ? 'rgba(167,139,250,.12)' : p==='Edit' ? 'rgba(34,211,238,.09)' : 'rgba(148,163,184,.09)';
+  const permBorder   = p => p==='Full Control' ? 'rgba(167,139,250,.3)' : p==='Edit' ? 'rgba(34,211,238,.22)' : 'rgba(148,163,184,.2)';
+  const roleColor    = r => r==='Admin' ? 'var(--red)' : r==='Chief'||r==='Supervisor' ? 'var(--amber)' : 'var(--green)';
+  const roleBg       = r => r==='Admin' ? 'rgba(248,113,113,.1)' : r==='Chief'||r==='Supervisor' ? 'rgba(251,191,36,.09)' : 'rgba(52,211,153,.09)';
+  const roleBorder   = r => r==='Admin' ? 'rgba(248,113,113,.25)' : r==='Chief'||r==='Supervisor' ? 'rgba(251,191,36,.25)' : 'rgba(52,211,153,.22)';
+
+  function userBadge(val, color, bg, border) {
+    return `<span style="font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:.05em;padding:2px 9px;border-radius:var(--radius);background:${bg};color:${color};border:1px solid ${border}">${esc(val)}</span>`;
+  }
+
+  const techRows = db.techs.map((t, idx) => {
+    const uname   = t.username || generateUsername(t.name);
+    const isAdmin = uname === 'admin';
+    const tempPw  = t.tempPassword || '';
+    const status  = t.archived ? 'Archived' : 'Active';
+    const perm    = t.permission || 'Edit';
+    const role    = t.role || 'Operator';
+    return `<tr>
+      <td style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--blue)">${esc(uname)}</td>
+      <td><div class="inst-name" style="font-size:13px">${esc(t.name)}</div></td>
+      <td>${userBadge(role, roleColor(role), roleBg(role), roleBorder(role))}</td>
+      <td><span style="font-family:var(--font-mono);font-size:10px;font-weight:600;padding:2px 9px;border-radius:var(--radius);background:rgba(52,211,153,.09);color:var(--green);border:1px solid rgba(52,211,153,.22)">${status}</span></td>
+      <td>${userBadge(perm, permColor(perm), permBg(perm), permBorder(perm))}</td>
+      <td style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">${tempPw ? esc(tempPw) : '<span style="color:var(--subtle)">—</span>'}</td>
+      <td>
+        <div style="display:flex;gap:6px;align-items:center">
+          ${isAdmin
+            ? `<button class="btn-edit-sm" onclick="openEditTech(${idx})">Edit</button>
+               <span style="font-family:var(--font-mono);font-size:10px;color:var(--subtle)">protected</span>`
+            : `<button class="btn-edit-sm" onclick="openEditTech(${idx})">Edit</button>
+               <button class="btn-del-sm"  onclick="archiveTech(${idx})">Archive</button>`}
+        </div>
+      </td>
+    </tr>`;
+  });
 
   const archivedTypeRows = (db.archivedTypes||[]).map(t => `<tr class="row-archived">
     <td><span class="inst-name" style="font-size:13px">${esc(t)}</span></td>
@@ -2312,10 +2965,11 @@ function renderAdmin() {
     <div class="toolbar" style="margin-bottom:12px">
       <div class="search-box" style="max-width:100%">
         <span class="search-icon">⌕</span>
-        <input id="admin-instr-search" placeholder="Search type, serial, site..." oninput="ui.adminInstrSearch=this.value;render()" value="${esc(ui.adminInstrSearch||'')}"/>
+        <input id="admin-instr-search" placeholder="Search type, serial, site..." oninput="ui.adminInstrSearch=this.value;filterTable('admin-instr-table',this.value)" value="${esc(ui.adminInstrSearch||'')}"/>
+        ${ui.adminInstrSearch ? `<button onclick="ui.adminInstrSearch='';document.getElementById('admin-instr-search').value='';filterTable('admin-instr-table','')" style="background:none;border:none;color:var(--subtle);cursor:pointer;padding:0 6px;font-size:13px">✕</button>` : ''}
       </div>
     </div>
-    ${adminTable(['Type / Serial','Site','Status',''], instrRows,'')}
+    ${adminTable(['Type / Serial','Site','Status',''], instrRows,'','admin-instr-table')}
     ${archivedInstr.length > 0 ? `
     <div style="margin-top:16px">
       <div class="archived-section-hdr">
@@ -2367,32 +3021,111 @@ function renderAdmin() {
 
   <div class="group">
     <div class="group-hdr" onclick="toggleAdminSection(this)">
-      <div class="group-title">◈ Technicians<span class="group-chevron">▼</span></div>
-      <div class="group-count">${plural(db.techs.length,'technician')}${(db.archivedTechs||[]).length > 0 ? ` · <span style="color:var(--subtle)">${db.archivedTechs.length} archived</span>` : ''}</div>
+      <div class="group-title">◈ User Credentials<span class="group-chevron">▼</span></div>
+      <div class="group-count">${plural(db.techs.length,'user')}${(db.archivedTechs||[]).length > 0 ? ` · <span style="color:var(--subtle)">${db.archivedTechs.length} archived</span>` : ''}</div>
     </div>
-    ${adminTable(['Name / Role','Email',''], techRows, '')}
-    <div class="admin-add-row" style="border:1px solid var(--border);border-top:none;border-radius:0 0 6px 6px;background:var(--surface2)">
-      <input id="new-tech-name"  class="admin-input" placeholder="Full name *"
-        value="${esc(ui.newTechName||'')}"
-        oninput="ui.newTechName=this.value"
-        onkeydown="if(event.key==='Enter')addTech()"/>
-      <input id="new-tech-role"  class="admin-input" placeholder="Role, e.g. Field Tech"
-        value="${esc(ui.newTechRole||'')}"
-        oninput="ui.newTechRole=this.value"
-        onkeydown="if(event.key==='Enter')addTech()"/>
-      <input id="new-tech-email" class="admin-input" placeholder="Email (optional)"
-        value="${esc(ui.newTechEmail||'')}"
-        oninput="ui.newTechEmail=this.value"
-        onkeydown="if(event.key==='Enter')addTech()"/>
-      <button class="btn-add-sm" onclick="addTech()">+ Add Technician</button>
+    <div class="inst-table">
+      <table>
+        <thead><tr>
+          <th>USERNAME</th>
+          <th>DISPLAY NAME</th>
+          <th>ROLE</th>
+          <th>STATUS</th>
+          <th>PERMISSION</th>
+          <th>TEMP PASSWORD</th>
+          <th>ACTIONS</th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--blue)">admin</td>
+            <td><div class="inst-name" style="font-size:13px">System Administrator</div></td>
+            <td><span style="font-family:var(--font-mono);font-size:10px;font-weight:600;padding:2px 9px;border-radius:var(--radius);background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.25)">admin</span></td>
+            <td><span style="font-family:var(--font-mono);font-size:10px;font-weight:600;padding:2px 9px;border-radius:var(--radius);background:rgba(52,211,153,.09);color:var(--green);border:1px solid rgba(52,211,153,.22)">Active</span></td>
+            <td><span style="font-family:var(--font-mono);font-size:10px;font-weight:600;padding:2px 9px;border-radius:var(--radius);background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.3)">Full Control</span></td>
+            <td style="font-family:var(--font-mono);font-size:11px;color:var(--subtle)">—</td>
+            <td><span style="font-family:var(--font-mono);font-size:10px;color:var(--subtle)">protected</span></td>
+          </tr>
+          ${techRows.join('')}
+        </tbody>
+      </table>
     </div>
+
+    <!-- ADD NEW USER FORM -->
+    <div style="border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius-lg) var(--radius-lg);padding:18px 20px;background:var(--surface2)">
+      <div style="font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--blue);letter-spacing:.08em;margin-bottom:14px">+ ADD NEW USER</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div>
+          <div class="form-label" style="margin-bottom:4px">USERNAME *</div>
+          <input id="new-tech-username" class="form-input" placeholder="e.g. jsmith"
+            autocapitalize="none" spellcheck="false"
+            value="${esc(ui.newTechUsername||'')}"
+            oninput="ui.newTechUsername=this.value"/>
+        </div>
+        <div>
+          <div class="form-label" style="margin-bottom:4px">DISPLAY NAME *</div>
+          <input id="new-tech-name" class="form-input" placeholder="e.g. John Smith"
+            value="${esc(ui.newTechName||'')}"
+            oninput="ui.newTechName=this.value;ui.newTechUsername=ui.newTechUsername||generateUsername(this.value)"/>
+        </div>
+        <div>
+          <div class="form-label" style="margin-bottom:4px">ROLE</div>
+          <select id="new-tech-role" class="form-input"
+            onchange="ui.newTechRole=this.value">
+            <option value="Operator" ${(ui.newTechRole||'Operator')==='Operator'?'selected':''}>Operator</option>
+            <option value="Supervisor" ${ui.newTechRole==='Supervisor'?'selected':''}>Supervisor</option>
+            <option value="Chief" ${ui.newTechRole==='Chief'?'selected':''}>Chief</option>
+            <option value="Admin" ${ui.newTechRole==='Admin'?'selected':''}>Admin</option>
+          </select>
+        </div>
+        <div>
+          <div class="form-label" style="margin-bottom:4px">PERMISSION</div>
+          <select id="new-tech-permission" class="form-input"
+            onchange="ui.newTechPermission=this.value">
+            <option value="View" ${(ui.newTechPermission||'View')==='View'?'selected':''}>View</option>
+            <option value="Edit" ${ui.newTechPermission==='Edit'?'selected':''}>Edit</option>
+            <option value="Full Control" ${ui.newTechPermission==='Full Control'?'selected':''}>Full Control</option>
+          </select>
+        </div>
+        <div>
+          <div class="form-label" style="margin-bottom:4px">EMAIL (OPTIONAL)</div>
+          <input id="new-tech-email" class="form-input" placeholder="user@sdapcd.gov"
+            value="${esc(ui.newTechEmail||'')}"
+            oninput="ui.newTechEmail=this.value"/>
+        </div>
+        <div>
+          <div class="form-label" style="margin-bottom:4px">TEMPORARY PASSWORD</div>
+          <input id="new-tech-temppw" class="form-input" placeholder="Default: circuit"
+            value="${esc(ui.newTechTempPw||'circuit')}"
+            oninput="ui.newTechTempPw=this.value"/>
+        </div>
+      </div>
+      <button class="btn-add-sm" onclick="addTech()">+ Add User</button>
+    </div>
+
     ${(db.archivedTechs||[]).length > 0 ? `
     <div style="margin-top:16px">
-      <div class="archived-section-hdr">
-        Archived Technicians (${(db.archivedTechs||[]).length})
+      <div class="archived-section-hdr">Archived Users (${(db.archivedTechs||[]).length})</div>
+      <div class="inst-table">
+        <table>
+          <thead><tr><th>USERNAME</th><th>DISPLAY NAME</th><th>ROLE</th><th>STATUS</th><th>ACTIONS</th></tr></thead>
+          <tbody>${(db.archivedTechs||[]).map((t, idx) => `<tr class="row-archived">
+            <td style="font-family:var(--font-mono);font-size:12px;color:var(--subtle)">${esc(t.username||generateUsername(t.name))}</td>
+            <td><div class="inst-name" style="font-size:13px">${esc(t.name)}</div></td>
+            <td style="font-family:var(--font-mono);font-size:11px;color:var(--subtle)">${esc(t.role||'Operator')}</td>
+            <td><span class="badge-archived">ARCHIVED</span></td>
+            <td><div style="display:flex;gap:6px">
+              <button class="btn-restore" onclick="restoreTech(${idx})">RESTORE</button>
+              <button class="btn-del-sm"  onclick="permanentlyDeleteTech(${idx})">DELETE</button>
+            </div></td>
+          </tr>`).join('')}</tbody>
+        </table>
       </div>
-      ${adminTable(['Name / Role','Email',''], archivedTechRows,'')}
     </div>` : ''}
+
+    <div style="padding:10px 14px;font-family:var(--font-mono);font-size:10px;color:var(--subtle);line-height:1.8;border-top:1px solid var(--border2);margin-top:4px">
+      <strong style="color:var(--muted)">Permissions:</strong> View = read only. Edit = create/update records. Full Control = all edit access plus admin-level operations.<br>
+      <strong style="color:var(--muted)">Roles:</strong> Operator = standard staff. Supervisor / Chief = can see/edit everything except Credentials tab; can authorize deletions. Admin = full system access.
+    </div>
   </div>
 
     <div class="group">
@@ -2410,6 +3143,64 @@ function renderAdmin() {
       '<button class="btn-add-sm" onclick="addCustomStatus()">+ Add Status</button>'
     )}
     <div style="margin-top:8px;font-family:var(--font-mono);font-size:10px;color:var(--subtle)">Built-in statuses (Operational, Maintenance, Repair, Calibration, Offline, Deployed, At Vendor) cannot be removed.</div>
+  </div>
+
+  <div class="group">
+    <div class="group-hdr" onclick="toggleAdminSection(this)">
+      <div class="group-title">🗑 Delete Log<span class="group-chevron">▼</span></div>
+      <div class="group-count">${plural((db.deleteLog||[]).length,'record')}</div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-bottom:none;border-radius:var(--radius-lg) var(--radius-lg) 0 0">
+      <div style="display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;color:var(--muted)">
+        <span style="color:var(--blue)">ⓘ</span> Records all permanent deletions. Visible to administrators only.
+      </div>
+      <button class="btn-export" onclick="exportDeleteLogCSV()">↓ Export CSV</button>
+    </div>
+    ${(db.deleteLog||[]).length === 0
+      ? `<div style="text-align:center;padding:32px;color:var(--subtle);font-family:var(--font-mono);font-size:12px;background:var(--surface);border:1px solid var(--border);border-radius:0 0 var(--radius-lg) var(--radius-lg)">No deletions recorded yet.</div>`
+      : `<div style="border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius-lg) var(--radius-lg);overflow:hidden">
+          ${(db.deleteLog||[]).map(e => `
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border2);background:var(--surface)">
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);margin-bottom:4px">${esc(e.ts)}</div>
+            <div style="font-family:var(--font-mono);font-size:12px;color:var(--text)">
+              <span style="color:var(--red);font-weight:600">[${esc(e.what||'DELETE')}]</span>
+              <span style="color:var(--muted)"> ${esc(e.user)}</span> — ${esc(e.detail)}
+            </div>
+          </div>`).join('')}
+        </div>`
+    }
+  </div>
+
+  <div class="group">
+    <div class="group-hdr" onclick="toggleAdminSection(this)">
+      <div class="group-title">🔒 Security Log<span class="group-chevron">▼</span></div>
+      <div class="group-count">${plural((db.securityLog||[]).length,'event')}</div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-bottom:none;border-radius:var(--radius-lg) var(--radius-lg) 0 0">
+      <div style="display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;color:var(--muted)">
+        <span style="color:var(--blue)">ⓘ</span> This log records all login events, sign-outs, deletions, and approvals. It is append-only and cannot be modified by any user.
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:var(--red);font-family:var(--font-mono);font-size:10px;font-weight:600;padding:3px 10px;border-radius:var(--radius)">Read Only — Cannot Be Edited</span>
+        <button class="btn-export" onclick="exportSecurityLogCSV()">↓ Export CSV</button>
+      </div>
+    </div>
+    ${(db.securityLog||[]).length === 0
+      ? `<div style="text-align:center;padding:32px;color:var(--subtle);font-family:var(--font-mono);font-size:12px;background:var(--surface);border:1px solid var(--border);border-radius:0 0 var(--radius-lg) var(--radius-lg)">No events recorded yet.</div>`
+      : `<div style="border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius-lg) var(--radius-lg);overflow:hidden">
+          ${(db.securityLog||[]).map(e => {
+            const typeColor = e.type==='LOGIN'?'var(--green)':e.type==='LOGOUT'?'var(--slate)':e.type==='APPROVAL'?'var(--blue)':e.type==='DELETE'?'var(--red)':'var(--amber)';
+            return `
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border2);background:var(--surface)">
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);margin-bottom:4px">${esc(e.ts)}</div>
+            <div style="font-family:var(--font-mono);font-size:12px;color:var(--text)">
+              <span style="color:${typeColor};font-weight:600">[${esc(e.type)}]</span>
+              <span style="color:var(--muted)"> ${esc(e.user)}</span> — ${esc(e.detail)}
+            </div>
+          </div>`;
+          }).join('')}
+        </div>`
+    }
   </div>
 
   <div class="group">
@@ -2454,6 +3245,25 @@ function renderAdmin() {
   </div>`;
 }
 
+function exportDeleteLogCSV() {
+  const rows = [['Timestamp','User','Type','Detail']];
+  (db.deleteLog||[]).forEach(e => rows.push([e.ts, e.user, e.what||'DELETE', e.detail]));
+  const csv = rows.map(r => r.map(c => '"'+String(c||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'sdapcd_delete_log_' + today() + '.csv';
+  a.click();
+}
+function exportSecurityLogCSV() {
+  const rows = [['Timestamp','User','Event Type','Detail']];
+  (db.securityLog||[]).forEach(e => rows.push([e.ts, e.user, e.type, e.detail]));
+  const csv = rows.map(r => r.map(c => '"'+String(c||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'sdapcd_security_log_' + today() + '.csv';
+  a.click();
+}
+
 // ── INSTRUMENT ACTIONS ─────────────────────────────────────
 function navigateTo(page) {
   if (ui.adminUnlocked && ui.adminUnlockedAt && (Date.now()-ui.adminUnlockedAt > 5*60*1000)) {
@@ -2494,7 +3304,7 @@ function hashPW(pw) {
   return h.toString(16);
 }
 function getStoredHash() {
-  return localStorage.getItem(ADMIN_PW_KEY) || hashPW('admin1234');
+  return localStorage.getItem(ADMIN_PW_KEY) || hashPW('circuit');
 }
 function submitAdminPassword() {
   const pw = document.getElementById('admin-pw-input')?.value || '';
@@ -2544,7 +3354,7 @@ function toggleTheme() {
   sessionStorage.setItem('sdapcd_theme', ui.theme);
   render();
 }
-function markDirty() { ui.dirty = true; }
+// markDirty is defined in the sync layer below
 function closeModal() { ui.modal = null; ui.form = {}; ui.dirty = false; render(); }
 function setStatFilter(k) { ui.activeStatCard = ui.activeStatCard === k ? null : k; render(); }
 
@@ -2571,7 +3381,7 @@ function updateStatus(id, val) {
     onConfirm: () => {
       addHistory(id, 'Status changed', `${prev} → ${val}`);
       i.status = val;
-      saveDB(); render(); toast(`Status → ${val}`);
+      saveDB('instrument', (typeof id !== 'undefined' ? id : (inst && inst.id))); render(); toast(`Status → ${val}`);
     }
   });
 }
@@ -2602,7 +3412,7 @@ function updateSite(id, val) {
         i.status = 'Deployed';
         addHistory(id, 'Status changed', 'Operational → Deployed');
       }
-      saveDB(); render(); toast(`Moved to ${val}`);
+      saveDB('instrument', (typeof id !== 'undefined' ? id : (inst && inst.id))); render(); toast(`Moved to ${val}`);
     }
   });
 }
@@ -2636,14 +3446,81 @@ function saveEditInstrument(id) {
   i.name = name; i.serial = serial; i.status = status; i.site = site; i.notes = notes;
   if (name === 'BC1060' && i.lastCertDate === undefined) i.lastCertDate = null;
   if (changes.length) addHistory(id, 'Instrument edited', changes.join(' · '));
-  saveDB(); closeModal(); toast('Instrument updated');
+  saveDB('instrument', (typeof id !== 'undefined' ? id : (inst && inst.id))); closeModal(); toast('Instrument updated');
 }
 function openLogWork(id) {
   const i = db.instruments.find(x => x.id === id);
   if (!i) return;
   ui.modal = 'logwork';
-  ui.form  = { instId: id, instName: i.name, serial: i.serial, by: '', desc: '' };
+  ui.form  = { instId: id, instName: i.name, serial: i.serial, by: '', desc: '',
+               workType: 'Maintenance', otherReason: '', attachments: [] };
   render();
+}
+
+function attachLogWorkFiles(input) {
+  const files = Array.from(input.files);
+  if (!ui.form.attachments) ui.form.attachments = [];
+  const inst = db.instruments.find(x => x.id === ui.form.instId);
+
+  files.forEach(file => {
+    if (file.size > 8 * 1024 * 1024) { toast('⚠ ' + file.name + ' too large — max 8MB'); return; }
+    const reader = new FileReader();
+    reader.onload = async e => {
+      // Save current field values before any re-render
+      const byEl    = document.getElementById('f-lw-by');
+      const descEl  = document.getElementById('f-lw-desc');
+      const dateEl  = document.getElementById('f-lw-date');
+      const otherEl = document.getElementById('f-lw-other');
+      if (byEl)    ui.form.by          = byEl.value;
+      if (descEl)  ui.form.desc        = descEl.value;
+      if (dateEl)  ui.form.date        = dateEl.value;
+      if (otherEl) ui.form.otherReason = otherEl.value;
+
+      // Add a placeholder while uploading
+      const placeholderIdx = ui.form.attachments.length;
+      ui.form.attachments.push({
+        name: file.name,
+        type: file.type.startsWith('image/') ? 'image' : 'pdf',
+        uploading: true,
+        data: e.target.result  // keep local copy as fallback
+      });
+      render();
+
+      // Upload to Google Drive
+      try {
+        const result = await API.uploadFile(
+          e.target.result,
+          file.name,
+          file.type,
+          inst ? inst.name   : '',
+          inst ? inst.serial : '',
+          ui.form.workType || 'Work'
+        );
+        // Replace placeholder with Drive link
+        ui.form.attachments[placeholderIdx] = {
+          name:      file.name,
+          type:      file.type.startsWith('image/') ? 'image' : 'pdf',
+          fileId:    result.fileId,
+          fileUrl:   result.fileUrl,
+          directUrl: result.directUrl,
+          data:      e.target.result  // keep local fallback
+        };
+        toast('📎 ' + file.name + ' uploaded to Drive');
+      } catch(err) {
+        // Drive upload failed — keep local base64 as fallback
+        console.warn('Drive upload failed, keeping local:', err);
+        ui.form.attachments[placeholderIdx] = {
+          name: file.name,
+          type: file.type.startsWith('image/') ? 'image' : 'pdf',
+          data: e.target.result,
+          localOnly: true
+        };
+        toast('⚠ Drive upload failed — file saved locally only');
+      }
+      render();
+    };
+    reader.readAsDataURL(file);
+  });
 }
 function openCreateWO(id) { const i=db.instruments.find(x=>x.id===id); if (!i) return; ui.modal='createwo'; ui.form={instId:id,instName:i.name,serial:i.serial}; render(); }
 function openHistory(id)  { const i=db.instruments.find(x=>x.id===id); if (!i) return; ui.modal='history';  ui.form={instId:id,instName:i.name,serial:i.serial}; render(); }
@@ -2651,40 +3528,88 @@ function openLogCert(id)  {
   const i = db.instruments.find(x => x.id === id);
   if (!i) return;
   ui.modal = 'logcert';
-  ui.form  = { instId: id, instName: i.name, serial: i.serial, certDate: today(), certBy: '', certNotes: '', editMode: false };
+  ui.form  = { instId: id, instName: i.name, serial: i.serial,
+               certDate: today(), certNotes: '', editMode: false,
+               certIntervalMonths: i.certIntervalMonths || '' };
   render();
 }
 function openEditCert(id) {
   const i = db.instruments.find(x => x.id === id);
   if (!i) return;
   ui.modal = 'logcert';
-  ui.form  = { instId: id, instName: i.name, serial: i.serial, certDate: i.lastCertDate || today(), certBy: '', certNotes: '', editMode: true };
+  ui.form  = { instId: id, instName: i.name, serial: i.serial,
+               certDate: i.lastCertDate || today(), certNotes: '', editMode: true,
+               certIntervalMonths: i.certIntervalMonths || '' };
   render();
 }
+function openSetCertInterval(id) {
+  const i = db.instruments.find(x => x.id === id);
+  if (!i) return;
+  ui.modal = 'setcertinterval';
+  ui.form  = { instId: id, instName: i.name, serial: i.serial,
+               certIntervalMonths: i.certIntervalMonths || '' };
+  render();
+}
+function saveSetCertInterval() {
+  // Read from input field first, fall back to preset selection
+  const inputVal = getVal('f-interval-months');
+  const months = parseInt(inputVal || ui.form.certIntervalMonths || '0', 10);
+  if (!months || months < 1 || months > 120) {
+    ui.form = {...ui.form, err: 'Enter a valid interval between 1 and 120 months.'};
+    render(); return;
+  }
+  const i = db.instruments.find(x => x.id === ui.form.instId);
+  if (!i) return;
+  i.certIntervalMonths = months;
+  API.put('/instruments/' + i.id, {
+    name: i.name, serial: i.serial, status: i.status, site: i.site,
+    notes: i.notes || '', cert_interval_months: months
+  }).catch(e => console.warn('cert interval save failed', e));
+  addHistory(i.id, 'Cert interval set', `Interval set to ${months} month(s) for ${i.name} · ${i.serial}`);
+  saveDB('instrument', (typeof id !== 'undefined' ? id : (inst && inst.id))); closeModal(); render();
+  toast(`Cert interval set to ${months} month(s)`);
+}
 function saveLogCert() {
-  const mo=document.getElementById('f-cert-month'),dy=document.getElementById('f-cert-day'),yr=document.getElementById('f-cert-year');
-  const certDate=(mo&&dy&&yr)?yr.value+'-'+mo.value+'-'+dy.value:'';
-  const certBy    = getVal('f-cert-by');
+  const mo = document.getElementById('f-cert-month');
+  const dy = document.getElementById('f-cert-day');
+  const yr = document.getElementById('f-cert-year');
+  const certDate  = (mo && dy && yr) ? `${yr.value}-${mo.value}-${dy.value}` : '';
   const certNotes = getVal('f-cert-notes');
-  if (!certDate) { ui.form={...ui.form, err:'Certification date is required.'}; render(); return; }
+  // Read interval from input field first, fall back to preset (ui.form.certIntervalMonths)
+  const inputMonths = getVal('f-interval-months-cert');
+  const months = parseInt(inputMonths || ui.form.certIntervalMonths || '0', 10);
+  if (!certDate) { ui.form = {...ui.form, err: 'Certification date is required.'}; render(); return; }
+  if (!months || months < 1) { ui.form = {...ui.form, err: 'A valid cert interval is required.'}; render(); return; }
   const { instId, editMode } = ui.form;
   const i = db.instruments.find(x => x.id === instId);
   if (!i) return;
   const prevDate = i.lastCertDate;
   i.lastCertDate = certDate;
-  const due = certDueDate(certDate);
-  const action = editMode ? 'Vendor Certification updated' : 'Vendor Certification logged';
+  i.certIntervalMonths = months;
+  const due = certDueDate(certDate, months);
+  const action = editMode ? 'Certification updated' : 'Certification logged';
   const detail = editMode
-    ? `Cert date changed: ${prevDate || '—'} → ${certDate} · Next due: ${due}${certBy ? ' · By: ' + certBy : ''}${certNotes ? ' · ' + certNotes.slice(0,80) : ''}`
-    : `Cert date: ${certDate} · Next due: ${due}${certBy ? ' · By: ' + certBy : ''}${certNotes ? ' · ' + certNotes.slice(0,80) : ''}`;
+    ? `Cert date: ${prevDate || '—'} → ${certDate} · Next due: ${due} · Interval: ${months}mo${certNotes ? ' · ' + certNotes.slice(0,80) : ''}`
+    : `Cert date: ${certDate} · Next due: ${due} · Interval: ${months}mo${certNotes ? ' · ' + certNotes.slice(0,80) : ''}`;
+  API.put('/instruments/' + i.id, {
+    name: i.name, serial: i.serial, status: i.status, site: i.site,
+    notes: i.notes || '', last_cert_date: certDate, cert_interval_months: months
+  }).catch(e => console.warn('cert save failed', e));
   addHistory(instId, action, detail);
-  saveDB(); closeModal(); toast((editMode ? 'Certification updated' : 'Certification recorded') + ' — next due ' + due);
+  saveDB('instrument', (typeof id !== 'undefined' ? id : (inst && inst.id))); closeModal(); render();
+  toast((editMode ? 'Certification updated' : 'Certification recorded') + ' — next due ' + due);
 }
-function openWODetail(wid){ if (db.workOrders.find(w => w.id === wid)) { ui.modal='wodetail'; ui.form={woId:wid}; render(); } }
-function openEditWO(wid)  {
-  const wo = db.workOrders.find(w => w.id === wid);
+function openWODetail(wid) {
+  const wo = db.workOrders.find(w => String(w.id) === String(wid));
+  if (!wo) { toast('⚠ Work order not found'); return; }
+  ui.modal = 'wodetail';
+  ui.form  = { woId: wo.id };
+  render();
+}
+function openEditWO(wid) {
+  const wo = db.workOrders.find(w => String(w.id) === String(wid));
   if (!wo) return;
-  ui.modal='editwo'; ui.form={woId:wid, type:wo.type, by:wo.technician||'', desc:wo.description||''};
+  ui.modal='editwo'; ui.form={woId:wo.id, type:wo.type, by:wo.technician||'', desc:wo.description||''};
   render();
 }
 
@@ -2711,7 +3636,7 @@ function saveAdd() {
   }
   db.instruments.push(newInst);
   addHistory(id, 'Instrument added', `${name} ${serial} at ${site} — ${newInst.status}`);
-  saveDB(); closeModal(); toast('Instrument added');
+  saveDB('instrument', (typeof id !== 'undefined' ? id : (inst && inst.id))); closeModal(); toast('Instrument added');
 }
 
 // Shared save for logwork and createwo
@@ -2722,23 +3647,57 @@ function saveWorkEntry(mode) {
   const desc = getVal('f-desc');
   if (!by) { ui.form={...ui.form, err:'Technician is required.', type, by, desc}; render(); return; }
   const { instId } = ui.form;
-  const woId = db.woId++;
+  // Compute next WO ID from max existing to avoid conflicts with server-assigned IDs
+  const maxId = db.workOrders.reduce((m, w) => Math.max(m, parseInt(w.id)||0), 0);
+  const woId = maxId + 1;
+  db.woId = woId + 1;
   db.workOrders.push({ id:woId, instrumentId:instId, type, description:desc, technician:by, status:'Open', created:today() });
   addHistory(instId, 'Work order created', `WO-${woId} · ${type} · Tech: ${by}${desc?' · '+desc.slice(0,80):''}`);
-  saveDB(); closeModal(); toast('Work order WO-'+woId+' created');
+  saveDB('workorder', wo && wo.id); closeModal(); toast('Work order WO-'+woId+' created');
 }
 
 function saveLogWork() {
-  const byEl       = document.getElementById('f-lw-by');
-  const descEl     = document.getElementById('f-lw-desc');
-  const by         = byEl   ? byEl.value.trim()   : '';
-  const desc       = descEl ? descEl.value.trim()  : '';
+  const byEl    = document.getElementById('f-lw-by');
+  const descEl  = document.getElementById('f-lw-desc');
+  const otherEl = document.getElementById('f-lw-other');
+  const by      = byEl   ? byEl.value.trim()  : '';
+  const desc    = descEl ? descEl.value.trim() : '';
+  const workType    = ui.form.workType    || 'Maintenance';
+  const otherReason = otherEl ? otherEl.value.trim() : (ui.form.otherReason || '');
+  const attachments = ui.form.attachments || [];
+
   if (!by)   { ui.form={...ui.form, err:'Please select the technician who performed the work.'}; render(); return; }
   if (!desc) { ui.form={...ui.form, err:'Please describe the work that was performed.'}; render(); return; }
+  if (workType === 'Other' && !otherReason) { ui.form={...ui.form, err:'Please specify the reason for "Other".'}; render(); return; }
+
   const { instId } = ui.form;
-  addHistory(instId, 'Work performed', 'Tech: ' + by + ' · ' + desc.slice(0, 120));
-  saveDB(); closeModal();
-  toast('\u2713 Work entry logged');
+  const typeLabel = workType === 'Other' ? `Other — ${otherReason}` : workType;
+  const attachNote = attachments.length > 0 ? ` · ${attachments.length} attachment${attachments.length>1?'s':''}` : '';
+  addHistory(instId, `Work performed — ${typeLabel}`, `Tech: ${by} · ${desc.slice(0,120)}${attachNote}`);
+
+  // Store attachments on the instrument record — use Drive links, strip raw base64
+  if (attachments.length > 0) {
+    const inst = db.instruments.find(x => String(x.id) === String(instId));
+    if (inst) {
+      if (!inst.workAttachments) inst.workAttachments = [];
+      attachments.forEach(a => inst.workAttachments.push({
+        name:      a.name,
+        type:      a.type,
+        fileId:    a.fileId    || null,
+        fileUrl:   a.fileUrl   || null,
+        directUrl: a.directUrl || null,
+        localOnly: a.localOnly || false,
+        // Only keep base64 if Drive upload failed (localOnly)
+        data:      a.localOnly ? a.data : null,
+        date:      today(),
+        tech:      by,
+        workType:  typeLabel
+      }));
+    }
+  }
+
+  saveDB('instrument', instId); closeModal();
+  toast('✓ Work entry logged');
 }
 
 function saveEditWO(wid) {
@@ -2750,16 +3709,79 @@ function saveEditWO(wid) {
   if (!wo) return;
   wo.type = type; wo.technician = by; wo.description = desc;
   addHistory(wo.instrumentId, 'Work order updated', `WO-${wid} · ${type} · Tech: ${by}${desc ? ' · ' + desc.slice(0, 80) : ''}`);
-  saveDB(); openWODetail(wid); toast('Work order updated');
+  saveDB('workorder', wo && wo.id); openWODetail(wid); toast('Work order updated');
 }
 
-function closeWO(wid) {
-  const wo = db.workOrders.find(w => w.id === wid);
+function submitForClosure(wid) {
+  const wo = db.workOrders.find(w => String(w.id) === String(wid));
   if (!wo) return;
-  ui.modal = 'closeworkorder';
-  ui.form  = { woId: wid, closedBy: '' };
-  render();
+  showConfirm({
+    title: 'SUBMIT FOR CLOSURE',
+    icon: '↑',
+    msg: `Submit <strong>WO-${wo.id}</strong> for closure approval?`,
+    detail: 'Once submitted, this order will be locked pending authorized approval.',
+    onConfirm: () => {
+      wo.status = 'Pending Closure';
+      wo.submittedBy = ui.currentUser;
+      wo.submittedDate = today();
+      addHistory(wo.instrumentId, 'Submitted for closure', `WO-${wo.id} · ${wo.type} · Submitted by: ${ui.currentUser}`);
+      addSecurityLog('SUBMIT', `WO-${wo.id} submitted for closure by ${ui.currentUser}`);
+      saveDB('workorder', wo && wo.id); closeModal(); render();
+      toast('WO-' + wo.id + ' submitted for closure approval');
+    }
+  });
+}
 
+function openApproveWO(wid) {
+  const wo = db.workOrders.find(w => String(w.id) === String(wid));
+  if (!wo) return;
+  ui.modal = 'approveworkorder';
+  ui.form  = { woId: wo.id };
+  render();
+}
+
+function openRestoreWO(wid) {
+  const wo = db.workOrders.find(w => String(w.id) === String(wid));
+  if (!wo) return;
+  ui.modal = 'restoreworkorder';
+  ui.form  = { woId: wo.id };
+  render();
+  setTimeout(() => { const el = document.getElementById('f-restore-notes'); if (el) el.focus(); }, 80);
+}
+
+function confirmRestoreWO() {
+  const notes = (document.getElementById('f-restore-notes')?.value || '').trim();
+  if (!notes) {
+    ui.form = {...ui.form, err: 'A reason is required when restoring a work order.'}; render(); return;
+  }
+  const wo = db.workOrders.find(w => String(w.id) === String(ui.form.woId));
+  if (!wo) return;
+  wo.status        = 'Open';
+  wo.restoreReason = notes;
+  wo.restoredBy    = ui.currentUser;
+  wo.restoredDate  = today();
+  delete wo.submittedBy;
+  delete wo.submittedDate;
+  addHistory(wo.instrumentId, 'Submission restored to Open', `WO-${wo.id} · Restored by: ${ui.currentUser} · Reason: ${notes}`);
+  addSecurityLog('RESTORE', `WO-${wo.id} restored to Open by ${ui.currentUser}. Reason: ${notes}`);
+  saveDB('workorder', wo && wo.id); closeModal(); render();
+  toast('WO-' + wo.id + ' restored to Open');
+}
+
+function confirmApproveWO() {
+  const woId  = ui.form.woId;
+  const notes = (document.getElementById('f-approve-notes')?.value || '').trim();
+  const wo    = db.workOrders.find(w => String(w.id) === String(woId));
+  if (!wo) return;
+  wo.status     = 'Closed';
+  wo.closedBy   = ui.currentUser;
+  wo.approvedBy = ui.currentUser;
+  wo.closedDate = today();
+  const detail  = `WO-${wo.id} · ${wo.type} · Approved by: ${ui.currentUser}${notes ? ' · Notes: ' + notes : ''}`;
+  addHistory(wo.instrumentId, 'Work order approved & closed', detail);
+  addSecurityLog('APPROVAL', `Approved closure of WO-${String(wo.id).padStart(3,'0')} by ${ui.currentUser}.${notes ? ' Notes: ' + notes : ''}`);
+  saveDB('workorder', wo && wo.id); closeModal(); render();
+  toast('✓ WO-' + wo.id + ' approved and closed');
 }
 
 // ── ADMIN ACTIONS ──────────────────────────────────────────
@@ -2769,7 +3791,7 @@ function addSite() {
   if (db.sites.includes(val)) { toast('⚠ Site already exists'); return; }
   db.sites.push(val);
   ui.newSite = '';
-  saveDB(); render(); toast(`Site "${val}" added`);
+  saveDB('site'); render(); toast(`Site "${val}" added`);
 }
 function archiveSite(idx) {
   const s = db.sites[idx];
@@ -2788,7 +3810,7 @@ function archiveSite(idx) {
       db.sites.splice(idx, 1);
       if (!db.archivedSites) db.archivedSites = [];
       db.archivedSites.push(s);
-      saveDB(); render(); toast(`Site "${s}" archived`);
+      saveDB('site'); render(); toast(`Site "${s}" archived`);
     }
   });
 }
@@ -2796,17 +3818,17 @@ function restoreSite(name) {
   if (!db.archivedSites) return;
   db.archivedSites = db.archivedSites.filter(s => s !== name);
   db.sites.push(name);
-  saveDB(); render(); toast(`Site "${name}" restored`);
+  saveDB('site'); render(); toast(`Site "${name}" restored`);
 }
 function permanentlyDeleteSite(name) {
   showConfirm({
-    title: 'PERMANENTLY DELETE SITE',
-    icon: '⚠',
+    title: 'PERMANENTLY DELETE SITE', icon: '⚠',
     msg: `<strong style="color:var(--red)">Permanently delete site "${esc(name)}"?</strong> This cannot be undone.`,
     detail: 'This site is already archived.',
     onConfirm: () => {
+      addDeleteLog('Site', `Site "${name}" permanently deleted`);
       db.archivedSites = (db.archivedSites||[]).filter(s => s !== name);
-      saveDB(); render(); toast(`Site "${name}" permanently deleted`);
+      saveDB('site'); render(); toast(`Site "${name}" permanently deleted`);
     }
   });
 }
@@ -2822,7 +3844,7 @@ function archiveInstrument(id) {
       i.archived = true;
       i.archivedDate = today();
       addHistory(id, 'Instrument archived', `${i.name} S/N ${i.serial}`);
-      saveDB(); render(); toast(`${i.serial} archived`);
+      saveDB('instrument', (typeof id !== 'undefined' ? id : (inst && inst.id))); render(); toast(`${i.serial} archived`);
     }
   });
 }
@@ -2832,7 +3854,7 @@ function restoreInstrument(id) {
   i.archived = false;
   delete i.archivedDate;
   addHistory(id, 'Instrument restored', `${i.name} S/N ${i.serial} restored to registry`);
-  saveDB(); render(); toast(`${i.serial} restored`);
+  saveDB('instrument', (typeof id !== 'undefined' ? id : (inst && inst.id))); render(); toast(`${i.serial} restored`);
 }
 function permanentlyDeleteInstrument(id) {
   const i = db.instruments.find(x => x.id === id);
@@ -2843,10 +3865,11 @@ function permanentlyDeleteInstrument(id) {
     msg: `<strong style="color:var(--red)">Permanently delete ${esc(i.name)} S/N ${esc(i.serial)}?</strong> All history and work orders will be erased. This cannot be undone.`,
     detail: 'This instrument is already archived. This is the final, permanent deletion.',
     onConfirm: () => {
+      addDeleteLog('Instrument', `${i.name} S/N ${i.serial} permanently deleted`);
       db.instruments = db.instruments.filter(x => x.id !== id);
       db.workOrders  = db.workOrders.filter(w => w.instrumentId !== id);
       delete db.history[id];
-      saveDB(); render(); toast('Instrument permanently deleted');
+      saveDB('instrument', (typeof id !== 'undefined' ? id : (inst && inst.id))); render(); toast('Instrument permanently deleted');
     }
   });
 }
@@ -2856,7 +3879,7 @@ function addInstType() {
   if (db.instTypes.includes(val)) { toast('⚠ Type already exists'); return; }
   db.instTypes.push(val);
   ui.newType = '';
-  saveDB(); render(); toast(`Type "${val}" added`);
+  saveDB('type'); render(); toast(`Type "${val}" added`);
 }
 function archiveInstType(idx) {
   const t = db.instTypes[idx];
@@ -2872,7 +3895,7 @@ function archiveInstType(idx) {
       db.instTypes.splice(idx, 1);
       if (!db.archivedTypes) db.archivedTypes = [];
       db.archivedTypes.push(t);
-      saveDB(); render(); toast(`Type "${t}" archived`);
+      saveDB('type'); render(); toast(`Type "${t}" archived`);
     }
   });
 }
@@ -2880,7 +3903,7 @@ function restoreInstType(name) {
   if (!db.archivedTypes) return;
   db.archivedTypes = db.archivedTypes.filter(t => t !== name);
   db.instTypes.push(name);
-  saveDB(); render(); toast(`Type "${name}" restored`);
+  saveDB('type'); render(); toast(`Type "${name}" restored`);
 }
 function permanentlyDeleteType(name) {
   showConfirm({
@@ -2889,20 +3912,47 @@ function permanentlyDeleteType(name) {
     msg: `<strong style="color:var(--red)">Permanently delete type "${esc(name)}"?</strong> This cannot be undone.`,
     detail: 'This type is already archived.',
     onConfirm: () => {
+      addDeleteLog('Instrument Type', `Type "${name}" permanently deleted`);
       db.archivedTypes = (db.archivedTypes||[]).filter(t => t !== name);
-      saveDB(); render(); toast(`Type "${name}" permanently deleted`);
+      saveDB('type'); render(); toast(`Type "${name}" permanently deleted`);
     }
   });
 }
+function generateUsername(fullName) {
+  // Format: first initial + last name, lowercase, letters only
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length < 2) return fullName.trim().toLowerCase().replace(/[^a-z]/g, '');
+  const first = parts[0].replace(/[^a-zA-Z]/g, '');
+  const last  = parts[parts.length - 1].replace(/[^a-zA-Z]/g, '');
+  return (first[0] + last).toLowerCase();
+}
+
 function addTech() {
-  const name  = (ui.newTechName  || getVal('new-tech-name')).trim();
-  const role  = (ui.newTechRole  || getVal('new-tech-role')).trim();
-  const email = (ui.newTechEmail || getVal('new-tech-email')).trim();
-  if (!name) { toast('⚠ Enter a name first'); return; }
-  if (db.techs.find(t => t.name.toLowerCase() === name.toLowerCase())) { toast('⚠ Technician already exists'); return; }
-  db.techs.push({ name, role, email });
+  const displayName = (ui.newTechName    || getVal('new-tech-name')).trim();
+  const email       = (ui.newTechEmail   || getVal('new-tech-email')).trim();
+  const tempPw      = (ui.newTechTempPw  || getVal('new-tech-temppw')).trim() || 'circuit';
+  const role        = (ui.newTechRole    || getVal('new-tech-role')    || 'Operator').trim();
+  const permission  = (ui.newTechPermission || getVal('new-tech-permission') || 'Edit').trim();
+
+  let username = (ui.newTechUsername || getVal('new-tech-username')).trim().toLowerCase().replace(/[^a-z0-9]/g,'');
+  if (!displayName) { toast('⚠ Display name is required'); return; }
+  if (!username) username = generateUsername(displayName);
+
+  const allUsers = [...db.techs, ...(db.archivedTechs||[])];
+  if (allUsers.find(t => (t.username||'').toLowerCase() === username)) {
+    toast(`⚠ Username "${username}" already exists`); return;
+  }
+  if (allUsers.find(t => t.name.toLowerCase() === displayName.toLowerCase())) {
+    toast('⚠ A user with that display name already exists'); return;
+  }
+
+  // Store temp password as the initial login password
+  localStorage.setItem(getUserPWKey(username), hashPWEarly(tempPw));
+
+  db.techs.push({ name: displayName, role, email, username, permission, tempPassword: tempPw });
   ui.newTechName = ''; ui.newTechRole = ''; ui.newTechEmail = '';
-  saveDB(); render(); toast(`${name} added`);
+  ui.newTechUsername = ''; ui.newTechPermission = ''; ui.newTechTempPw = '';
+  saveDB('tech'); render(); toast(`${displayName} added · username: ${username}`);
 }
 function archiveTech(idx) {
   const t = db.techs[idx];
@@ -2915,7 +3965,7 @@ function archiveTech(idx) {
       db.techs.splice(idx, 1);
       if (!db.archivedTechs) db.archivedTechs = [];
       db.archivedTechs.push(t);
-      saveDB(); render(); toast(`${t.name} archived`);
+      saveDB('tech'); render(); toast(`${t.name} archived`);
     }
   });
 }
@@ -2923,7 +3973,7 @@ function restoreTech(idx) {
   if (!db.archivedTechs || !db.archivedTechs[idx]) return;
   const t = db.archivedTechs.splice(idx, 1)[0];
   db.techs.push(t);
-  saveDB(); render(); toast(`${t.name} restored`);
+  saveDB('tech'); render(); toast(`${t.name} restored`);
 }
 function permanentlyDeleteTech(idx) {
   const t = (db.archivedTechs||[])[idx];
@@ -2935,13 +3985,20 @@ function permanentlyDeleteTech(idx) {
     detail: 'This technician is already archived.',
     onConfirm: () => {
       db.archivedTechs.splice(idx, 1);
-      saveDB(); render(); toast(`${t.name} permanently deleted`);
+      saveDB('tech'); render(); toast(`${t.name} permanently deleted`);
     }
   });
 }
 
 function openEditType(idx)  { ui.modal='edittype'; ui.form={idx, val:db.instTypes[idx]}; render(); }
-function openEditTech(idx)  { const t=db.techs[idx]; ui.modal='edittech'; ui.form={idx, name:t.name, role:t.role||'', email:t.email||''}; render(); }
+function openEditTech(idx) {
+  const t = db.techs[idx];
+  ui.modal = 'edittech';
+  ui.form = { idx, name: t.name, role: t.role||'Operator', email: t.email||'',
+              username: t.username||generateUsername(t.name), permission: t.permission||'Edit',
+              tempPassword: t.tempPassword||'' };
+  render();
+}
 
 function saveEditType(idx) {
   const val = getVal('f-val').toUpperCase();
@@ -2951,17 +4008,26 @@ function saveEditType(idx) {
   const old = db.instTypes[idx];
   db.instTypes[idx] = val;
   db.instruments.forEach(i => { if (i.name === old) i.name = val; });
-  saveDB(); closeModal(); toast('Type updated');
+  saveDB('instrument', (typeof id !== 'undefined' ? id : (inst && inst.id))); closeModal(); toast('Type updated');
 }
 function saveEditTech(idx) {
-  const name  = getVal('f-name');
-  const role  = getVal('f-role');
-  const email = getVal('f-email');
-  if (!name) { ui.form={...ui.form,err:'Name is required.',name,role,email}; render(); return; }
+  const name       = getVal('f-name');
+  const role       = getVal('f-role')       || 'Operator';
+  const email      = getVal('f-email');
+  const permission = getVal('f-permission') || 'Edit';
+  const newTempPw  = getVal('f-temppw');
+  if (!name) { ui.form={...ui.form, err:'Display name is required.'}; render(); return; }
   const dup = db.techs.findIndex(t => t.name.toLowerCase() === name.toLowerCase());
-  if (dup !== -1 && dup !== idx) { ui.form={...ui.form,err:'A technician with that name already exists.',name,role,email}; render(); return; }
-  db.techs[idx] = { name, role, email };
-  saveDB(); closeModal(); toast('Technician updated');
+  if (dup !== -1 && dup !== idx) { ui.form={...ui.form, err:'A user with that display name already exists.'}; render(); return; }
+  const t = db.techs[idx];
+  const username = t.username || generateUsername(t.name);
+  if (newTempPw) {
+    localStorage.setItem(getUserPWKey(username), hashPWEarly(newTempPw));
+    db.techs[idx] = { ...t, name, role, email, permission, tempPassword: newTempPw };
+  } else {
+    db.techs[idx] = { ...t, name, role, email, permission };
+  }
+  saveDB('tech'); closeModal(); toast('User updated');
 }
 
 // ── SELECTIVE CLEAR FUNCTIONS ─────────────────────────────
@@ -2973,7 +4039,7 @@ function confirmClearHistory() {
     detail: 'Instruments, sites, work orders, and notes will not be affected.',
     onConfirm: () => {
       db.history = {};
-      saveDB(); render(); toast('All history cleared');
+      saveDB('workorder', wo && wo.id); render(); toast('All history cleared');
     }
   });
 }
@@ -2987,7 +4053,7 @@ function confirmClearWorkOrders() {
     onConfirm: () => {
       db.workOrders = [];
       db.woId = 1;
-      saveDB(); render(); toast('All work orders cleared');
+      saveDB('workorder', wo && wo.id); render(); toast('All work orders cleared');
     }
   });
 }
@@ -3000,7 +4066,7 @@ function confirmClearNotes() {
     detail: 'Instruments, sites, work orders, and history will not be affected.',
     onConfirm: () => {
       db.instruments.forEach(i => { i.notes = ''; });
-      saveDB(); render(); toast('All instrument notes cleared');
+      saveDB('workorder', wo && wo.id); render(); toast('All instrument notes cleared');
     }
   });
 }
@@ -3024,7 +4090,7 @@ function confirmClearExceptSitesInst() {
           db.techs      = [];
           db.instTypes  = ['BC1060', 'ESEQ'];
           db.instruments.forEach(i => { i.notes = ''; });
-          saveDB(); render(); toast('Records cleared — sites and instruments preserved');
+          saveDB('type'); render(); toast('Records cleared — sites and instruments preserved');
         }
       });
     }
@@ -3252,20 +4318,22 @@ function printHistory(id) {
 
 
 // ── SITE EDIT FUNCTIONS ─────────────────────────────────────
-function openEditSite(idx) {
-  const code = db.sites[idx];
-  const meta = db.sitesMeta[code] || { type:'Field', address:'', lat:'', lng:'' };
+function openEditSite(siteCode) {
+  const idx  = db.sites.indexOf(siteCode);
+  if (idx === -1) return;
+  const meta = (db.sitesMeta || {})[siteCode] || { type:'Field', address:'', lat:'', lng:'', siteName:'' };
   ui.modal = 'editsite';
-  ui.form  = { idx, val:code, type:meta.type||'Field', address:meta.address||'', lat:meta.lat||'', lng:meta.lng||'' };
+  ui.form  = { idx, val:siteCode, siteName:meta.siteName||'', type:meta.type||'Field', address:meta.address||'', lat:meta.lat||'', lng:meta.lng||'' };
   render();
 }
 function saveEditSite(idx) {
-  const val     = getVal('f-val').toUpperCase().trim();
-  const typeEl  = document.getElementById('f-site-type');
-  const type    = typeEl ? typeEl.value : (ui.form.type||'Field');
-  const address = getVal('f-site-address').trim();
-  const lat     = getVal('f-site-lat').trim();
-  const lng     = getVal('f-site-lng').trim();
+  const val      = getVal('f-val').toUpperCase().trim();
+  const siteName = getVal('f-site-name').trim();
+  const typeEl   = document.getElementById('f-site-type');
+  const type     = typeEl ? typeEl.value : (ui.form.type||'Field');
+  const address  = getVal('f-site-address').trim();
+  const lat      = getVal('f-site-lat').trim();
+  const lng      = getVal('f-site-lng').trim();
   if (!val) { ui.form={...ui.form,err:'Site code is required.'}; render(); return; }
   if (PROTECTED_SITES.includes(db.sites[idx])) { ui.form={...ui.form,err:'Protected site cannot be renamed.'}; render(); return; }
   if (db.sites.includes(val) && val !== db.sites[idx]) { ui.form={...ui.form,err:'Site already exists.'}; render(); return; }
@@ -3276,8 +4344,10 @@ function saveEditSite(idx) {
     db.instruments.forEach(i => { if (i.site === old) i.site = val; });
   }
   db.sites[idx] = val;
-  db.sitesMeta[val] = { type, address, lat, lng };
-  saveDB(); closeModal(); toast('✓ Site updated');
+  const existing = db.sitesMeta[val] || {};
+  db.sitesMeta[val] = { ...existing, siteName, type, address, lat, lng };
+  if (ui.selectedSite === old) ui.selectedSite = val;
+  saveDB('site'); closeModal(); toast('✓ Site updated');
 }
 
 
@@ -3303,7 +4373,7 @@ function addCustomStatus() {
   if (!db.customStatuses) db.customStatuses = [];
   if (allStatuses().map(s=>s.toLowerCase()).includes(val.toLowerCase())) { toast('⚠ That status already exists'); return; }
   db.customStatuses.push(val);
-  saveDB(); render(); toast('✓ Status "' + val + '" added');
+  saveDB('status'); render(); toast('✓ Status "' + val + '" added');
 }
 function removeCustomStatus(idx) {
   const s = (db.customStatuses||[])[idx];
@@ -3313,10 +4383,10 @@ function removeCustomStatus(idx) {
     showConfirm({ title:'STATUS IN USE', icon:'⚠',
       msg:'<strong>' + esc(s) + '</strong> is used by ' + n + ' instrument' + (n===1?'':'s') + '. Remove anyway?',
       detail:'Instruments keep this value but it will not appear in dropdowns.',
-      onConfirm: () => { db.customStatuses.splice(idx,1); saveDB(); render(); toast('✓ Status removed'); }
+      onConfirm: () => { db.customStatuses.splice(idx,1); saveDB('instrument', (typeof id !== 'undefined' ? id : (inst && inst.id))); render(); toast('✓ Status removed'); }
     }); return;
   }
-  db.customStatuses.splice(idx,1); saveDB(); render(); toast('✓ Status "' + s + '" removed');
+  db.customStatuses.splice(idx,1); saveDB('status'); render(); toast('✓ Status "' + s + '" removed');
 }
 
 // ── SITE INFO ─────────────────────────────────────────────────────────
@@ -3325,37 +4395,343 @@ function openAddSite() {
   ui.form  = { code:'', type:'Field', address:'', lat:'', lng:'' };
   render();
 }
+function uploadSitePhoto(siteCode, input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  if (!db.sitesMeta) db.sitesMeta = {};
+  if (!db.sitesMeta[siteCode]) db.sitesMeta[siteCode] = {};
+  // Migrate legacy single photo to array
+  const meta = db.sitesMeta[siteCode];
+  if (meta.photo && !meta.photos) { meta.photos = [meta.photo]; delete meta.photo; }
+  if (!meta.photos) meta.photos = [];
+
+  let loaded = 0;
+  files.forEach(file => {
+    if (file.size > 4 * 1024 * 1024) { toast('⚠ ' + file.name + ' too large — max 4MB per photo'); return; }
+    const reader = new FileReader();
+    reader.onload = e => {
+      meta.photos.push(e.target.result);
+      loaded++;
+      if (loaded === files.length) {
+        saveDB('site'); render();
+        toast('✓ ' + loaded + ' photo' + (loaded > 1 ? 's' : '') + ' added to ' + siteCode);
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function removeSitePhoto(siteCode, idx) {
+  const meta = (db.sitesMeta || {})[siteCode];
+  if (!meta) return;
+  // Support both legacy and array
+  if (meta.photos) {
+    meta.photos.splice(idx, 1);
+    if (meta.photos.length === 0) delete meta.photos;
+  } else if (meta.photo) {
+    delete meta.photo;
+  }
+  saveDB('site'); render(); toast('Photo removed');
+}
+function setSitePhotoActive(siteCode, idx) {
+  // Bring clicked thumbnail to front (swap with index 0)
+  const meta = (db.sitesMeta || {})[siteCode];
+  if (!meta || !meta.photos) return;
+  const tmp = meta.photos[0];
+  meta.photos[0] = meta.photos[idx];
+  meta.photos[idx] = tmp;
+  render();
+}
 function saveAddSite() {
-  const code    = getVal('f-site-code').toUpperCase().trim();
-  const typeEl  = document.getElementById('f-site-type');
-  const type    = typeEl ? typeEl.value : 'Field';
-  const address = getVal('f-site-address').trim();
-  const lat     = getVal('f-site-lat').trim();
-  const lng     = getVal('f-site-lng').trim();
+  const code     = getVal('f-site-code').toUpperCase().trim();
+  const siteName = getVal('f-site-name').trim();
+  const typeEl   = document.getElementById('f-site-type');
+  const type     = typeEl ? typeEl.value : 'Field';
+  const address  = getVal('f-site-address').trim();
+  const lat      = getVal('f-site-lat').trim();
+  const lng      = getVal('f-site-lng').trim();
   if (!code) { ui.form={...ui.form,err:'Site code is required.'}; render(); return; }
   if (db.sites.includes(code)) { ui.form={...ui.form,err:'Site "'+code+'" already exists.'}; render(); return; }
   db.sites.push(code);
   if (!db.sitesMeta) db.sitesMeta = {};
-  db.sitesMeta[code] = { type, address, lat, lng };
-  saveDB(); closeModal(); render(); toast('✓ Site "' + code + '" added');
+  db.sitesMeta[code] = { siteName, type, address, lat, lng };
+  ui.selectedSite = code;
+  saveDB('site'); closeModal(); render(); toast('✓ Site "' + code + '" added');
 }
+// ── SERVICE LOG ────────────────────────────────────────────
+function renderServiceLog() {
+  const WORK_TYPES = ['Maintenance','Calibration','Repair','Inspection','Other'];
+  const q        = (ui.slSearch   || '').toLowerCase();
+  const typeF    =  ui.slTypeF    || 'All Types';
+  const techF    =  ui.slTechF    || 'All Techs';
+  const dateFrom =  ui.slDateFrom || '';
+  const dateTo   =  ui.slDateTo   || '';
+
+  // Collect all log work entries from every instrument's history
+  const entries = [];
+  Object.entries(db.history || {}).forEach(([instId, hist]) => {
+    const inst = db.instruments.find(i => String(i.id) === String(instId));
+    if (!inst) return;
+    (hist || []).forEach(h => {
+      if (!(h.action || '').toLowerCase().includes('work performed')) return;
+      // Parse work type from action string "Work performed — Calibration"
+      const typePart = (h.action || '').split('—')[1]?.trim() || 'Work';
+      const baseType = WORK_TYPES.find(t => typePart.toLowerCase().startsWith(t.toLowerCase())) || 'Other';
+      // Parse tech from detail "Tech: jsmith · ..."
+      const techMatch = (h.detail || '').match(/Tech:\s*([^·\n]+)/i);
+      const tech = techMatch ? techMatch[1].trim() : '—';
+      // Parse attachments count
+      const attachMatch = (h.detail || '').match(/(\d+) attachment/i);
+      const attachCount = attachMatch ? parseInt(attachMatch[1]) : 0;
+      // Get actual attachment objects
+      const attachments = attachCount > 0
+        ? ((inst.workAttachments || []).filter(a => a.date === (h.ts||'').slice(0,10) && a.tech === tech))
+        : [];
+      entries.push({ instId, inst, h, typePart, baseType, tech, attachCount, attachments,
+                     dateStr: (h.ts||'').slice(0,10) });
+    });
+  });
+
+  // Sort newest first
+  entries.sort((a, b) => (b.h.epoch||0) - (a.h.epoch||0));
+
+  // Apply filters
+  const filtered = entries.filter(e => {
+    const matchQ = !q
+      || e.inst.name.toLowerCase().includes(q)
+      || e.inst.serial.toLowerCase().includes(q)
+      || e.tech.toLowerCase().includes(q)
+      || (e.h.detail||'').toLowerCase().includes(q)
+      || e.typePart.toLowerCase().includes(q);
+    const matchType = typeF === 'All Types' || e.baseType === typeF;
+    const matchTech = techF === 'All Techs' || e.tech === techF;
+    const matchFrom = !dateFrom || e.dateStr >= dateFrom;
+    const matchTo   = !dateTo   || e.dateStr <= dateTo;
+    return matchQ && matchType && matchTech && matchFrom && matchTo;
+  });
+
+  // All unique techs for filter dropdown
+  const allTechs = [...new Set(entries.map(e => e.tech).filter(t => t && t !== '—'))].sort();
+
+  // Type color map
+  const typeColor = t => ({
+    Maintenance: 'var(--blue)',   Calibration: 'var(--green)',
+    Repair:      'var(--red)',    Inspection:  'var(--purple)',
+    Other:       'var(--slate)'
+  }[t] || 'var(--slate)');
+  const typeBg = t => ({
+    Maintenance: 'rgba(34,211,238,.09)',  Calibration: 'rgba(52,211,153,.09)',
+    Repair:      'rgba(248,113,113,.09)', Inspection:  'rgba(167,139,250,.09)',
+    Other:       'rgba(148,163,184,.09)'
+  }[t] || 'rgba(148,163,184,.09)');
+  const typeBorder = t => ({
+    Maintenance: 'rgba(34,211,238,.25)',  Calibration: 'rgba(52,211,153,.25)',
+    Repair:      'rgba(248,113,113,.25)', Inspection:  'rgba(167,139,250,.25)',
+    Other:       'rgba(148,163,184,.25)'
+  }[t] || 'rgba(148,163,184,.25)');
+
+  const hasFilters = q || typeF !== 'All Types' || techF !== 'All Techs' || dateFrom || dateTo;
+
+  const rows = filtered.length === 0
+    ? `<tr class="empty-row"><td colspan="6" style="text-align:center;padding:28px;color:var(--subtle)">No service log entries match your filters</td></tr>`
+    : filtered.map(e => {
+        // Strip "Tech: X · " prefix from detail for cleaner display
+        const detail = (e.h.detail || '').replace(/^Tech:[^·]+·\s*/i, '').replace(/·\s*\d+ attachments?/i,'').trim();
+        const attachHtml = e.attachments.length > 0
+          ? e.attachments.map(a =>
+              `<a href="${a.fileUrl||a.data||'#'}" ${a.fileUrl?'target="_blank"':'download="'+esc(a.name)+'"'} style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-mono);font-size:10px;color:var(--blue);text-decoration:none;margin-right:4px;margin-top:3px">${a.type==='image'?'🖼':'📄'} ${esc(a.name)}${a.fileUrl?' ↗':''}</a>`
+            ).join('')
+          : e.attachCount > 0
+            ? `<span style="font-family:var(--font-mono);font-size:10px;color:var(--subtle)">${e.attachCount} attachment${e.attachCount>1?'s':''}</span>`
+            : '';
+        return `<tr>
+          <td style="font-family:var(--font-mono);font-size:11px;color:var(--subtle);white-space:nowrap">${esc(e.dateStr)}</td>
+          <td>
+            <div class="inst-name">${esc(e.inst.name)}</div>
+            <div class="inst-sn">${esc(e.inst.serial)}</div>
+          </td>
+          <td><span style="font-family:var(--font-mono);font-size:10px;font-weight:600;padding:2px 9px;border-radius:var(--radius);background:${typeBg(e.baseType)};color:${typeColor(e.baseType)};border:1px solid ${typeBorder(e.baseType)}">${esc(e.typePart)}</span></td>
+          <td style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">${esc(e.tech)}</td>
+          <td style="font-size:12px;color:var(--muted);max-width:260px;line-height:1.45">
+            ${esc(detail)}
+            ${attachHtml ? `<div style="margin-top:4px">${attachHtml}</div>` : ''}
+          </td>
+          <td>
+            <button class="btn-act btn-history" onclick="openHistory(${e.instId})" style="font-size:10px">▤ History</button>
+          </td>
+        </tr>`;
+      }).join('');
+
+  return `
+  <div class="section-hdr">
+    <div class="section-title">▣ Service Log</div>
+    <div style="font-family:var(--font-mono);font-size:11px;color:var(--subtle)">${filtered.length} entr${filtered.length===1?'y':'ies'}</div>
+  </div>
+
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:18px;flex-wrap:wrap">
+    <div class="search-box" style="min-width:220px;flex:1;max-width:320px">
+      <span class="search-icon">⌕</span>
+      <input placeholder="Search instrument, serial, tech..." value="${esc(ui.slSearch||'')}" id="sl-search" oninput="ui.slSearch=this.value;filterTable('sl-table',this.value)"/>
+      ${ui.slSearch ? `<button onclick="ui.slSearch='';document.getElementById('sl-search').value='';filterTable('sl-table','')" style="background:none;border:none;color:var(--subtle);cursor:pointer;padding:0 6px;font-size:13px" title="Clear">✕</button>` : ''}
+    </div>
+    <select class="filter-sel" onchange="ui.slTypeF=this.value;render()">
+      <option value="All Types" ${typeF==='All Types'?'selected':''}>All Types</option>
+      ${WORK_TYPES.map(t => `<option value="${esc(t)}" ${typeF===t?'selected':''}>${esc(t)}</option>`).join('')}
+    </select>
+    <select class="filter-sel" onchange="ui.slTechF=this.value;render()">
+      <option value="All Techs" ${techF==='All Techs'?'selected':''}>All Techs</option>
+      ${allTechs.map(t => `<option value="${esc(t)}" ${techF===t?'selected':''}>${esc(t)}</option>`).join('')}
+    </select>
+    <input type="date" class="filter-sel" style="font-family:var(--font-mono);font-size:11px;cursor:pointer"
+      value="${esc(dateFrom)}" title="From date" onchange="ui.slDateFrom=this.value;render()"/>
+    <input type="date" class="filter-sel" style="font-family:var(--font-mono);font-size:11px;cursor:pointer"
+      value="${esc(dateTo)}" title="To date" onchange="ui.slDateTo=this.value;render()"/>
+    <button class="btn-act" onclick="ui.slSearch='';ui.slTypeF='All Types';ui.slTechF='All Techs';ui.slDateFrom='';ui.slDateTo='';filterTable('sl-table','');render()" style="white-space:nowrap">✕ Clear</button>
+  </div>
+
+  <div class="inst-table">
+    <table id="sl-table">
+      <thead><tr>
+        <th>DATE</th>
+        <th>INSTRUMENT / SERIAL</th>
+        <th>TYPE</th>
+        <th>TECHNICIAN</th>
+        <th>DESCRIPTION / FILES</th>
+        <th></th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
 function renderSites() {
-  const typeColors = { 'Field':'var(--amber)','HQ/Shop':'var(--blue)','Vendor':'var(--purple)','Storage':'var(--green)','Mobile':'var(--slate)' };
-  const rows = db.sites.filter(s => s !== 'VENDOR').map(s => {
-    const m = (db.sitesMeta||{})[s] || {};
-    return '<tr>' +
-      '<td><div class="inst-name" style="font-size:13px">' + esc(s) + '</div></td>' +
-      '<td style="font-size:12px;color:var(--muted)">' + (m.address ? esc(m.address) : '<span style="color:var(--subtle)">—</span>') + '</td>' +
-      '<td style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">' + (m.lat ? esc(m.lat) : '<span style="color:var(--subtle)">—</span>') + '</td>' +
-      '<td style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">' + (m.lng ? esc(m.lng) : '<span style="color:var(--subtle)">—</span>') + '</td>' +
-      '</tr>';
-  }).join('');
-  return '<div class="section-hdr"><div class="section-title">◈ Monitoring Sites</div></div>' +
-    '<div class="inst-table"><table>' +
-    '<thead><tr><th>SITE CODE</th><th>ADDRESS</th><th>LATITUDE</th><th>LONGITUDE</th></tr></thead>' +
-    '<tbody>' + (rows || '<tr class="empty-row"><td colspan="4" style="text-align:center;padding:24px;color:var(--subtle)">No sites configured</td></tr>') + '</tbody>' +
-    '</table></div>' +
-    '<div style="margin-top:10px;font-family:var(--font-mono);font-size:10px;color:var(--subtle)">Edit metadata in Admin → Monitoring Sites.</div>';
+  const allSites = db.sites;
+  if (allSites.length === 0) {
+    return `
+    <div class="section-hdr">
+      <div class="section-title">◈ Monitoring Sites</div>
+      <button class="btn-add" onclick="openAddSite()">+ Add Site</button>
+    </div>
+    <div style="text-align:center;padding:60px;color:var(--subtle);font-family:var(--font-mono)">No sites configured. Click <strong>+ Add Site</strong> to get started.</div>`;
+  }
+
+  // Default selected site
+  if (!ui.selectedSite || !allSites.includes(ui.selectedSite)) {
+    ui.selectedSite = allSites[0];
+  }
+  const s    = ui.selectedSite;
+  const m    = (db.sitesMeta || {})[s] || {};
+  const photos = (() => {
+    if (m.photos && m.photos.length) return m.photos;
+    if (m.photo) return [m.photo];
+    return [];
+  })();
+  const siteInsts = db.instruments.filter(i => !i.archived && i.site === s);
+  const openWOs   = db.workOrders.filter(w => {
+    const inst = db.instruments.find(i => i.id === w.instrumentId);
+    return inst && inst.site === s && w.status !== 'Closed';
+  }).length;
+
+  // Tab bar
+  const tabs = allSites.map(site => `
+    <button onclick="ui.selectedSite='${esc(site)}';render()" style="
+      padding:8px 18px;border:none;background:transparent;cursor:pointer;
+      font-family:var(--font-mono);font-size:12px;font-weight:${site===s?'700':'500'};
+      color:${site===s?'var(--blue)':'var(--muted)'};
+      border-bottom:2px solid ${site===s?'var(--blue)':'transparent'};
+      transition:all .15s;white-space:nowrap;letter-spacing:.03em"
+      onmouseover="if('${esc(site)}'!=='${esc(s)}')this.style.color='var(--text)'"
+      onmouseout="if('${esc(site)}'!=='${esc(s)}')this.style.color='var(--muted)'"
+    >${esc(site)}</button>`).join('');
+
+  // Instrument rows
+  const instRows = siteInsts.length === 0
+    ? `<tr class="empty-row"><td colspan="3" style="text-align:center;padding:20px;color:var(--subtle)">No instruments at this site</td></tr>`
+    : siteInsts.map(i => {
+        const lastCert = i.lastCertDate
+          ? new Date(i.lastCertDate + 'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
+          : '—';
+        return `<tr>
+          <td>
+            <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text)">${esc(i.name)}</div>
+            <div style="font-family:var(--font-mono);font-size:11px;color:var(--blue)">${esc(i.serial)}</div>
+          </td>
+          <td><span class="${statusClass(i.status)}" style="padding:3px 10px;border-radius:var(--radius);font-size:11px;font-weight:600">${esc(i.status)}</span></td>
+          <td style="font-family:var(--font-mono);font-size:12px;color:var(--muted)">${lastCert}</td>
+        </tr>`;
+      }).join('');
+
+  // Photo grid
+  const photoSection = `
+  <div style="margin-top:28px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--blue)">SITE PHOTOS</div>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:rgba(34,211,238,.09);border:1px solid rgba(34,211,238,.25);color:var(--blue);font-family:var(--font-mono);font-size:11px;font-weight:600;padding:5px 12px;border-radius:var(--radius);transition:all .15s" onmouseover="this.style.background='rgba(34,211,238,.15)'" onmouseout="this.style.background='rgba(34,211,238,.09)'">
+        <input type="file" accept="image/*" multiple style="display:none" onchange="uploadSitePhoto('${esc(s)}',this)"/>
+        + Add Photo
+      </label>
+    </div>
+    ${photos.length === 0
+      ? `<div style="padding:24px;text-align:center;color:var(--subtle);font-family:var(--font-mono);font-size:11px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg)">No photos yet — click Add Photo to upload</div>`
+      : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
+          ${photos.map((p, pi) => `
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;position:relative">
+            <img src="${p}" style="width:100%;height:160px;object-fit:cover;display:block">
+            <div style="padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
+              <span style="font-family:var(--font-mono);font-size:10px;color:var(--subtle)">${pi === 0 ? 'Primary' : 'Photo ' + (pi+1)}</span>
+              <div style="display:flex;gap:6px">
+                ${pi > 0 ? `<button onclick="setSitePhotoActive('${esc(s)}',${pi})" style="background:rgba(34,211,238,.09);border:1px solid rgba(34,211,238,.22);color:var(--blue);font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:var(--radius);cursor:pointer">View</button>` : ''}
+                <button onclick="removeSitePhoto('${esc(s)}',${pi})" style="background:rgba(248,113,113,.09);border:1px solid rgba(248,113,113,.22);color:var(--red);font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:var(--radius);cursor:pointer">Remove</button>
+              </div>
+            </div>
+          </div>`).join('')}
+        </div>`
+    }
+  </div>`;
+
+  return `
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+    <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--blue)">MONITORING SITE INFORMATION</div>
+    <button class="btn-add" onclick="openAddSite()" style="font-size:11px;padding:6px 14px">+ Add Site</button>
+  </div>
+
+  <!-- TABS -->
+  <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:24px;overflow-x:auto;flex-wrap:nowrap">
+    ${tabs}
+  </div>
+
+  <!-- SITE DETAIL -->
+  <div style="display:grid;grid-template-columns:auto 1fr;gap:12px 24px;margin-bottom:20px;align-items:baseline">
+    <span style="font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--subtle)">NAME</span>
+    <span style="font-size:14px;color:var(--text)">${m.siteName ? esc(m.siteName) : '<span style="color:var(--subtle);font-style:italic">Not set</span>'}</span>
+
+    <span style="font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--subtle)">TYPE</span>
+    <span style="font-family:var(--font-mono);font-size:13px;color:var(--text)">${m.type ? esc(m.type) : '<span style="color:var(--subtle);font-style:italic">Not set</span>'}</span>
+
+    <span style="font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--subtle)">ADDRESS</span>
+    <span style="font-size:13px;color:var(--text)">${m.address ? esc(m.address) : '<span style="color:var(--subtle);font-style:italic">Not set</span>'}</span>
+
+    <span style="font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--subtle)">LAT / LNG</span>
+    <span style="font-family:var(--font-mono);font-size:13px;color:var(--text)">${(m.lat && m.lng) ? esc(m.lat) + ' &nbsp;/&nbsp; ' + esc(m.lng) : '<span style="color:var(--subtle);font-style:italic">Not set</span>'}</span>
+  </div>
+  <button class="btn-edit-sm" onclick="openEditSite('${esc(s)}')" style="margin-bottom:28px">✎ Edit Site Info</button>
+
+  <!-- INSTRUMENTS -->
+  <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--blue);margin-bottom:12px">
+    INSTRUMENTS AT THIS SITE (${siteInsts.length})
+  </div>
+  <div class="inst-table" style="margin-bottom:0">
+    <table>
+      <thead><tr>
+        <th>TYPE / SERIAL</th>
+        <th>STATUS</th>
+        <th>LAST CALIBRATION</th>
+      </tr></thead>
+      <tbody>${instRows}</tbody>
+    </table>
+  </div>
+
+  <!-- PHOTOS (below instruments) -->
+  ${photoSection}`;
 }
 
 // ── ADMIN COLLAPSIBLE SECTIONS ────────────────────────────────────────
@@ -3405,7 +4781,8 @@ function confirmCloseWO() {
   if (!wo) return;
   wo.status = 'Closed'; wo.technician = closedBy; wo.closedBy = closedBy; wo.closedDate = today();
   addHistory(wo.instrumentId, 'Work order closed', 'WO-' + woId + ' · ' + wo.type + ' · Completed by: ' + closedBy);
-  saveDB(); closeModal();
+  addSecurityLog('APPROVAL', `Approved closure of WO-${String(woId).padStart(3,'0')}.`);
+  saveDB('workorder', wo && wo.id); closeModal();
   toast('✓ Work order WO-' + woId + ' marked complete');
 }
 
@@ -3431,135 +4808,115 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && ui.modal) 
 // Debounce timer — batches rapid consecutive saves into one request
 let _syncTimer = null;
 
-// Re-define saveDB to do a full state push (simple & reliable)
-window.saveDB = function saveDB() {
+// Re-define saveDB to do a targeted push of only dirty records
+window.saveDB = function saveDB(type, id) {
+  if (type === 'instrument' && id !== undefined) markDirty('instruments', id);
+  else if (type === 'workorder' && id !== undefined) markDirty('workOrders', id);
+  else if (type === 'site')    markDirty('sites');
+  else if (type === 'tech')    markDirty('techs');
+  else if (type === 'type')    markDirty('types');
+  else if (type === 'status')  markDirty('statuses');
   clearTimeout(_syncTimer);
   _syncTimer = setTimeout(syncToServer, 120);
 };
 
+// ── DIRTY TRACKING ─────────────────────────────────────────
+// Instead of fetching full DB to diff, track what changed locally
+const _dirty = { instruments: new Set(), workOrders: new Set(), sites: false, techs: false, types: false, statuses: false };
+
+function markDirty(type, id) {
+  if (id !== undefined) _dirty[type].add(String(id));
+  else _dirty[type] = true;
+}
+
 async function syncToServer() {
   try {
-    // Fetch the current server state so we can diff and patch
-    const srv = await API.get('/db');
-
     // ── INSTRUMENTS ─────────────────────────────────────────
-    for (const inst of db.instruments) {
-      const match = srv.instruments.find(s => s.id === inst.id);
-      if (!match) {
-        // New instrument
-        const body = {
-          name: inst.name, serial: inst.serial, status: inst.status,
-          site: inst.site, notes: inst.notes || '',
-        };
-        const created = await API.post('/instruments', body);
-        inst.id = created.id; // update local id if it changed
+    for (const instId of _dirty.instruments) {
+      const inst = db.instruments.find(i => String(i.id) === instId);
+      if (!inst) { await API.del('/instruments/' + instId).catch(()=>{}); continue; }
+      if (!inst._synced) {
+        // New instrument — POST
+        const body = { name: inst.name, serial: inst.serial, status: inst.status, site: inst.site, notes: inst.notes||'' };
+        const created = await API.post('/instruments', body).catch(()=>null);
+        if (created) { inst.id = created.id; inst._synced = true; }
       } else {
-        // Update if changed
-        const changed =
-          match.name         !== inst.name   ||
-          match.serial       !== inst.serial  ||
-          match.status       !== inst.status  ||
-          match.site         !== inst.site    ||
-          (match.notes||'')  !== (inst.notes||'') ||
-          !!match.archived   !== !!inst.archived  ||
-          match.lastCertDate !== inst.lastCertDate;
-        if (changed) {
-          await API.put('/instruments/' + inst.id, {
-            name: inst.name, serial: inst.serial, status: inst.status,
-            site: inst.site, notes: inst.notes || '',
-            archived: inst.archived ? 1 : 0,
-            last_cert_date: inst.lastCertDate || null
-          });
-        }
+        // Existing — PUT
+        await API.put('/instruments/' + inst.id, {
+          name: inst.name, serial: inst.serial, status: inst.status,
+          site: inst.site, notes: inst.notes||'',
+          archived: inst.archived ? 1 : 0,
+          last_cert_date: inst.lastCertDate || null,
+          cert_interval_months: inst.certIntervalMonths || null
+        }).catch(()=>{});
       }
     }
-    // Delete instruments removed locally
-    for (const s of srv.instruments) {
-      if (!db.instruments.find(i => i.id === s.id)) {
-        await API.del('/instruments/' + s.id);
-      }
-    }
+    _dirty.instruments.clear();
 
     // ── WORK ORDERS ─────────────────────────────────────────
-    for (const wo of db.workOrders) {
-      const match = srv.workOrders.find(s => s.id === wo.id);
-      if (!match) {
+    for (const woId of _dirty.workOrders) {
+      const wo = db.workOrders.find(w => String(w.id) === woId);
+      if (!wo) { await API.del('/work-orders/' + woId).catch(()=>{}); continue; }
+      if (!wo._synced) {
         const created = await API.post('/work-orders', {
-          instrument_id: wo.instrumentId,
-          type: wo.type || '', description: wo.description || '',
-          tech_name: wo.technician || '', notes: wo.notes || ''
-        });
-        wo.id = created.id;
+          instrument_id: wo.instrumentId, type: wo.type||'',
+          description: wo.description||'', tech_name: wo.technician||'', notes: wo.notes||''
+        }).catch(()=>null);
+        if (created) { wo.id = created.id; wo._synced = true; }
       } else {
-        const changed =
-          match.status      !== wo.status ||
-          match.type        !== (wo.type||'') ||
-          match.description !== (wo.description||'') ||
-          match.techName    !== (wo.technician||'');
-        if (changed) {
-          await API.put('/work-orders/' + wo.id, {
-            status: wo.status, type: wo.type||'',
-            description: wo.description||'', tech_name: wo.technician||'',
-            notes: wo.notes||''
-          });
-          if (wo.status === 'Closed' && match.status !== 'Closed') {
-            await API.patch('/work-orders/' + wo.id + '/close', {});
-          }
+        await API.put('/work-orders/' + wo.id, {
+          status: wo.status, type: wo.type||'',
+          description: wo.description||'', tech_name: wo.technician||'', notes: wo.notes||''
+        }).catch(()=>{});
+        if (wo.status === 'Closed') {
+          await API.patch('/work-orders/' + wo.id + '/close', {}).catch(()=>{});
         }
       }
     }
-    for (const s of srv.workOrders) {
-      if (!db.workOrders.find(w => w.id === s.id)) {
-        await API.del('/work-orders/' + s.id);
-      }
-    }
+    _dirty.workOrders.clear();
 
     // ── SITES ───────────────────────────────────────────────
-    const srvActiveNames   = srv.sites;
-    const srvArchivedNames = srv.archivedSites;
-    for (const name of db.sites) {
-      if (!srvActiveNames.includes(name) && !srvArchivedNames.includes(name)) {
-        await API.post('/sites', { name });
+    if (_dirty.sites) {
+      for (const name of db.sites) {
+        await API.post('/sites', { name }).catch(()=>{});
       }
-    }
-    for (const name of (db.archivedSites||[])) {
-      if (!srvArchivedNames.includes(name)) {
-        // Find id and archive it
-        const siteRow = await API.get('/sites').catch(()=>null);
-        if (siteRow) {
-          const found = siteRow.find(s => s.name === name);
-          if (found) await API.patch('/sites/' + found.id + '/archive', { archived: true });
-        }
-      }
+      _dirty.sites = false;
     }
 
     // ── INST TYPES ──────────────────────────────────────────
-    for (const name of db.instTypes) {
-      if (!srv.instTypes.includes(name)) {
+    if (_dirty.types) {
+      for (const name of db.instTypes) {
         await API.post('/inst-types', { name }).catch(()=>{});
       }
+      _dirty.types = false;
     }
 
     // ── TECHS ───────────────────────────────────────────────
-    for (let ti = 0; ti < db.techs.length; ti++) {
-      const t = db.techs[ti];
-      const match = srv.techs.find(s => s.name === t.name);
-      if (!match) {
+    if (_dirty.techs) {
+      for (const t of db.techs) {
         await API.post('/technicians', { name: t.name, role: t.role||'', email: t.email||'' }).catch(()=>{});
       }
+      _dirty.techs = false;
     }
 
     // ── CUSTOM STATUSES ─────────────────────────────────────
-    for (const name of (db.customStatuses||[])) {
-      if (!srv.customStatuses.includes(name)) {
+    if (_dirty.statuses) {
+      for (const name of (db.customStatuses||[])) {
         await API.post('/custom-statuses', { name }).catch(()=>{});
       }
+      _dirty.statuses = false;
     }
 
   } catch(e) {
     console.error('SDAPCD: sync to server failed', e);
     toast('⚠ Server sync failed — check that the server is running');
   }
+}
+
+// Mark instruments/WOs as synced on load
+function markAllSynced() {
+  (db.instruments||[]).forEach(i => { i._synced = true; });
+  (db.workOrders||[]).forEach(w => { w._synced = true; });
 }
 
 // Replace admin password functions to use server settings
@@ -3571,7 +4928,7 @@ window.getStoredHash = async function() {
 window.submitAdminPassword = async function() {
   const pw = document.getElementById('admin-pw-input')?.value || '';
   if (!pw) { ui.form = {...ui.form, err: 'Please enter the password.'}; render(); return; }
-  const storedPw = await API.get('/settings/admin_pw').catch(()=>'admin1234');
+  const storedPw = await API.get('/settings/admin_pw').catch(()=>'circuit');
   if (hashPW(pw) !== hashPW(storedPw) && pw !== storedPw && hashPW(pw) !== storedPw) {
     ui.form = {...ui.form, err: 'Incorrect password. Try again.'}; render();
     setTimeout(() => { const el = document.getElementById('admin-pw-input'); if (el) { el.value=''; el.focus(); } }, 50);
@@ -3585,7 +4942,7 @@ window.saveAdminPassword = async function() {
   const current = document.getElementById('pw-current')?.value || '';
   const newPw   = document.getElementById('pw-new')?.value || '';
   const confirm = document.getElementById('pw-confirm')?.value || '';
-  const storedPw = await API.get('/settings/admin_pw').catch(()=>'admin1234');
+  const storedPw = await API.get('/settings/admin_pw').catch(()=>'circuit');
   if (hashPW(current) !== hashPW(storedPw) && current !== storedPw && hashPW(current) !== storedPw) {
     ui.form = {...ui.form, err: 'Current password is incorrect.'}; render(); return;
   }
@@ -3631,6 +4988,66 @@ window.confirmClearExceptSitesInst = function() {
     }
   });
 };
+
+// ── SESSION TIMEOUT ────────────────────────────────────────
+const SESSION_TIMEOUT_MS  = 20 * 60 * 1000; // 20 minutes
+const SESSION_WARN_MS     = 2  * 60 * 1000; // warn 2 min before
+let _sessionTimer  = null;
+let _sessionWarnTimer = null;
+let _sessionWarning = false;
+
+function resetSessionTimer() {
+  if (!ui.currentUser) return;
+  clearTimeout(_sessionTimer);
+  clearTimeout(_sessionWarnTimer);
+  _sessionWarning = false;
+  // Remove warning modal if showing
+  const warnEl = document.getElementById('_session_warn');
+  if (warnEl) warnEl.remove();
+
+  _sessionWarnTimer = setTimeout(() => {
+    if (!ui.currentUser) return;
+    _sessionWarning = true;
+    // Show warning overlay
+    let warnDiv = document.getElementById('_session_warn');
+    if (!warnDiv) {
+      warnDiv = document.createElement('div');
+      warnDiv.id = '_session_warn';
+      document.body.appendChild(warnDiv);
+    }
+    warnDiv.innerHTML = `
+      <div style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:32px 28px;max-width:380px;width:100%;box-shadow:var(--shadow-lg);text-align:center">
+          <div style="font-size:28px;margin-bottom:12px">⏱</div>
+          <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--amber);letter-spacing:.04em;margin-bottom:8px">SESSION EXPIRING SOON</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px">
+            You will be automatically signed out in <strong style="color:var(--text)">2 minutes</strong> due to inactivity.<br>Click below to stay signed in.
+          </div>
+          <div style="display:flex;gap:10px;justify-content:center">
+            <button onclick="resetSessionTimer()" style="background:linear-gradient(135deg,rgba(34,211,238,.15),rgba(34,211,238,.07));color:var(--blue);border:1px solid rgba(34,211,238,.3);padding:8px 22px;border-radius:var(--radius);font-size:12px;font-weight:600;font-family:var(--font-mono);cursor:pointer">
+              ✓ Stay Signed In
+            </button>
+            <button onclick="signOut()" style="background:var(--surface2);color:var(--muted);border:1px solid var(--border);padding:8px 22px;border-radius:var(--radius);font-size:12px;font-family:var(--font-mono);cursor:pointer">
+              Sign Out Now
+            </button>
+          </div>
+        </div>
+      </div>`;
+  }, SESSION_TIMEOUT_MS - SESSION_WARN_MS);
+
+  _sessionTimer = setTimeout(() => {
+    if (!ui.currentUser) return;
+    const warnEl2 = document.getElementById('_session_warn');
+    if (warnEl2) warnEl2.remove();
+    toast('⏱ Session expired — you have been signed out.');
+    signOut();
+  }, SESSION_TIMEOUT_MS);
+}
+
+// Reset timer on any user activity
+['mousedown','keydown','touchstart','scroll','click'].forEach(evt =>
+  document.addEventListener(evt, () => { if (ui.currentUser) resetSessionTimer(); }, { passive: true })
+);
 
 // ── BOOTSTRAP ──────────────────────────────────────────────
 // Show a loading state then fetch real data from server
