@@ -3973,11 +3973,18 @@ function addTech() {
     toast('⚠ A user with that display name already exists'); return;
   }
 
-  // Store password directly on the tech object (syncs to Sheets)
-  db.techs.push({ name: displayName, role, email, username, permission, password: tempPw || 'circuit' });
+  // Add to local db first
+  const newTech = { name: displayName, role, email, username, permission, password: tempPw || 'circuit' };
+  db.techs.push(newTech);
   ui.newTechName = ''; ui.newTechRole = ''; ui.newTechEmail = '';
   ui.newTechUsername = ''; ui.newTechPermission = ''; ui.newTechTempPw = '';
-  saveDB('tech'); render(); toast(`${displayName} added · username: ${username}`);
+  // POST directly to GAS and store the returned id
+  API.post('/technicians', {
+    name: displayName, role, email, username, permission, password: tempPw || 'circuit'
+  }).then(result => {
+    if (result && result.id) { newTech.id = result.id; newTech._synced = true; }
+  }).catch(e => console.warn('addTech failed', e));
+  render(); toast(`${displayName} added · username: ${username}`);
 }
 function archiveTech(idx) {
   const t = db.techs[idx];
@@ -4046,12 +4053,23 @@ function saveEditTech(idx) {
   if (dup !== -1 && dup !== idx) { ui.form={...ui.form, err:'A user with that display name already exists.'}; render(); return; }
   const t = db.techs[idx];
   const username = t.username || generateUsername(t.name);
-  if (newTempPw) {
-    db.techs[idx] = { ...t, name, role, email, permission, password: newTempPw };
-  } else {
-    db.techs[idx] = { ...t, name, role, email, permission };
+  const updated = newTempPw
+    ? { ...t, name, role, email, permission, password: newTempPw }
+    : { ...t, name, role, email, permission };
+  db.techs[idx] = updated;
+
+  // Save directly to GAS via PUT if we have an id
+  if (updated.id) {
+    API.put('/technicians/' + updated.id, {
+      name, role, email,
+      username:   updated.username   || '',
+      permission: updated.permission || 'Edit',
+      password:   updated.password   || 'circuit'
+    }).catch(e => console.warn('tech update failed', e));
   }
-  try{saveDB('tech');}catch(e){console.warn('saveDB',e);} closeModal(); toast('User updated');
+
+  try{saveDB('tech');}catch(e){console.warn('saveDB',e);}
+  closeModal(); toast('User updated');
 }
 
 // ── SELECTIVE CLEAR FUNCTIONS ─────────────────────────────
