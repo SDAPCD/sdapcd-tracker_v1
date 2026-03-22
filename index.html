@@ -3446,7 +3446,7 @@ function saveEditInstrument(id) {
   i.name = name; i.serial = serial; i.status = status; i.site = site; i.notes = notes;
   if (name === 'BC1060' && i.lastCertDate === undefined) i.lastCertDate = null;
   if (changes.length) addHistory(id, 'Instrument edited', changes.join(' · '));
-  saveDB('instrument'); closeModal(); toast('Instrument updated');
+  try{saveDB('instrument');}catch(e){console.warn('saveDB',e);} closeModal(); toast('Instrument updated');
 }
 function openLogWork(id) {
   const i = db.instruments.find(x => x.id === id);
@@ -3566,7 +3566,7 @@ function saveSetCertInterval() {
     notes: i.notes || '', cert_interval_months: months
   }).catch(e => console.warn('cert interval save failed', e));
   addHistory(i.id, 'Cert interval set', `Interval set to ${months} month(s) for ${i.name} · ${i.serial}`);
-  saveDB('instrument', i && i.id); closeModal(); render();
+  try{saveDB('instrument', i && i.id);}catch(e){console.warn('saveDB',e);} closeModal(); render();
   toast(`Cert interval set to ${months} month(s)`);
 }
 function saveLogCert() {
@@ -3575,14 +3575,13 @@ function saveLogCert() {
   const yr = document.getElementById('f-cert-year');
   const certDate  = (mo && dy && yr) ? `${yr.value}-${mo.value}-${dy.value}` : '';
   const certNotes = getVal('f-cert-notes');
-  // Read interval from input field first, fall back to preset (ui.form.certIntervalMonths)
   const inputMonths = getVal('f-interval-months-cert');
   const months = parseInt(inputMonths || ui.form.certIntervalMonths || '0', 10);
   if (!certDate) { ui.form = {...ui.form, err: 'Certification date is required.'}; render(); return; }
   if (!months || months < 1) { ui.form = {...ui.form, err: 'A valid cert interval is required.'}; render(); return; }
   const { instId, editMode } = ui.form;
-  const i = db.instruments.find(x => x.id === instId);
-  if (!i) return;
+  const i = db.instruments.find(x => String(x.id) === String(instId));
+  if (!i) { toast('⚠ Instrument not found'); closeModal(); return; }
   const prevDate = i.lastCertDate;
   i.lastCertDate = certDate;
   i.certIntervalMonths = months;
@@ -3596,7 +3595,8 @@ function saveLogCert() {
     notes: i.notes || '', last_cert_date: certDate, cert_interval_months: months
   }).catch(e => console.warn('cert save failed', e));
   addHistory(instId, action, detail);
-  saveDB('instrument', instId); closeModal(); render();
+  try { saveDB('instrument', i.id); } catch(e) { console.warn('saveDB error', e); }
+  closeModal(); render();
   toast((editMode ? 'Certification updated' : 'Certification recorded') + ' — next due ' + due);
 }
 function openWODetail(wid) {
@@ -3636,24 +3636,24 @@ function saveAdd() {
   }
   db.instruments.push(newInst);
   addHistory(id, 'Instrument added', `${name} ${serial} at ${site} — ${newInst.status}`);
-  saveDB('instrument', id); closeModal(); toast('Instrument added');
+  try{saveDB('instrument', id);}catch(e){console.warn('saveDB',e);} closeModal(); toast('Instrument added');
 }
 
 // Shared save for logwork and createwo
 function saveWorkEntry(mode) {
-  // legacy entry point kept for createwo modal
   const type = document.getElementById('f-type') ? document.getElementById('f-type').value : '';
   const by   = getVal('f-by');
   const desc = getVal('f-desc');
   if (!by) { ui.form={...ui.form, err:'Technician is required.', type, by, desc}; render(); return; }
   const { instId } = ui.form;
-  // Compute next WO ID from max existing to avoid conflicts with server-assigned IDs
   const maxId = db.workOrders.reduce((m, w) => Math.max(m, parseInt(w.id)||0), 0);
   const woId = maxId + 1;
   db.woId = woId + 1;
   db.workOrders.push({ id:woId, instrumentId:instId, type, description:desc, technician:by, status:'Open', created:today() });
   addHistory(instId, 'Work order created', `WO-${woId} · ${type} · Tech: ${by}${desc?' · '+desc.slice(0,80):''}`);
-  saveDB('workorder', woId); closeModal(); toast('Work order WO-'+woId+' created');
+  try { saveDB('workorder', woId); } catch(e) { console.warn('saveDB error', e); }
+  closeModal();
+  toast('Work order WO-'+woId+' created');
 }
 
 function saveLogWork() {
@@ -3696,7 +3696,7 @@ function saveLogWork() {
     }
   }
 
-  saveDB('instrument', instId); closeModal();
+  try{saveDB('instrument', instId);}catch(e){console.warn('saveDB',e);} closeModal();
   toast('✓ Work entry logged');
 }
 
@@ -3709,7 +3709,7 @@ function saveEditWO(wid) {
   if (!wo) return;
   wo.type = type; wo.technician = by; wo.description = desc;
   addHistory(wo.instrumentId, 'Work order updated', `WO-${wid} · ${type} · Tech: ${by}${desc ? ' · ' + desc.slice(0, 80) : ''}`);
-  saveDB('workorder', wo ? wo.id : wid); openWODetail(wid); toast('Work order updated');
+  saveDB('workorder', wo.id); openWODetail(wid); toast('Work order updated');
 }
 
 function submitForClosure(wid) {
@@ -3726,7 +3726,7 @@ function submitForClosure(wid) {
       wo.submittedDate = today();
       addHistory(wo.instrumentId, 'Submitted for closure', `WO-${wo.id} · ${wo.type} · Submitted by: ${ui.currentUser}`);
       addSecurityLog('SUBMIT', `WO-${wo.id} submitted for closure by ${ui.currentUser}`);
-      saveDB('workorder'); closeModal(); render();
+      try{saveDB('workorder');}catch(e){console.warn('saveDB',e);} closeModal(); render();
       toast('WO-' + wo.id + ' submitted for closure approval');
     }
   });
@@ -3764,7 +3764,7 @@ function confirmRestoreWO() {
   delete wo.submittedDate;
   addHistory(wo.instrumentId, 'Submission restored to Open', `WO-${wo.id} · Restored by: ${ui.currentUser} · Reason: ${notes}`);
   addSecurityLog('RESTORE', `WO-${wo.id} restored to Open by ${ui.currentUser}. Reason: ${notes}`);
-  saveDB('workorder', wo ? wo.id : ui); closeModal(); render();
+  try{saveDB('workorder', wo.id);}catch(e){console.warn('saveDB',e);} closeModal(); render();
   toast('WO-' + wo.id + ' restored to Open');
 }
 
@@ -3780,7 +3780,7 @@ function confirmApproveWO() {
   const detail  = `WO-${wo.id} · ${wo.type} · Approved by: ${ui.currentUser}${notes ? ' · Notes: ' + notes : ''}`;
   addHistory(wo.instrumentId, 'Work order approved & closed', detail);
   addSecurityLog('APPROVAL', `Approved closure of WO-${String(wo.id).padStart(3,'0')} by ${ui.currentUser}.${notes ? ' Notes: ' + notes : ''}`);
-  saveDB('workorder', wo ? wo.id : woId); closeModal(); render();
+  try{saveDB('workorder', wo.id);}catch(e){console.warn('saveDB',e);} closeModal(); render();
   toast('✓ WO-' + wo.id + ' approved and closed');
 }
 
@@ -4008,7 +4008,7 @@ function saveEditType(idx) {
   const old = db.instTypes[idx];
   db.instTypes[idx] = val;
   db.instruments.forEach(i => { if (i.name === old) i.name = val; });
-  saveDB('instrument'); closeModal(); toast('Type updated');
+  try{saveDB('instrument');}catch(e){console.warn('saveDB',e);} closeModal(); toast('Type updated');
 }
 function saveEditTech(idx) {
   const name       = getVal('f-name');
@@ -4027,7 +4027,7 @@ function saveEditTech(idx) {
   } else {
     db.techs[idx] = { ...t, name, role, email, permission };
   }
-  saveDB('tech'); closeModal(); toast('User updated');
+  try{saveDB('tech');}catch(e){console.warn('saveDB',e);} closeModal(); toast('User updated');
 }
 
 // ── SELECTIVE CLEAR FUNCTIONS ─────────────────────────────
@@ -4053,7 +4053,7 @@ function confirmClearWorkOrders() {
     onConfirm: () => {
       db.workOrders = [];
       db.woId = 1;
-      saveDB('workorder', woId); render(); toast('All work orders cleared');
+      saveDB('workorder'); render(); toast('All work orders cleared');
     }
   });
 }
@@ -4347,7 +4347,7 @@ function saveEditSite(idx) {
   const existing = db.sitesMeta[val] || {};
   db.sitesMeta[val] = { ...existing, siteName, type, address, lat, lng };
   if (ui.selectedSite === old) ui.selectedSite = val;
-  saveDB('site'); closeModal(); toast('✓ Site updated');
+  try{saveDB('site');}catch(e){console.warn('saveDB',e);} closeModal(); toast('✓ Site updated');
 }
 
 
@@ -4455,7 +4455,7 @@ function saveAddSite() {
   if (!db.sitesMeta) db.sitesMeta = {};
   db.sitesMeta[code] = { siteName, type, address, lat, lng };
   ui.selectedSite = code;
-  saveDB('site'); closeModal(); render(); toast('✓ Site "' + code + '" added');
+  try{saveDB('site');}catch(e){console.warn('saveDB',e);} closeModal(); render(); toast('✓ Site "' + code + '" added');
 }
 // ── SERVICE LOG ────────────────────────────────────────────
 function renderServiceLog() {
@@ -4782,7 +4782,7 @@ function confirmCloseWO() {
   wo.status = 'Closed'; wo.technician = closedBy; wo.closedBy = closedBy; wo.closedDate = today();
   addHistory(wo.instrumentId, 'Work order closed', 'WO-' + woId + ' · ' + wo.type + ' · Completed by: ' + closedBy);
   addSecurityLog('APPROVAL', `Approved closure of WO-${String(woId).padStart(3,'0')}.`);
-  saveDB('workorder', wo ? wo.id : woId); closeModal();
+  try{saveDB('workorder', wo.id);}catch(e){console.warn('saveDB',e);} closeModal();
   toast('✓ Work order WO-' + woId + ' marked complete');
 }
 
