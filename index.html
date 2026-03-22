@@ -3309,12 +3309,11 @@ function exportSecurityLogCSV() {
 
 // ── INSTRUMENT ACTIONS ─────────────────────────────────────
 function navigateTo(page) {
-  if (ui.adminUnlocked && ui.adminUnlockedAt && (Date.now()-ui.adminUnlockedAt > 5*60*1000)) {
-    ui.adminUnlocked = false; ui.adminUnlockedAt = null;
-  }
   if (ui.page === 'admin' && page !== 'admin') { ui._openAdminSections = new Set(); }
-  if (page === 'admin' && !ui.adminUnlocked) {
-    ui.modal = 'adminlogin'; ui.form = {}; render(); return;
+  // Admin page is accessible to Full Control users without extra password
+  if (page === 'admin') {
+    ui.adminUnlocked = true;
+    ui.adminUnlockedAt = Date.now();
   }
   if (ui.modal && ui.dirty) {
     showConfirm({
