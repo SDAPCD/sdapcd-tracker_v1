@@ -3381,7 +3381,7 @@ function updateStatus(id, val) {
     onConfirm: () => {
       addHistory(id, 'Status changed', `${prev} → ${val}`);
       i.status = val;
-      saveDB('instrument', (typeof id !== 'undefined' ? id : (inst && inst.id))); render(); toast(`Status → ${val}`);
+      saveDB('instrument'); render(); toast(`Status → ${val}`);
     }
   });
 }
@@ -3412,7 +3412,7 @@ function updateSite(id, val) {
         i.status = 'Deployed';
         addHistory(id, 'Status changed', 'Operational → Deployed');
       }
-      saveDB('instrument', (typeof id !== 'undefined' ? id : (inst && inst.id))); render(); toast(`Moved to ${val}`);
+      saveDB('instrument'); render(); toast(`Moved to ${val}`);
     }
   });
 }
@@ -3446,7 +3446,7 @@ function saveEditInstrument(id) {
   i.name = name; i.serial = serial; i.status = status; i.site = site; i.notes = notes;
   if (name === 'BC1060' && i.lastCertDate === undefined) i.lastCertDate = null;
   if (changes.length) addHistory(id, 'Instrument edited', changes.join(' · '));
-  saveDB('instrument', (typeof id !== 'undefined' ? id : (inst && inst.id))); closeModal(); toast('Instrument updated');
+  saveDB('instrument'); closeModal(); toast('Instrument updated');
 }
 function openLogWork(id) {
   const i = db.instruments.find(x => x.id === id);
@@ -3566,7 +3566,7 @@ function saveSetCertInterval() {
     notes: i.notes || '', cert_interval_months: months
   }).catch(e => console.warn('cert interval save failed', e));
   addHistory(i.id, 'Cert interval set', `Interval set to ${months} month(s) for ${i.name} · ${i.serial}`);
-  saveDB('instrument', (typeof id !== 'undefined' ? id : (inst && inst.id))); closeModal(); render();
+  saveDB('instrument', i && i.id); closeModal(); render();
   toast(`Cert interval set to ${months} month(s)`);
 }
 function saveLogCert() {
@@ -3596,7 +3596,7 @@ function saveLogCert() {
     notes: i.notes || '', last_cert_date: certDate, cert_interval_months: months
   }).catch(e => console.warn('cert save failed', e));
   addHistory(instId, action, detail);
-  saveDB('instrument', (typeof id !== 'undefined' ? id : (inst && inst.id))); closeModal(); render();
+  saveDB('instrument', instId); closeModal(); render();
   toast((editMode ? 'Certification updated' : 'Certification recorded') + ' — next due ' + due);
 }
 function openWODetail(wid) {
@@ -3636,7 +3636,7 @@ function saveAdd() {
   }
   db.instruments.push(newInst);
   addHistory(id, 'Instrument added', `${name} ${serial} at ${site} — ${newInst.status}`);
-  saveDB('instrument', (typeof id !== 'undefined' ? id : (inst && inst.id))); closeModal(); toast('Instrument added');
+  saveDB('instrument', id); closeModal(); toast('Instrument added');
 }
 
 // Shared save for logwork and createwo
@@ -3653,7 +3653,7 @@ function saveWorkEntry(mode) {
   db.woId = woId + 1;
   db.workOrders.push({ id:woId, instrumentId:instId, type, description:desc, technician:by, status:'Open', created:today() });
   addHistory(instId, 'Work order created', `WO-${woId} · ${type} · Tech: ${by}${desc?' · '+desc.slice(0,80):''}`);
-  saveDB('workorder', wo && wo.id); closeModal(); toast('Work order WO-'+woId+' created');
+  saveDB('workorder', woId); closeModal(); toast('Work order WO-'+woId+' created');
 }
 
 function saveLogWork() {
@@ -3709,7 +3709,7 @@ function saveEditWO(wid) {
   if (!wo) return;
   wo.type = type; wo.technician = by; wo.description = desc;
   addHistory(wo.instrumentId, 'Work order updated', `WO-${wid} · ${type} · Tech: ${by}${desc ? ' · ' + desc.slice(0, 80) : ''}`);
-  saveDB('workorder', wo && wo.id); openWODetail(wid); toast('Work order updated');
+  saveDB('workorder', wo ? wo.id : wid); openWODetail(wid); toast('Work order updated');
 }
 
 function submitForClosure(wid) {
@@ -3726,7 +3726,7 @@ function submitForClosure(wid) {
       wo.submittedDate = today();
       addHistory(wo.instrumentId, 'Submitted for closure', `WO-${wo.id} · ${wo.type} · Submitted by: ${ui.currentUser}`);
       addSecurityLog('SUBMIT', `WO-${wo.id} submitted for closure by ${ui.currentUser}`);
-      saveDB('workorder', wo && wo.id); closeModal(); render();
+      saveDB('workorder'); closeModal(); render();
       toast('WO-' + wo.id + ' submitted for closure approval');
     }
   });
@@ -3764,7 +3764,7 @@ function confirmRestoreWO() {
   delete wo.submittedDate;
   addHistory(wo.instrumentId, 'Submission restored to Open', `WO-${wo.id} · Restored by: ${ui.currentUser} · Reason: ${notes}`);
   addSecurityLog('RESTORE', `WO-${wo.id} restored to Open by ${ui.currentUser}. Reason: ${notes}`);
-  saveDB('workorder', wo && wo.id); closeModal(); render();
+  saveDB('workorder', wo ? wo.id : ui); closeModal(); render();
   toast('WO-' + wo.id + ' restored to Open');
 }
 
@@ -3780,7 +3780,7 @@ function confirmApproveWO() {
   const detail  = `WO-${wo.id} · ${wo.type} · Approved by: ${ui.currentUser}${notes ? ' · Notes: ' + notes : ''}`;
   addHistory(wo.instrumentId, 'Work order approved & closed', detail);
   addSecurityLog('APPROVAL', `Approved closure of WO-${String(wo.id).padStart(3,'0')} by ${ui.currentUser}.${notes ? ' Notes: ' + notes : ''}`);
-  saveDB('workorder', wo && wo.id); closeModal(); render();
+  saveDB('workorder', wo ? wo.id : woId); closeModal(); render();
   toast('✓ WO-' + wo.id + ' approved and closed');
 }
 
@@ -3844,7 +3844,7 @@ function archiveInstrument(id) {
       i.archived = true;
       i.archivedDate = today();
       addHistory(id, 'Instrument archived', `${i.name} S/N ${i.serial}`);
-      saveDB('instrument', (typeof id !== 'undefined' ? id : (inst && inst.id))); render(); toast(`${i.serial} archived`);
+      saveDB('instrument'); render(); toast(`${i.serial} archived`);
     }
   });
 }
@@ -3854,7 +3854,7 @@ function restoreInstrument(id) {
   i.archived = false;
   delete i.archivedDate;
   addHistory(id, 'Instrument restored', `${i.name} S/N ${i.serial} restored to registry`);
-  saveDB('instrument', (typeof id !== 'undefined' ? id : (inst && inst.id))); render(); toast(`${i.serial} restored`);
+  saveDB('instrument'); render(); toast(`${i.serial} restored`);
 }
 function permanentlyDeleteInstrument(id) {
   const i = db.instruments.find(x => x.id === id);
@@ -3869,7 +3869,7 @@ function permanentlyDeleteInstrument(id) {
       db.instruments = db.instruments.filter(x => x.id !== id);
       db.workOrders  = db.workOrders.filter(w => w.instrumentId !== id);
       delete db.history[id];
-      saveDB('instrument', (typeof id !== 'undefined' ? id : (inst && inst.id))); render(); toast('Instrument permanently deleted');
+      saveDB('instrument'); render(); toast('Instrument permanently deleted');
     }
   });
 }
@@ -4008,7 +4008,7 @@ function saveEditType(idx) {
   const old = db.instTypes[idx];
   db.instTypes[idx] = val;
   db.instruments.forEach(i => { if (i.name === old) i.name = val; });
-  saveDB('instrument', (typeof id !== 'undefined' ? id : (inst && inst.id))); closeModal(); toast('Type updated');
+  saveDB('instrument'); closeModal(); toast('Type updated');
 }
 function saveEditTech(idx) {
   const name       = getVal('f-name');
@@ -4039,7 +4039,7 @@ function confirmClearHistory() {
     detail: 'Instruments, sites, work orders, and notes will not be affected.',
     onConfirm: () => {
       db.history = {};
-      saveDB('workorder', wo && wo.id); render(); toast('All history cleared');
+      saveDB('workorder'); render(); toast('All history cleared');
     }
   });
 }
@@ -4053,7 +4053,7 @@ function confirmClearWorkOrders() {
     onConfirm: () => {
       db.workOrders = [];
       db.woId = 1;
-      saveDB('workorder', wo && wo.id); render(); toast('All work orders cleared');
+      saveDB('workorder', woId); render(); toast('All work orders cleared');
     }
   });
 }
@@ -4066,7 +4066,7 @@ function confirmClearNotes() {
     detail: 'Instruments, sites, work orders, and history will not be affected.',
     onConfirm: () => {
       db.instruments.forEach(i => { i.notes = ''; });
-      saveDB('workorder', wo && wo.id); render(); toast('All instrument notes cleared');
+      saveDB('workorder'); render(); toast('All instrument notes cleared');
     }
   });
 }
@@ -4383,7 +4383,7 @@ function removeCustomStatus(idx) {
     showConfirm({ title:'STATUS IN USE', icon:'⚠',
       msg:'<strong>' + esc(s) + '</strong> is used by ' + n + ' instrument' + (n===1?'':'s') + '. Remove anyway?',
       detail:'Instruments keep this value but it will not appear in dropdowns.',
-      onConfirm: () => { db.customStatuses.splice(idx,1); saveDB('instrument', (typeof id !== 'undefined' ? id : (inst && inst.id))); render(); toast('✓ Status removed'); }
+      onConfirm: () => { db.customStatuses.splice(idx,1); saveDB('instrument'); render(); toast('✓ Status removed'); }
     }); return;
   }
   db.customStatuses.splice(idx,1); saveDB('status'); render(); toast('✓ Status "' + s + '" removed');
@@ -4782,7 +4782,7 @@ function confirmCloseWO() {
   wo.status = 'Closed'; wo.technician = closedBy; wo.closedBy = closedBy; wo.closedDate = today();
   addHistory(wo.instrumentId, 'Work order closed', 'WO-' + woId + ' · ' + wo.type + ' · Completed by: ' + closedBy);
   addSecurityLog('APPROVAL', `Approved closure of WO-${String(woId).padStart(3,'0')}.`);
-  saveDB('workorder', wo && wo.id); closeModal();
+  saveDB('workorder', wo ? wo.id : woId); closeModal();
   toast('✓ Work order WO-' + woId + ' marked complete');
 }
 
