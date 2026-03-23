@@ -853,9 +853,10 @@ async function gasRequest(path, action, params, body) {
   let response;
   try {
     if (body !== null && body !== undefined) {
+      // No Content-Type header — keeps it a "simple" CORS request that GAS handles correctly
+      // GAS reads body from e.postData.contents regardless of Content-Type
       response = await fetch(url.toString(), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
     } else {
@@ -3576,7 +3577,12 @@ function attachLogWorkFiles(input) {
   const inst = db.instruments.find(x => x.id === ui.form.instId);
 
   files.forEach(file => {
-    if (file.size > 8 * 1024 * 1024) { toast('⚠ ' + file.name + ' too large — max 8MB'); return; }
+    const isPDF = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    const maxSize = isPDF ? 2 * 1024 * 1024 : 4 * 1024 * 1024; // 2MB PDF, 4MB image
+    if (file.size > maxSize) {
+      toast(`⚠ ${file.name} too large — max ${isPDF ? '2MB for PDFs' : '4MB for images'}`);
+      return;
+    }
     const reader = new FileReader();
     reader.onload = async e => {
       // Save current field values before any re-render
@@ -3593,18 +3599,25 @@ function attachLogWorkFiles(input) {
       const placeholderIdx = ui.form.attachments.length;
       ui.form.attachments.push({
         name: file.name,
-        type: file.type.startsWith('image/') ? 'image' : 'pdf',
+        type: isPDF ? 'pdf' : 'image',
         uploading: true,
-        data: e.target.result  // keep local copy as fallback
+        data: e.target.result
       });
       render();
+
+      // Compress images before upload
+      let uploadData = e.target.result;
+      if (!isPDF && file.type.startsWith('image/')) {
+        try { uploadData = await compressImage(e.target.result, 1400, 0.85); }
+        catch(ce) { uploadData = e.target.result; }
+      }
 
       // Upload to Google Drive
       try {
         const result = await API.uploadFile(
-          e.target.result,
+          uploadData,
           file.name,
-          file.type,
+          isPDF ? 'application/pdf' : (file.type || 'image/jpeg'),
           inst ? inst.name   : '',
           inst ? inst.serial : '',
           ui.form.workType || 'Work'
@@ -3612,23 +3625,23 @@ function attachLogWorkFiles(input) {
         // Replace placeholder with Drive link
         ui.form.attachments[placeholderIdx] = {
           name:      file.name,
-          type:      file.type.startsWith('image/') ? 'image' : 'pdf',
+          type:      isPDF ? 'pdf' : 'image',
           fileId:    result.fileId,
           fileUrl:   result.fileUrl,
           directUrl: result.directUrl,
-          data:      e.target.result  // keep local fallback
+          data:      e.target.result
         };
         toast('📎 ' + file.name + ' uploaded to Drive');
       } catch(err) {
-        // Drive upload failed — keep local base64 as fallback
-        console.warn('Drive upload failed, keeping local:', err);
+        const msg = err && err.message ? err.message : String(err);
+        console.warn('Drive upload failed:', err);
         ui.form.attachments[placeholderIdx] = {
           name: file.name,
-          type: file.type.startsWith('image/') ? 'image' : 'pdf',
+          type: isPDF ? 'pdf' : 'image',
           data: e.target.result,
           localOnly: true
         };
-        toast('⚠ Drive upload failed: ' + (err.message || 'unknown error'));
+        toast('⚠ Upload failed: ' + msg.slice(0, 60));
       }
       render();
     };
@@ -3796,19 +3809,25 @@ function saveWorkEntry(mode) {
     }
   }
   addHistory(instId, 'Work order created', `WO-${woId} · ${type} · Tech: ${by}${desc?' · '+desc.slice(0,80):''}`);
-  // POST to GAS — lock until response to prevent duplicates
+  // POST to GAS and update the WO's id with the server-assigned id
   _savingWO = true;
+  closeModal();
+  toast('✓ Work order created — saving to Sheets...');
   API.post('/work-orders', {
     instrument_id: instId, type, description: desc, tech_name: by
   }).then(result => {
     if (result && result.id) {
-      newWO.id    = result.id;  // use server-assigned ID
+      // Update the WO in db with server-assigned id
+      const idx = db.workOrders.indexOf(newWO);
+      if (idx !== -1) db.workOrders[idx].id = Number(result.id);
+      newWO.id      = Number(result.id);
       newWO._synced = true;
+      toast('✓ Work order WO-' + result.id + ' saved to Sheets');
     }
-  }).catch(e => console.warn('createWO failed', e))
-    .finally(() => { _savingWO = false; });
-  closeModal();
-  toast('Work order WO-'+woId+' created');
+  }).catch(e => {
+    console.warn('createWO failed', e);
+    toast('⚠ WO created locally — Sheets sync failed');
+  }).finally(() => { _savingWO = false; });
 }
 
 function saveLogWork() {
