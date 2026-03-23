@@ -965,6 +965,22 @@ async function loadDBFromServer() {
     markAllSynced();
     // Admin password comes directly from GAS getFullDB as db.adminPassword
     if (!db.adminPassword) db.adminPassword = 'circuit';
+    // Load attachments — map to instruments and sitesMeta
+    if (!db.attachments) db.attachments = [];
+    if (db.attachments.length > 0) {
+      // Map work attachments to instruments
+      db.instruments.forEach(inst => {
+        const instAttachments = db.attachments.filter(a => String(a.instrumentId) === String(inst.id) && a.type === 'work');
+        if (instAttachments.length > 0) inst.workAttachments = instAttachments;
+      });
+      // Map site photos to sitesMeta
+      db.attachments.filter(a => a.type === 'site_photo' && a.siteCode).forEach(a => {
+        if (!db.sitesMeta[a.siteCode]) db.sitesMeta[a.siteCode] = {};
+        if (!db.sitesMeta[a.siteCode].photos) db.sitesMeta[a.siteCode].photos = [];
+        // Store as object with url + id for deletion
+        db.sitesMeta[a.siteCode].photos.push({ url: a.directUrl || a.fileUrl, attachmentId: a.id, fileName: a.fileName });
+      });
+    }
     render();
   } catch(e) {
     console.error('SDAPCD: failed to load from server.', e);
@@ -3741,6 +3757,31 @@ function saveWorkEntry(mode) {
   db.woId = woId + 1;
   const newWO = { id:woId, instrumentId:instId, type, description:desc, technician:by, status:'Open', created:today() };
   db.workOrders.push(newWO);
+  // Auto-update instrument status to match the WO type and move to HQ/SHOP
+  const woInst = db.instruments.find(i => String(i.id) === String(instId));
+  if (woInst && !woInst.archived) {
+    const statusMap = {
+      'Maintenance': 'Maintenance',
+      'Repair':      'Repair',
+      'Calibration': 'Calibration',
+      'Inspection':  'Maintenance',
+      'Other':       'Maintenance'
+    };
+    const newStatus = statusMap[type] || type;
+    const validStatuses = ['Maintenance','Repair','Calibration','Offline'];
+    if (validStatuses.includes(newStatus) && woInst.status !== newStatus) {
+      const prevStatus = woInst.status;
+      woInst.status = newStatus;
+      // Also move to HQ/SHOP if it's a field instrument
+      if (woInst.site !== 'HQ/SHOP' && woInst.site !== 'VENDOR') {
+        woInst.site = 'HQ/SHOP';
+        addHistory(instId, 'Site changed', `${prevStatus !== newStatus ? prevStatus + ' → ' + newStatus + ' · ' : ''}Moved to HQ/SHOP for WO-${woId}`);
+      } else {
+        addHistory(instId, 'Status changed', `${prevStatus} → ${newStatus} (WO-${woId} created)`);
+      }
+      syncInstrument(woInst);
+    }
+  }
   addHistory(instId, 'Work order created', `WO-${woId} · ${type} · Tech: ${by}${desc?' · '+desc.slice(0,80):''}`);
   API.post('/work-orders', {
     instrument_id: instId, type, description: desc, tech_name: by
@@ -3771,24 +3812,48 @@ function saveLogWork() {
   const attachNote = attachments.length > 0 ? ` · ${attachments.length} attachment${attachments.length>1?'s':''}` : '';
   addHistory(instId, `Work performed — ${typeLabel}`, `Tech: ${by} · ${desc.slice(0,120)}${attachNote}`);
 
-  // Store attachments on the instrument record — use Drive links, strip raw base64
+  // Store attachments — save to Sheets attachments tab if Drive upload succeeded
   if (attachments.length > 0) {
     const inst = db.instruments.find(x => String(x.id) === String(instId));
     if (inst) {
       if (!inst.workAttachments) inst.workAttachments = [];
-      attachments.forEach(a => inst.workAttachments.push({
-        name:      a.name,
-        type:      a.type,
-        fileId:    a.fileId    || null,
-        fileUrl:   a.fileUrl   || null,
-        directUrl: a.directUrl || null,
-        localOnly: a.localOnly || false,
-        // Only keep base64 if Drive upload failed (localOnly)
-        data:      a.localOnly ? a.data : null,
-        date:      today(),
-        tech:      by,
-        workType:  typeLabel
-      }));
+      attachments.forEach(a => {
+        const entry = {
+          name:      a.name,
+          type:      a.type,
+          fileId:    a.fileId    || null,
+          fileUrl:   a.fileUrl   || null,
+          directUrl: a.directUrl || null,
+          localOnly: a.localOnly || false,
+          data:      a.localOnly ? a.data : null,
+          date:      today(),
+          tech:      by,
+          workType:  typeLabel
+        };
+        inst.workAttachments.push(entry);
+        // Save link to Sheets if Drive upload succeeded
+        if (a.fileUrl && !a.localOnly) {
+          API.post('/attachments', {
+            instrument_id: instId,
+            site_code:     '',
+            type:          'work',
+            file_name:     a.name,
+            file_url:      a.fileUrl   || '',
+            file_id:       a.fileId    || '',
+            direct_url:    a.directUrl || '',
+            tech:          by,
+            date:          today(),
+            work_type:     typeLabel,
+            mime_type:     a.type === 'image' ? 'image/jpeg' : 'application/pdf'
+          }).then(saved => {
+            if (saved && saved.id) {
+              entry.attachmentId = saved.id;
+              if (!db.attachments) db.attachments = [];
+              db.attachments.push({...saved, instrumentId: instId, type: 'work'});
+            }
+          }).catch(e => console.warn('save attachment failed', e));
+        }
+      });
     }
   }
 
@@ -4529,40 +4594,76 @@ function uploadSitePhoto(siteCode, input) {
   if (!files.length) return;
   if (!db.sitesMeta) db.sitesMeta = {};
   if (!db.sitesMeta[siteCode]) db.sitesMeta[siteCode] = {};
-  // Migrate legacy single photo to array
   const meta = db.sitesMeta[siteCode];
-  if (meta.photo && !meta.photos) { meta.photos = [meta.photo]; delete meta.photo; }
   if (!meta.photos) meta.photos = [];
 
-  let loaded = 0;
   files.forEach(file => {
     if (file.size > 4 * 1024 * 1024) { toast('⚠ ' + file.name + ' too large — max 4MB per photo'); return; }
     const reader = new FileReader();
-    reader.onload = e => {
-      meta.photos.push(e.target.result);
-      loaded++;
-      if (loaded === files.length) {
-        saveDB('site'); render();
-        toast('✓ ' + loaded + ' photo' + (loaded > 1 ? 's' : '') + ' added to ' + siteCode);
+    reader.onload = async e => {
+      // Add placeholder
+      const placeholder = { url: e.target.result, uploading: true, fileName: file.name };
+      meta.photos.push(placeholder);
+      render();
+
+      try {
+        // Upload to Google Drive
+        const result = await API.uploadFile(
+          e.target.result, file.name, file.type,
+          siteCode, '', 'site_photo'
+        );
+        // Save link to Sheets attachments tab
+        const saved = await API.post('/attachments', {
+          instrument_id: '',
+          site_code:     siteCode,
+          type:          'site_photo',
+          file_name:     file.name,
+          file_url:      result.fileUrl   || '',
+          file_id:       result.fileId    || '',
+          direct_url:    result.directUrl || '',
+          tech:          ui.currentUser   || '',
+          date:          today(),
+          work_type:     '',
+          mime_type:     file.type
+        });
+        // Replace placeholder with saved entry
+        const idx = meta.photos.indexOf(placeholder);
+        if (idx !== -1) {
+          meta.photos[idx] = {
+            url:          result.directUrl || result.fileUrl,
+            attachmentId: saved.id,
+            fileName:     file.name
+          };
+        }
+        if (!db.attachments) db.attachments = [];
+        db.attachments.push({ ...saved, type: 'site_photo', siteCode });
+        toast('✓ ' + file.name + ' uploaded');
+      } catch(err) {
+        // Fallback: keep base64 locally
+        const idx = meta.photos.indexOf(placeholder);
+        if (idx !== -1) meta.photos[idx] = { url: e.target.result, fileName: file.name, localOnly: true };
+        toast('⚠ Upload failed — photo saved locally only');
+        console.warn('uploadSitePhoto failed', err);
       }
+      render();
     };
     reader.readAsDataURL(file);
   });
 }
 function removeSitePhoto(siteCode, idx) {
   const meta = (db.sitesMeta || {})[siteCode];
-  if (!meta) return;
-  // Support both legacy and array
-  if (meta.photos) {
-    meta.photos.splice(idx, 1);
-    if (meta.photos.length === 0) delete meta.photos;
-  } else if (meta.photo) {
-    delete meta.photo;
+  if (!meta || !meta.photos) return;
+  const photo = meta.photos[idx];
+  // Delete from Sheets if it has an attachmentId
+  if (photo && photo.attachmentId) {
+    API.del('/attachments/' + photo.attachmentId).catch(()=>{});
+    db.attachments = (db.attachments||[]).filter(a => a.id !== photo.attachmentId);
   }
-  saveDB('site'); render(); toast('Photo removed');
+  meta.photos.splice(idx, 1);
+  if (meta.photos.length === 0) delete meta.photos;
+  render(); toast('Photo removed');
 }
 function setSitePhotoActive(siteCode, idx) {
-  // Bring clicked thumbnail to front (swap with index 0)
   const meta = (db.sitesMeta || {})[siteCode];
   if (!meta || !meta.photos) return;
   const tmp = meta.photos[0];
@@ -4752,7 +4853,7 @@ function renderSites() {
   const m    = (db.sitesMeta || {})[s] || {};
   const photos = (() => {
     if (m.photos && m.photos.length) return m.photos;
-    if (m.photo) return [m.photo];
+    if (m.photo) return [{ url: m.photo }]; // legacy string fallback
     return [];
   })();
   const siteInsts = db.instruments.filter(i => !i.archived && i.site === s);
@@ -4803,17 +4904,23 @@ function renderSites() {
     ${photos.length === 0
       ? `<div style="padding:24px;text-align:center;color:var(--subtle);font-family:var(--font-mono);font-size:11px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg)">No photos yet — click Add Photo to upload</div>`
       : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
-          ${photos.map((p, pi) => `
-          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;position:relative">
-            <img src="${p}" style="width:100%;height:160px;object-fit:cover;display:block">
+          ${photos.map((p, pi) => {
+            const src = (typeof p === 'object') ? (p.url || '') : p;
+            const label = (typeof p === 'object' && p.fileName) ? p.fileName : (pi === 0 ? 'Primary' : 'Photo ' + (pi+1));
+            const uploading = typeof p === 'object' && p.uploading;
+            return `
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;position:relative;opacity:${uploading?'0.6':'1'}">
+            <img src="${esc(src)}" style="width:100%;height:160px;object-fit:cover;display:block" onerror="this.style.display='none'">
+            ${uploading ? `<div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.4);color:#fff;font-family:var(--font-mono);font-size:11px">⏳ uploading...</div>` : ''}
             <div style="padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
-              <span style="font-family:var(--font-mono);font-size:10px;color:var(--subtle)">${pi === 0 ? 'Primary' : 'Photo ' + (pi+1)}</span>
+              <span style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px">${esc(label)}</span>
               <div style="display:flex;gap:6px">
-                ${pi > 0 ? `<button onclick="setSitePhotoActive('${esc(s)}',${pi})" style="background:rgba(34,211,238,.09);border:1px solid rgba(34,211,238,.22);color:var(--blue);font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:var(--radius);cursor:pointer">View</button>` : ''}
-                <button onclick="removeSitePhoto('${esc(s)}',${pi})" style="background:rgba(248,113,113,.09);border:1px solid rgba(248,113,113,.22);color:var(--red);font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:var(--radius);cursor:pointer">Remove</button>
+                ${src && !uploading ? `<a href="${esc(src)}" target="_blank" style="background:rgba(34,211,238,.09);border:1px solid rgba(34,211,238,.22);color:var(--blue);font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:var(--radius);text-decoration:none">↗</a>` : ''}
+                ${pi > 0 && !uploading ? `<button onclick="setSitePhotoActive('${esc(s)}',${pi})" style="background:rgba(34,211,238,.09);border:1px solid rgba(34,211,238,.22);color:var(--blue);font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:var(--radius);cursor:pointer">Primary</button>` : ''}
+                ${!uploading ? `<button onclick="removeSitePhoto('${esc(s)}',${pi})" style="background:rgba(248,113,113,.09);border:1px solid rgba(248,113,113,.22);color:var(--red);font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:var(--radius);cursor:pointer">Remove</button>` : ''}
               </div>
             </div>
-          </div>`).join('')}
+          </div>`;}).join('')}
         </div>`
     }
   </div>`;
