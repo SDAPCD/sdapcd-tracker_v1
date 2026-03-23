@@ -845,20 +845,31 @@ const SEED = [
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyw4OrLWPQo4J-zul2eKqKFC3A5g2BopsycwD-hxpx7Hdq5kZ74iwfpPZ-BCoTxmx0k/exec';
 
 async function gasRequest(path, action, params, body) {
+  // ── STRATEGY: always use GET with body encoded as URL param ──
+  // GAS redirects POST requests which causes the body to be lost.
+  // GET requests go directly to doGet with no redirect — 100% reliable.
+  // Exception: file uploads use POST because base64 data is too large for URL params.
+
+  const isFileUpload = path === 'upload' && action === 'file';
+
   const url = new URL(GAS_URL);
   url.searchParams.set('path', path);
   url.searchParams.set('action', action);
-  if (params) Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
+  if (params) Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, String(v)));
 
   let response;
   try {
-    if (body !== null && body !== undefined) {
-      // No Content-Type header — keeps it a "simple" CORS request that GAS handles correctly
-      // GAS reads body from e.postData.contents regardless of Content-Type
+    if (isFileUpload) {
+      // File uploads: POST with JSON body (base64 data is too big for URL)
       response = await fetch(url.toString(), {
         method: 'POST',
         body: JSON.stringify(body)
       });
+    } else if (body !== null && body !== undefined) {
+      // All other mutations: GET with body serialized as URL param
+      // This avoids the GAS POST redirect that silently drops the body
+      url.searchParams.set('body', JSON.stringify(body));
+      response = await fetch(url.toString());
     } else {
       response = await fetch(url.toString());
     }
@@ -1472,6 +1483,7 @@ function renderFieldRow(i, fieldSites) {
       <div class="actions">
         <button class="btn-act btn-logwork" onclick="openLogWork(${i.id})" title="Log Work Entry (L)">▣ LOG WORK</button>
         <button class="btn-act btn-history" onclick="openHistory(${i.id})" title="View History (H)">▤ HISTORY</button>
+        ${(db.attachments||[]).filter(a=>String(a.instrumentId)===String(i.id)&&a.type!=='site_photo').length > 0 ? `<button class="btn-act" style="background:rgba(167,139,250,.13);border-color:rgba(167,139,250,.3);color:var(--purple)" onclick="openAttachments(${i.id})" title="View Attachments">📎 FILES (${(db.attachments||[]).filter(a=>String(a.instrumentId)===String(i.id)&&a.type!=='site_photo').length})</button>` : ''}
       </div>
     </td>
   </tr>`;
@@ -1509,6 +1521,7 @@ function renderShopRow(i) {
       <div class="actions">
         <button class="btn-act btn-logwork" onclick="openLogWork(${i.id})" title="Log Work Entry (L)">▣ LOG WORK</button>
         <button class="btn-act btn-history" onclick="openHistory(${i.id})" title="View History (H)">▤ HISTORY</button>
+        ${(db.attachments||[]).filter(a=>String(a.instrumentId)===String(i.id)&&a.type!=='site_photo').length > 0 ? `<button class="btn-act" style="background:rgba(167,139,250,.13);border-color:rgba(167,139,250,.3);color:var(--purple)" onclick="openAttachments(${i.id})" title="View Attachments">📎 FILES (${(db.attachments||[]).filter(a=>String(a.instrumentId)===String(i.id)&&a.type!=='site_photo').length})</button>` : ''}
       </div>
     </td>
   </tr>`;
@@ -1545,6 +1558,7 @@ function renderVendorRow(i) {
       <div class="actions">
         <button class="btn-act btn-logwork" onclick="openLogWork(${i.id})" title="Log Work Entry (L)">▣ LOG WORK</button>
         <button class="btn-act btn-history" onclick="openHistory(${i.id})" title="View History (H)">▤ HISTORY</button>
+        ${(db.attachments||[]).filter(a=>String(a.instrumentId)===String(i.id)&&a.type!=='site_photo').length > 0 ? `<button class="btn-act" style="background:rgba(167,139,250,.13);border-color:rgba(167,139,250,.3);color:var(--purple)" onclick="openAttachments(${i.id})" title="View Attachments">📎 FILES (${(db.attachments||[]).filter(a=>String(a.instrumentId)===String(i.id)&&a.type!=='site_photo').length})</button>` : ''}
       </div>
     </td>
   </tr>`;
@@ -1884,10 +1898,31 @@ function renderModal() {
     );
   }
 
+  if (ui.modal === 'addSitePhotoLink') {
+    const f = ui.form;
+    return modalShell('ADD SITE PHOTO', `
+      <div class="modal-sub">${esc(f.siteCode||'')}</div>
+      ${f.err ? `<div class="err-msg" style="margin-bottom:12px">${esc(f.err)}</div>` : ''}
+      <div class="form-group">
+        <label class="form-label">Google Drive Share Link *</label>
+        <input id="f-drive-url" class="form-input" placeholder="Paste Google Drive link here…" value="${esc(f.driveUrl||'')}">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);margin-top:5px;line-height:1.7">
+          In Google Drive: right-click photo → <strong>Get link</strong> → set to "Anyone with link" → Copy → Paste above
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Label (optional)</label>
+        <input id="f-photo-label" class="form-input" placeholder="e.g. North face of station" value="${esc(f.label||'')}">
+      </div>
+    `,
+    `<button class="btn-cancel" onclick="closeModal()">Cancel</button>
+     <button class="btn-save" onclick="saveAddSitePhotoLink()">Save Link</button>`);
+  }
+
   if (ui.modal === 'history') {
     const hist  = db.history[f.instId] || [];
     const inst  = db.instruments.find(x => String(x.id) === String(f.instId));
-    const attachments = (inst && inst.workAttachments) || [];
+    const attachments = (db.attachments||[]).filter(a => String(a.instrumentId) === String(f.instId) && a.type !== 'site_photo');
 
     // Color and icon by action type
     function entryStyle(action) {
@@ -1955,6 +1990,70 @@ function renderModal() {
     );
   }
 
+  if (ui.modal === 'attachments') {
+    const instId = f.instId;
+    const atts = (db.attachments||[]).filter(a => String(a.instrumentId) === String(instId) && a.type !== 'site_photo');
+    const images = atts.filter(a => (a.mimeType||'').startsWith('image') || a.type === 'image');
+    const pdfs   = atts.filter(a => (a.mimeType||'').includes('pdf') || a.type === 'pdf');
+    const others = atts.filter(a => !images.includes(a) && !pdfs.includes(a));
+
+    const renderAtt = (a, idx) => {
+      const isPDF = (a.mimeType||'').includes('pdf') || a.type === 'pdf';
+      const isImg = (a.mimeType||'').startsWith('image') || a.type === 'image';
+      const url   = a.fileUrl || a.directUrl || '';
+      const icon  = isPDF ? '📄' : isImg ? '🖼' : '📎';
+      const label = a.workType ? `${a.workType} · ` : '';
+      return `
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);margin-bottom:8px">
+        <span style="font-size:22px;flex-shrink:0">${icon}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.fileName||a.name||'Attachment '+(idx+1))}</div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);margin-top:2px">${label}${esc(a.date||'')}${a.tech?' · '+esc(a.tech):''}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          ${url ? `<a href="${esc(url)}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:5px 12px;background:var(--blue-dim);border:1px solid rgba(88,166,255,.25);border-radius:var(--radius);font-family:var(--font-mono);font-size:11px;color:var(--blue);text-decoration:none;font-weight:600">↗ Open</a>` : '<span style="font-size:11px;color:var(--subtle)">No link</span>'}
+        </div>
+      </div>`;
+    };
+
+    const body = atts.length === 0
+      ? `<div style="text-align:center;padding:40px 0;color:var(--muted)">
+           <div style="font-size:32px;margin-bottom:10px">📎</div>
+           <div style="font-family:var(--font-mono);font-size:13px">No attachments found for this instrument.</div>
+           <div style="font-family:var(--font-mono);font-size:11px;margin-top:6px;color:var(--subtle)">Upload files using the LOG WORK button.</div>
+         </div>`
+      : `
+        ${pdfs.length > 0 ? `
+          <div style="font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--subtle);margin-bottom:8px">PDF DOCUMENTS (${pdfs.length})</div>
+          ${pdfs.map(renderAtt).join('')}
+        ` : ''}
+        ${images.length > 0 ? `
+          <div style="font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--subtle);margin-bottom:8px;${pdfs.length?'margin-top:16px':''}">IMAGES (${images.length})</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:16px">
+            ${images.map(a => `
+            <div style="border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--surface)">
+              <a href="${esc(driveViewUrl(a.fileUrl||a.directUrl||''))}" target="_blank">
+                <img src="${esc(driveDirectUrl(a.fileUrl||a.directUrl||''))}" style="width:100%;height:120px;object-fit:cover;display:block" onerror="this.style.display='none';this.parentElement.innerHTML='<div style=\'height:120px;display:flex;align-items:center;justify-content:center;color:var(--subtle);font-size:11px\'>🖼 Click to view</div>'" alt="${esc(a.fileName||'')}">
+              </a>
+              <div style="padding:6px 10px">
+                <div style="font-size:10px;font-family:var(--font-mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.fileName||'')}</div>
+                <div style="font-size:9px;font-family:var(--font-mono);color:var(--subtle)">${esc(a.date||'')}${a.tech?' · '+esc(a.tech):''}</div>
+              </div>
+            </div>`).join('')}
+          </div>
+        ` : ''}
+        ${others.length > 0 ? `
+          <div style="font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--subtle);margin-bottom:8px">OTHER FILES (${others.length})</div>
+          ${others.map(renderAtt).join('')}
+        ` : ''}`;
+
+    return modalShell(`ATTACHMENTS — ${esc(f.instName||'')} ${esc(f.serial||'')}`,
+      `<div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-bottom:16px">${atts.length} file${atts.length!==1?'s':''} attached to this instrument</div>
+      ${body}`,
+      `<button class="btn-save" onclick="closeModal()">Close</button>`
+    );
+  }
+
   if (ui.modal === 'wodetail') {
     const wo   = db.workOrders.find(w => String(w.id) === String(f.woId));
     const inst = wo ? db.instruments.find(i => String(i.id) === String(wo.instrumentId)) : null;
@@ -1973,7 +2072,26 @@ function renderModal() {
         ${wo.restoredBy    ? `<div><div class="wo-field-label">RESTORED BY</div><div class="wo-field-val inst-sn">${esc(wo.restoredBy)} · ${esc(wo.restoredDate||'')}</div></div>` : ''}
       </div>
       ${wo.description   ? `<div class="form-group"><div class="wo-field-label">DESCRIPTION</div><div style="font-size:13px;color:var(--muted);margin-top:4px;line-height:1.5">${esc(wo.description)}</div></div>` : ''}
-      ${wo.restoreReason ? `<div class="form-group" style="margin-top:8px"><div class="wo-field-label" style="color:var(--amber)">RESTORE REASON</div><div style="font-size:13px;color:var(--amber);margin-top:4px;line-height:1.5;padding:8px 10px;background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.2);border-left:3px solid var(--amber);border-radius:var(--radius)">${esc(wo.restoreReason)}</div></div>` : ''}`,
+      ${wo.restoreReason ? `<div class="form-group" style="margin-top:8px"><div class="wo-field-label" style="color:var(--amber)">RESTORE REASON</div><div style="font-size:13px;color:var(--amber);margin-top:4px;line-height:1.5;padding:8px 10px;background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.2);border-left:3px solid var(--amber);border-radius:var(--radius)">${esc(wo.restoreReason)}</div></div>` : ''}
+      ${(() => {
+        if (!inst) return '';
+        const woAtts = (db.attachments||[]).filter(a => String(a.instrumentId) === String(wo.instrumentId) && a.type !== 'site_photo');
+        if (!woAtts.length) return '';
+        return `<div style="margin-top:14px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg)">
+          <div style="font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--subtle);margin-bottom:8px">INSTRUMENT ATTACHMENTS (${woAtts.length})</div>
+          ${woAtts.slice(0,5).map(a => {
+            const isPDF = (a.mimeType||'').includes('pdf') || a.type === 'pdf';
+            const url   = a.fileUrl || a.directUrl || '';
+            return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border2)">
+              <span>${isPDF ? '📄' : '🖼'}</span>
+              <span style="font-family:var(--font-mono);font-size:11px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.fileName||a.name||'File')}</span>
+              <span style="font-family:var(--font-mono);font-size:10px;color:var(--subtle)">${esc(a.date||'')}${a.tech?' · '+esc(a.tech):''}</span>
+              ${url ? `<a href="${esc(url)}" target="_blank" style="flex-shrink:0;font-family:var(--font-mono);font-size:10px;color:var(--blue);text-decoration:none">↗ Open</a>` : ''}
+            </div>`;
+          }).join('')}
+          ${woAtts.length > 5 ? `<div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);margin-top:6px">${woAtts.length-5} more — <span style="color:var(--blue);cursor:pointer" onclick="closeModal();openAttachments(${wo.instrumentId})">View all</span></div>` : ''}
+        </div>`;
+      })()}`,
       `${wo.status === 'Pending Closure'
           ? (currentUserHasFullControl()
               ? `<button class="btn-approve-close" onclick="openApproveWO(${wo.id})">✓ Approve & Close</button>`
@@ -2288,6 +2406,11 @@ function renderModal() {
         <div class="form-group"><label class="form-label">Longitude</label>
           <input id="f-site-lng" class="form-input" value="${esc(f.lng||'')}" placeholder="e.g. -117.1611"/>
         </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">📁 Google Drive Photo Folder URL</label>
+        <input id="f-drive-folder" class="form-input" value="${esc(f.driveFolder||'')}" placeholder="Paste Google Drive folder link here…"/>
+        <div style="font-size:11px;color:var(--subtle);margin-top:4px;font-family:var(--font-mono)">Create a Drive folder, right-click → Share → Copy link. Paste it here.</div>
       </div>`,
       `<button class="btn-cancel" onclick="closeModal()">Cancel</button>
        <button class="btn-save" onclick="saveEditSite(${f.idx})">Save Changes</button>`
@@ -3493,7 +3616,7 @@ function syncWorkOrder(wo) {
     restore_reason: woToSync.restoreReason   || '',
     restored_by:    woToSync.restoredBy      || '',
     restored_date:  woToSync.restoredDate    || ''
-  }).catch(e => console.warn('syncWorkOrder failed', e));
+  }).catch(e => { toast('⚠ WO sync failed: ' + e.message, 'error'); console.error('syncWorkOrder failed', e); });
 }
 
 function syncSite(name, body) {
@@ -3717,6 +3840,14 @@ function openWODetail(wid) {
   ui.form  = { woId: wo.id };
   render();
 }
+
+function openAttachments(instId) {
+  const i = db.instruments.find(x => String(x.id) === String(instId));
+  if (!i) return;
+  ui.modal = 'attachments';
+  ui.form  = { instId, instName: i.name, serial: i.serial };
+  render();
+}
 function openEditWO(wid) {
   const wo = db.workOrders.find(w => String(w.id) === String(wid));
   if (!wo) return;
@@ -3855,7 +3986,7 @@ function saveLogWork() {
         inst.workAttachments.push(entry);
         // Save link to Sheets if Drive upload succeeded
         if (a.fileUrl && !a.localOnly) {
-          API.post('/attachments', {
+          const attPayload = {
             instrument_id: instId,
             site_code:     '',
             type:          'work',
@@ -3867,13 +3998,22 @@ function saveLogWork() {
             date:          today(),
             work_type:     typeLabel,
             mime_type:     a.type === 'image' ? 'image/jpeg' : 'application/pdf'
-          }).then(saved => {
+          };
+          // Add to db.attachments immediately so it shows without reload
+          if (!db.attachments) db.attachments = [];
+          const tempAtt = {
+            id: null, instrumentId: Number(instId), siteCode: null, type: 'work',
+            fileName: a.name, fileUrl: a.fileUrl||'', fileId: a.fileId||'',
+            directUrl: a.directUrl||'', tech: by, date: today(),
+            workType: typeLabel, mimeType: a.type==='image'?'image/jpeg':'application/pdf'
+          };
+          db.attachments.push(tempAtt);
+          API.post('/attachments', attPayload).then(saved => {
             if (saved && saved.id) {
               entry.attachmentId = saved.id;
-              if (!db.attachments) db.attachments = [];
-              db.attachments.push({...saved, instrumentId: instId, type: 'work'});
+              tempAtt.id = saved.id; // update in place
             }
-          }).catch(e => console.warn('save attachment failed', e));
+          }).catch(e => { toast('⚠ Could not save attachment link: ' + e.message, 'error'); console.warn('save attachment failed', e); });
         }
       });
     }
@@ -3921,7 +4061,7 @@ function submitForClosure(wid) {
         tech_name:      wo.technician  || '',
         submitted_by:   ui.currentUser,
         submitted_date: today()
-      }).catch(e => console.warn('submitForClosure sync failed', e));
+      }).catch(e => { toast('⚠ Save failed: ' + e.message, 'error'); console.error('submitForClosure failed', e); });
       closeModal(); render();
       toast('WO-' + wo.id + ' submitted for closure approval');
     }
@@ -3972,7 +4112,7 @@ function confirmRestoreWO() {
     restored_date:  today(),
     submitted_by:   '',
     submitted_date: ''
-  }).catch(e => console.warn('restoreWO sync failed', e));
+  }).catch(e => { toast('⚠ Save failed: ' + e.message, 'error'); console.error('restoreWO failed', e); });
   closeModal(); render();
   toast('WO-' + wo.id + ' restored to Open');
 }
@@ -4004,7 +4144,7 @@ function confirmApproveWO() {
     restore_reason: wo.restoreReason   || '',
     restored_by:    wo.restoredBy      || '',
     restored_date:  wo.restoredDate    || ''
-  }).catch(e => console.warn('approveWO sync failed', e));
+  }).catch(e => { toast('⚠ Save failed: ' + e.message, 'error'); console.error('approveWO failed', e); });
   // Instrument → Operational at HQ/SHOP
   const inst = db.instruments.find(i => String(i.id) === String(wo.instrumentId));
   if (inst && !inst.archived) {
@@ -4565,7 +4705,7 @@ function openEditSite(siteCode) {
   if (idx === -1) return;
   const meta = (db.sitesMeta || {})[siteCode] || { type:'Field', address:'', lat:'', lng:'', siteName:'' };
   ui.modal = 'editsite';
-  ui.form  = { idx, val:siteCode, siteName:meta.siteName||'', type:meta.type||'Field', address:meta.address||'', lat:meta.lat||'', lng:meta.lng||'' };
+  ui.form  = { idx, val:siteCode, siteName:meta.siteName||'', type:meta.type||'Field', address:meta.address||'', lat:meta.lat||'', lng:meta.lng||'', driveFolder:meta.driveFolder||'' };
   render();
 }
 function saveEditSite(idx) {
@@ -4576,6 +4716,7 @@ function saveEditSite(idx) {
   const address  = getVal('f-site-address').trim();
   const lat      = getVal('f-site-lat').trim();
   const lng      = getVal('f-site-lng').trim();
+  const driveFolder = getVal('f-drive-folder').trim();
   if (!val) { ui.form={...ui.form,err:'Site code is required.'}; render(); return; }
   if (PROTECTED_SITES.includes(db.sites[idx])) { ui.form={...ui.form,err:'Protected site cannot be renamed.'}; render(); return; }
   if (db.sites.includes(val) && val !== db.sites[idx]) { ui.form={...ui.form,err:'Site already exists.'}; render(); return; }
@@ -4587,9 +4728,9 @@ function saveEditSite(idx) {
   }
   db.sites[idx] = val;
   const existing = db.sitesMeta[val] || {};
-  db.sitesMeta[val] = { ...existing, siteName, type, address, lat, lng };
+  db.sitesMeta[val] = { ...existing, siteName, type, address, lat, lng, driveFolder };
   if (ui.selectedSite === old) ui.selectedSite = val;
-  API.post('/sites/update', {old_code: old, code: val, site_name: siteName, type, address, lat, lng}).catch(()=>{});
+  API.post('/sites/update', {old_code: old, code: val, site_name: siteName, type, address, lat, lng, drive_folder: driveFolder}).catch(()=>{});
   try{saveDB('site');}catch(e){console.warn('saveDB',e);} closeModal(); toast('✓ Site updated');
 }
 
@@ -4659,97 +4800,110 @@ function compressImage(dataUrl, maxWidth, quality) {
   });
 }
 
-function uploadSitePhoto(siteCode, input) {
-  const files = Array.from(input.files);
-  if (!files.length) return;
-  if (!db.sitesMeta) db.sitesMeta = {};
-  if (!db.sitesMeta[siteCode]) db.sitesMeta[siteCode] = {};
-  const meta = db.sitesMeta[siteCode];
-  if (!meta.photos) meta.photos = [];
+// ── SITE PHOTO LINK SYSTEM ─────────────────────────────────
+// Convert any Google Drive share URL to a direct image URL for embedding
+function driveDirectUrl(url) {
+  // Extracts the file ID from any Drive URL and returns a thumbnail embed URL.
+  // drive.google.com/thumbnail?id=FILE_ID is the current working embed format.
+  // drive.google.com/uc?export=view is deprecated and blocked by Google.
+  if (!url) return '';
 
-  files.forEach(file => {
-    if (file.size > 4 * 1024 * 1024) { toast('⚠ ' + file.name + ' too large — max 4MB per photo'); return; }
-    const reader = new FileReader();
-    reader.onload = async e => {
-      // Add placeholder
-      const placeholder = { url: e.target.result, uploading: true, fileName: file.name };
-      meta.photos.push(placeholder);
-      render();
+  // Already a thumbnail URL — return as-is
+  if (url.includes('drive.google.com/thumbnail')) return url;
 
-      // Compress image before upload to stay under GAS 6MB limit
-      let uploadData = e.target.result;
-      if (file.type.startsWith('image/')) {
-        try {
-          uploadData = await compressImage(e.target.result, 1200, 0.82);
-        } catch(ce) { uploadData = e.target.result; }
-      }
+  // Extract file ID from any Drive URL format
+  let fileId = null;
 
-      try {
-        // Upload to Google Drive
-        const result = await API.uploadFile(
-          uploadData, file.name, file.type.startsWith('image/') ? 'image/jpeg' : file.type,
-          siteCode, '', 'site_photo'
-        );
-        if (!result || !result.fileUrl) throw new Error('Drive upload returned no URL');
-        // Save link to Sheets attachments tab
-        const saved = await API.post('/attachments', {
-          instrument_id: '',
-          site_code:     siteCode,
-          type:          'site_photo',
-          file_name:     file.name,
-          file_url:      result.fileUrl   || '',
-          file_id:       result.fileId    || '',
-          direct_url:    result.directUrl || '',
-          tech:          ui.currentUser   || '',
-          date:          today(),
-          work_type:     '',
-          mime_type:     file.type
-        });
-        // Replace placeholder with saved entry
-        const idx = meta.photos.indexOf(placeholder);
-        if (idx !== -1) {
-          meta.photos[idx] = {
-            url:          result.directUrl || result.fileUrl,
-            attachmentId: saved.id,
-            fileName:     file.name
-          };
-        }
-        if (!db.attachments) db.attachments = [];
-        db.attachments.push({ ...saved, type: 'site_photo', siteCode });
-        toast('✓ ' + file.name + ' uploaded');
-      } catch(err) {
-        // Fallback: keep base64 locally
-        const idx = meta.photos.indexOf(placeholder);
-        if (idx !== -1) meta.photos[idx] = { url: e.target.result, fileName: file.name, localOnly: true };
-        console.warn('uploadSitePhoto failed:', err);
-        toast('⚠ Upload failed: ' + (err.message || 'unknown error'));
-      }
-      render();
-    };
-    reader.readAsDataURL(file);
-  });
-}
-function removeSitePhoto(siteCode, idx) {
-  const meta = (db.sitesMeta || {})[siteCode];
-  if (!meta || !meta.photos) return;
-  const photo = meta.photos[idx];
-  // Delete from Sheets if it has an attachmentId
-  if (photo && photo.attachmentId) {
-    API.del('/attachments/' + photo.attachmentId).catch(()=>{});
-    db.attachments = (db.attachments||[]).filter(a => a.id !== photo.attachmentId);
+  // format: /file/d/FILE_ID/
+  const m1 = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (m1) fileId = m1[1];
+
+  // format: ?id=FILE_ID or &id=FILE_ID
+  if (!fileId) {
+    const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (m2) fileId = m2[1];
   }
-  meta.photos.splice(idx, 1);
-  if (meta.photos.length === 0) delete meta.photos;
-  render(); toast('Photo removed');
+
+  // Old uc?export=view format — extract id and convert
+  if (!fileId && url.includes('uc?export=view')) {
+    const m3 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (m3) fileId = m3[1];
+  }
+
+  if (fileId) {
+    // Use thumbnail URL — works for embedding, no auth required for shared files
+    return 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w800';
+  }
+
+  return url;
 }
-function setSitePhotoActive(siteCode, idx) {
-  const meta = (db.sitesMeta || {})[siteCode];
-  if (!meta || !meta.photos) return;
-  const tmp = meta.photos[0];
-  meta.photos[0] = meta.photos[idx];
-  meta.photos[idx] = tmp;
+
+// Returns the best view URL for opening in Drive (not for embedding)
+function driveViewUrl(url) {
+  if (!url) return '#';
+  // Already a view URL
+  if (url.includes('drive.google.com/file/') || url.includes('drive.google.com/open')) return url;
+  // Extract file ID and build view URL
+  const m = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (m) return 'https://drive.google.com/file/d/' + m[1] + '/view';
+  const m2 = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (m2) return url; // already in right format
+  return url;
+}
+
+function openAddSitePhotoLink(siteCode) {
+  ui.modal = 'addSitePhotoLink';
+  ui.form  = { siteCode, driveUrl: '', label: '', err: '' };
   render();
+  setTimeout(() => { const el = document.getElementById('f-drive-url'); if (el) el.focus(); }, 60);
 }
+
+async function saveAddSitePhotoLink() {
+  const url   = (document.getElementById('f-drive-url')?.value || '').trim();
+  const label = (document.getElementById('f-photo-label')?.value || '').trim();
+  const sc    = ui.form.siteCode;
+  if (!url) { ui.form.err = 'Please paste a Google Drive link'; render(); return; }
+  if (!url.includes('google.com') && !url.startsWith('http')) {
+    ui.form.err = 'Please paste a valid Google Drive URL'; render(); return;
+  }
+  const directUrl = driveDirectUrl(url);
+  const fileName  = label || ('Site Photo ' + new Date().toLocaleDateString());
+  showLoading('Saving link…');
+  try {
+    const saved = await API.post('/attachments', {
+      instrument_id: '',
+      site_code:     sc,
+      type:          'site_photo',
+      file_name:     fileName,
+      file_url:      url,
+      file_id:       '',
+      direct_url:    directUrl,
+      tech:          ui.currentUser || '',
+      date:          today(),
+      work_type:     '',
+      mime_type:     'image/jpeg'
+    });
+    if (!db.attachments) db.attachments = [];
+    db.attachments.push({ ...saved, id: saved.id, type: 'site_photo', siteCode: sc,
+      fileUrl: url, directUrl, fileName });
+    closeModal();
+    toast('✓ Photo link saved');
+    render();
+  } catch(e) {
+    ui.form.err = 'Save failed: ' + e.message; render();
+  } finally { hideLoading(); }
+}
+
+async function removeSitePhotoById(attId) {
+  if (!attId) return;
+  if (!confirm('Remove this photo link? The file will remain in Google Drive.')) return;
+  try {
+    await API.del('/attachments/' + attId);
+    db.attachments = (db.attachments||[]).filter(a => a.id !== attId);
+    toast('Photo removed'); render();
+  } catch(e) { toast('⚠ Remove failed: ' + e.message); }
+}
+
 function saveAddSite() {
   const code     = getVal('f-site-code').toUpperCase().trim();
   const siteName = getVal('f-site-name').trim();
@@ -4758,6 +4912,7 @@ function saveAddSite() {
   const address  = getVal('f-site-address').trim();
   const lat      = getVal('f-site-lat').trim();
   const lng      = getVal('f-site-lng').trim();
+  const driveFolder = getVal('f-drive-folder').trim();
   if (!code) { ui.form={...ui.form,err:'Site code is required.'}; render(); return; }
   if (db.sites.includes(code)) { ui.form={...ui.form,err:'Site "'+code+'" already exists.'}; render(); return; }
   db.sites.push(code);
@@ -4793,9 +4948,13 @@ function renderServiceLog() {
       const attachMatch = (h.detail || '').match(/(\d+) attachment/i);
       const attachCount = attachMatch ? parseInt(attachMatch[1]) : 0;
       // Get actual attachment objects
-      const attachments = attachCount > 0
-        ? ((inst.workAttachments || []).filter(a => a.date === (h.ts||'').slice(0,10) && a.tech === tech))
-        : [];
+      // Always pull from db.attachments — reliable single source of truth
+      const attachments = (db.attachments||[]).filter(a =>
+        String(a.instrumentId) === String(instId) &&
+        a.type !== 'site_photo' &&
+        a.date === (h.ts||'').slice(0,10) &&
+        (tech === '—' || a.tech === tech)
+      );
       entries.push({ instId, inst, h, typePart, baseType, tech, attachCount, attachments,
                      dateStr: (h.ts||'').slice(0,10) });
     });
@@ -4847,11 +5006,17 @@ function renderServiceLog() {
         // Strip "Tech: X · " prefix from detail for cleaner display
         const detail = (e.h.detail || '').replace(/^Tech:[^·]+·\s*/i, '').replace(/·\s*\d+ attachments?/i,'').trim();
         const attachHtml = e.attachments.length > 0
-          ? e.attachments.map(a =>
-              `<a href="${a.fileUrl||a.data||'#'}" ${a.fileUrl?'target="_blank"':'download="'+esc(a.name)+'"'} style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-mono);font-size:10px;color:var(--blue);text-decoration:none;margin-right:4px;margin-top:3px">${a.type==='image'?'🖼':'📄'} ${esc(a.name)}${a.fileUrl?' ↗':''}</a>`
-            ).join('')
+          ? e.attachments.map(a => {
+              const isPDF = (a.mimeType||'').includes('pdf') || a.type === 'pdf' || (a.fileName||'').endsWith('.pdf');
+              const url   = a.fileUrl || a.directUrl || '';
+              const icon  = isPDF ? '📄' : '🖼';
+              const label = a.fileName || a.name || 'File';
+              return url
+                ? `<a href="${esc(url)}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-mono);font-size:10px;color:var(--blue);text-decoration:none;margin-right:5px;margin-top:3px;font-weight:600">${icon} ${esc(label)} ↗</a>`
+                : `<span style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);margin-right:5px">${icon} ${esc(label)} (no link)</span>`;
+            }).join('')
           : e.attachCount > 0
-            ? `<span style="font-family:var(--font-mono);font-size:10px;color:var(--subtle)">${e.attachCount} attachment${e.attachCount>1?'s':''}</span>`
+            ? `<span style="font-family:var(--font-mono);font-size:10px;color:var(--subtle)">${e.attachCount} file${e.attachCount>1?'s':''} — <span style="color:var(--blue);cursor:pointer" onclick="openAttachments(${e.instId})">view</span></span>`
             : '';
         return `<tr>
           <td style="font-family:var(--font-mono);font-size:11px;color:var(--subtle);white-space:nowrap">${esc(e.dateStr)}</td>
@@ -4930,11 +5095,6 @@ function renderSites() {
   }
   const s    = ui.selectedSite;
   const m    = (db.sitesMeta || {})[s] || {};
-  const photos = (() => {
-    if (m.photos && m.photos.length) return m.photos;
-    if (m.photo) return [{ url: m.photo }]; // legacy string fallback
-    return [];
-  })();
   const siteInsts = db.instruments.filter(i => !i.archived && i.site === s);
   const openWOs   = db.workOrders.filter(w => {
     const inst = db.instruments.find(i => i.id === w.instrumentId);
@@ -4970,36 +5130,54 @@ function renderSites() {
         </tr>`;
       }).join('');
 
-  // Photo grid
+  // Photo section — Google Drive link based (no upload, no errors)
+  const photos = (db.attachments||[]).filter(a => a.type === 'site_photo' && a.siteCode === s);
   const photoSection = `
   <div style="margin-top:28px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
       <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--blue)">SITE PHOTOS</div>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:rgba(34,211,238,.09);border:1px solid rgba(34,211,238,.25);color:var(--blue);font-family:var(--font-mono);font-size:11px;font-weight:600;padding:5px 12px;border-radius:var(--radius);transition:all .15s" onmouseover="this.style.background='rgba(34,211,238,.15)'" onmouseout="this.style.background='rgba(34,211,238,.09)'">
-        <input type="file" accept="image/*" multiple style="display:none" onchange="uploadSitePhoto('${esc(s)}',this)"/>
-        + Add Photo
-      </label>
+      ${currentUserHasFullControl() ? `<button onclick="openAddSitePhotoLink('${esc(s)}')" style="background:var(--blue-dim);border:1px solid rgba(88,166,255,.3);color:var(--blue);font-family:var(--font-mono);font-size:11px;font-weight:600;padding:5px 12px;border-radius:var(--radius);cursor:pointer">+ Add Photo Link</button>` : ''}
+    </div>
+    <div style="padding:7px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-mono);font-size:10px;color:var(--subtle);margin-bottom:12px;line-height:1.7">
+      💡 <strong style="color:var(--muted)">How it works:</strong>
+      Upload a photo to <a href="https://drive.google.com" target="_blank" style="color:var(--blue)">Google Drive</a>
+      → right-click → <em>Get link</em> → paste it here.
+      The link is saved to your Sheets <code>attachments</code> tab.
     </div>
     ${photos.length === 0
-      ? `<div style="padding:24px;text-align:center;color:var(--subtle);font-family:var(--font-mono);font-size:11px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg)">No photos yet — click Add Photo to upload</div>`
+      ? `<div style="padding:32px;text-align:center;color:var(--subtle);font-family:var(--font-mono);font-size:11px;background:var(--surface2);border:1px dashed var(--border);border-radius:var(--radius-lg)">
+           <div style="font-size:28px;margin-bottom:8px">📷</div>
+           No photos linked yet
+         </div>`
       : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
           ${photos.map((p, pi) => {
-            const src = (typeof p === 'object') ? (p.url || '') : p;
-            const label = (typeof p === 'object' && p.fileName) ? p.fileName : (pi === 0 ? 'Primary' : 'Photo ' + (pi+1));
-            const uploading = typeof p === 'object' && p.uploading;
+            const viewUrl  = driveViewUrl(p.fileUrl || p.directUrl || '');
+            const embedUrl = driveDirectUrl(p.fileUrl || p.directUrl || '');
+            const label    = p.fileName || ('Photo '+(pi+1));
             return `
-          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;position:relative;opacity:${uploading?'0.6':'1'}">
-            <img src="${esc(src)}" style="width:100%;height:160px;object-fit:cover;display:block" onerror="this.style.display='none'">
-            ${uploading ? `<div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.4);color:#fff;font-family:var(--font-mono);font-size:11px">⏳ uploading...</div>` : ''}
-            <div style="padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
-              <span style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px">${esc(label)}</span>
-              <div style="display:flex;gap:6px">
-                ${src && !uploading ? `<a href="${esc(src)}" target="_blank" style="background:rgba(34,211,238,.09);border:1px solid rgba(34,211,238,.22);color:var(--blue);font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:var(--radius);text-decoration:none">↗</a>` : ''}
-                ${pi > 0 && !uploading ? `<button onclick="setSitePhotoActive('${esc(s)}',${pi})" style="background:rgba(34,211,238,.09);border:1px solid rgba(34,211,238,.22);color:var(--blue);font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:var(--radius);cursor:pointer">Primary</button>` : ''}
-                ${!uploading ? `<button onclick="removeSitePhoto('${esc(s)}',${pi})" style="background:rgba(248,113,113,.09);border:1px solid rgba(248,113,113,.22);color:var(--red);font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:var(--radius);cursor:pointer">Remove</button>` : ''}
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">
+              <a href="${esc(viewUrl)}" target="_blank" style="display:block">
+                <div style="width:100%;height:160px;background:var(--surface);overflow:hidden;display:flex;align-items:center;justify-content:center">
+                  ${embedUrl
+                    ? `<img src="${esc(embedUrl)}" style="width:100%;height:160px;object-fit:cover;display:block"
+                         onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="${esc(label)}">
+                       <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--subtle)">
+                         <span style="font-size:28px">🖼</span><span style="font-size:10px;font-family:var(--font-mono)">Click to view in Drive</span>
+                       </div>`
+                    : `<div style="display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--subtle)">
+                         <span style="font-size:28px">🖼</span><span style="font-size:10px;font-family:var(--font-mono)">Click to view</span>
+                       </div>`
+                  }
+                </div>
+              </a>
+              <div style="padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
+                <span style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px" title="${esc(label)}">${esc(label)}</span>
+                <div style="display:flex;gap:5px">
+                  <a href="${esc(viewUrl)}" target="_blank" style="background:var(--blue-dim);border:1px solid rgba(88,166,255,.22);color:var(--blue);font-family:var(--font-mono);font-size:10px;padding:3px 7px;border-radius:var(--radius);text-decoration:none" title="Open in Google Drive">↗ View</a>
+                  ${currentUserHasFullControl() ? `<button onclick="removeSitePhotoById(${p.id})" style="background:var(--red-dim);border:1px solid rgba(248,81,73,.22);color:var(--red);font-family:var(--font-mono);font-size:10px;padding:3px 7px;border-radius:var(--radius);cursor:pointer">✕</button>` : ''}
+                </div>
               </div>
-            </div>
-          </div>`;}).join('')}
+            </div>`;}).join('')}
         </div>`
     }
   </div>`;
