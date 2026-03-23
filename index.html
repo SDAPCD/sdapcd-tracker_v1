@@ -1137,8 +1137,11 @@ function certBadge(i) {
   if (!i.certIntervalMonths) return `<span class="cert-none">NOT TRACKED</span>`;
   if (st === 'none')         return `<span class="cert-none">NO CERT DATE</span>`;
   if (st === 'overdue')      return `<span class="cert-overdue">⚠ OVERDUE ${Math.abs(days)}d · ${due}</span>`;
-  if (st === 'due-soon')     return `<span class="cert-due-soon">◉ DUE IN ${days}d · ${due}</span>`;
-  return                            `<span class="cert-ok">✓ OK · ${due}</span>`;
+  if (st === 'due-soon') {
+    const label = days === 0 ? 'TODAY' : days === 1 ? 'TOMORROW' : `IN ${days}d`;
+    return `<span class="cert-due-soon">◉ DUE ${label} · ${due}</span>`;
+  }
+  return `<span class="cert-ok">✓ OK · ${due}</span>`;
 }
 
 function addHistory(instId, action, detail) {
@@ -2169,28 +2172,6 @@ function renderModal() {
     );
   }
 
-  if (ui.modal === 'adminlogin') {
-    return `<div class="overlay"><div class="modal confirm-modal" style="max-width:360px">
-      <div class="modal-hdr">
-        <div class="modal-title" style="display:flex;align-items:center;gap:8px">⚙ ADMIN ACCESS</div>
-      </div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:18px;font-family:var(--font-mono);line-height:1.6">
-        Enter the admin password to access settings, archived instruments, and the danger zone.
-      </div>
-      ${f.err ? `<div class="err-msg" style="margin-bottom:12px">${f.err}</div>` : ''}
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <input id="admin-pw-input" class="form-input" type="password" placeholder="Enter admin password"
-          onkeydown="if(event.key==='Enter')submitAdminPassword()"/>
-      </div>
-      <div class="modal-actions">
-        <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-        <button class="btn-save" onclick="submitAdminPassword()">⚙ UNLOCK ADMIN</button>
-      </div>
-    </div></div>`;
-    setTimeout(() => { const el = document.getElementById('admin-pw-input'); if (el) el.focus(); }, 30);
-  }
-
   if (ui.modal === 'changepw') {
     return modalShell('CHANGE ADMIN PASSWORD', `
       ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
@@ -2888,7 +2869,6 @@ function adminTable(cols, rows, addRow, tableId) {
 
 // ── ADMIN ───────────────────────────────────────────────────
 function renderAdmin() {
-  if (!ui.adminUnlocked) { ui.modal = 'adminlogin'; ui.form = {}; return ''; }
   const instCount = {};
   const siteCount = {};
   db.instruments.forEach(i => {
@@ -3493,21 +3473,26 @@ function syncInstrument(i) {
 }
 
 function syncWorkOrder(wo) {
-  if (!wo || !wo.id) return;
-  API.put('/work-orders/' + wo.id, {
-    instrument_id:  wo.instrumentId,
-    status:         wo.status,
-    type:           wo.type            || '',
-    description:    wo.description     || '',
-    tech_name:      wo.technician      || '',
-    notes:          wo.notes           || '',
-    submitted_by:   wo.submittedBy     || '',
-    submitted_date: wo.submittedDate   || '',
-    closed_by:      wo.closedBy        || '',
-    approved_by:    wo.approvedBy      || '',
-    restore_reason: wo.restoreReason   || '',
-    restored_by:    wo.restoredBy      || '',
-    restored_date:  wo.restoredDate    || ''
+  if (!wo) return;
+  // Always use the latest version of the WO from db (server ID may have updated)
+  const latest = db.workOrders.find(w => String(w.instrumentId) === String(wo.instrumentId) &&
+    (String(w.id) === String(wo.id) || w === wo));
+  const woToSync = latest || wo;
+  if (!woToSync.id) return;
+  API.put('/work-orders/' + woToSync.id, {
+    instrument_id:  woToSync.instrumentId,
+    status:         woToSync.status,
+    type:           woToSync.type            || '',
+    description:    woToSync.description     || '',
+    tech_name:      woToSync.technician      || '',
+    notes:          woToSync.notes           || '',
+    submitted_by:   woToSync.submittedBy     || '',
+    submitted_date: woToSync.submittedDate   || '',
+    closed_by:      woToSync.closedBy        || '',
+    approved_by:    woToSync.approvedBy      || '',
+    restore_reason: woToSync.restoreReason   || '',
+    restored_by:    woToSync.restoredBy      || '',
+    restored_date:  woToSync.restoredDate    || ''
   }).catch(e => console.warn('syncWorkOrder failed', e));
 }
 
@@ -3927,7 +3912,16 @@ function submitForClosure(wid) {
       wo.submittedDate = today();
       addHistory(wo.instrumentId, 'Submitted for closure', `WO-${wo.id} · ${wo.type} · Submitted by: ${ui.currentUser}`);
       addSecurityLog('SUBMIT', `WO-${wo.id} submitted for closure by ${ui.currentUser}`);
-      syncWorkOrder(wo);
+      // Direct API call
+      API.put('/work-orders/' + wo.id, {
+        instrument_id:  wo.instrumentId,
+        status:         'Pending Closure',
+        type:           wo.type        || '',
+        description:    wo.description || '',
+        tech_name:      wo.technician  || '',
+        submitted_by:   ui.currentUser,
+        submitted_date: today()
+      }).catch(e => console.warn('submitForClosure sync failed', e));
       closeModal(); render();
       toast('WO-' + wo.id + ' submitted for closure approval');
     }
@@ -3966,7 +3960,19 @@ function confirmRestoreWO() {
   delete wo.submittedDate;
   addHistory(wo.instrumentId, 'Submission restored to Open', `WO-${wo.id} · Restored by: ${ui.currentUser} · Reason: ${notes}`);
   addSecurityLog('RESTORE', `WO-${wo.id} restored to Open by ${ui.currentUser}. Reason: ${notes}`);
-  syncWorkOrder(wo);
+  // Direct API call with all fields
+  API.put('/work-orders/' + wo.id, {
+    instrument_id:  wo.instrumentId,
+    status:         'Open',
+    type:           wo.type        || '',
+    description:    wo.description || '',
+    tech_name:      wo.technician  || '',
+    restore_reason: notes,
+    restored_by:    ui.currentUser,
+    restored_date:  today(),
+    submitted_by:   '',
+    submitted_date: ''
+  }).catch(e => console.warn('restoreWO sync failed', e));
   closeModal(); render();
   toast('WO-' + wo.id + ' restored to Open');
 }
@@ -3983,19 +3989,28 @@ function confirmApproveWO() {
   const detail  = `WO-${wo.id} · ${wo.type} · Approved by: ${ui.currentUser}${notes ? ' · Notes: ' + notes : ''}`;
   addHistory(wo.instrumentId, 'Work order approved & closed', detail);
   addSecurityLog('APPROVAL', `Approved closure of WO-${String(wo.id).padStart(3,'0')} by ${ui.currentUser}.${notes ? ' Notes: ' + notes : ''}`);
-  syncWorkOrder(wo);
-  // When WO is approved & closed — instrument becomes Operational at HQ/SHOP
+  // Direct API call — explicit and complete, no syncWorkOrder abstraction
+  API.put('/work-orders/' + wo.id, {
+    instrument_id:  wo.instrumentId,
+    status:         'Closed',
+    type:           wo.type            || '',
+    description:    wo.description     || '',
+    tech_name:      wo.technician      || '',
+    notes:          notes              || '',
+    closed_by:      ui.currentUser,
+    approved_by:    ui.currentUser,
+    submitted_by:   wo.submittedBy     || '',
+    submitted_date: wo.submittedDate   || '',
+    restore_reason: wo.restoreReason   || '',
+    restored_by:    wo.restoredBy      || '',
+    restored_date:  wo.restoredDate    || ''
+  }).catch(e => console.warn('approveWO sync failed', e));
+  // Instrument → Operational at HQ/SHOP
   const inst = db.instruments.find(i => String(i.id) === String(wo.instrumentId));
   if (inst && !inst.archived) {
     const changes = [];
-    if (inst.status !== 'Operational') {
-      changes.push(`Status: ${inst.status} → Operational`);
-      inst.status = 'Operational';
-    }
-    if (inst.site !== 'HQ/SHOP') {
-      changes.push(`Site: ${inst.site} → HQ/SHOP`);
-      inst.site = 'HQ/SHOP';
-    }
+    if (inst.status !== 'Operational') { changes.push(`Status: ${inst.status} → Operational`); inst.status = 'Operational'; }
+    if (inst.site   !== 'HQ/SHOP')     { changes.push(`Site: ${inst.site} → HQ/SHOP`);         inst.site   = 'HQ/SHOP'; }
     if (changes.length > 0) {
       addHistory(wo.instrumentId, 'Status updated on WO closure', changes.join(' · ') + ` (WO-${wo.id} approved & closed)`);
       syncInstrument(inst);
@@ -5097,7 +5112,7 @@ window.addEventListener('beforeunload', e => {
 });
 
 // ── KEYBOARD ───────────────────────────────────────────────
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && ui.modal) { if (ui.modal === 'confirm') confirmCancel(); else if (ui.modal !== 'adminlogin') closeModal(); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && ui.modal) { if (ui.modal === 'confirm') confirmCancel(); else closeModal(); } });
 
 // ══════════════════════════════════════════════════════════════
 //  SERVER-SYNC LAYER
