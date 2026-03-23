@@ -851,15 +851,27 @@ async function gasRequest(path, action, params, body) {
   if (params) Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
 
   let response;
-  if (body !== null && body !== undefined) {
-    response = await fetch(url.toString(), {
-      method: 'POST',
-      body: JSON.stringify(body)
-    });
-  } else {
-    response = await fetch(url.toString());
+  try {
+    if (body !== null && body !== undefined) {
+      response = await fetch(url.toString(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+    } else {
+      response = await fetch(url.toString());
+    }
+  } catch(fetchErr) {
+    throw new Error('Network error: ' + fetchErr.message);
   }
-  const j = await response.json();
+
+  let j;
+  try {
+    j = await response.json();
+  } catch(parseErr) {
+    throw new Error('Invalid response from server (status ' + response.status + ')');
+  }
+
   if (!j.ok) throw new Error(j.error || 'API error');
   return j.data;
 }
@@ -3482,18 +3494,19 @@ function syncInstrument(i) {
 function syncWorkOrder(wo) {
   if (!wo || !wo.id) return;
   API.put('/work-orders/' + wo.id, {
-    status:          wo.status,
-    type:            wo.type            || '',
-    description:     wo.description     || '',
-    tech_name:       wo.technician      || '',
-    notes:           wo.notes           || '',
-    submitted_by:    wo.submittedBy     || '',
-    submitted_date:  wo.submittedDate   || '',
-    closed_by:       wo.closedBy        || '',
-    approved_by:     wo.approvedBy      || '',
-    restore_reason:  wo.restoreReason   || '',
-    restored_by:     wo.restoredBy      || '',
-    restored_date:   wo.restoredDate    || ''
+    instrument_id:  wo.instrumentId,
+    status:         wo.status,
+    type:           wo.type            || '',
+    description:    wo.description     || '',
+    tech_name:      wo.technician      || '',
+    notes:          wo.notes           || '',
+    submitted_by:   wo.submittedBy     || '',
+    submitted_date: wo.submittedDate   || '',
+    closed_by:      wo.closedBy        || '',
+    approved_by:    wo.approvedBy      || '',
+    restore_reason: wo.restoreReason   || '',
+    restored_by:    wo.restoredBy      || '',
+    restored_date:  wo.restoredDate    || ''
   }).catch(e => console.warn('syncWorkOrder failed', e));
 }
 
@@ -3615,7 +3628,7 @@ function attachLogWorkFiles(input) {
           data: e.target.result,
           localOnly: true
         };
-        toast('⚠ Drive upload failed — file saved locally only');
+        toast('⚠ Drive upload failed: ' + (err.message || 'unknown error'));
       }
       render();
     };
@@ -3736,17 +3749,18 @@ function saveAdd() {
   }
   db.instruments.push(newInst);
   addHistory(id, 'Instrument added', `${name} ${serial} at ${site} — ${newInst.status}`);
-  // POST to GAS and update local id with server-assigned id
   API.post('/instruments', {
     name, serial, status: newInst.status, site, notes: notes||''
   }).then(result => {
     if (result && result.id) { newInst.id = result.id; newInst._synced = true; }
   }).catch(e => console.warn('addInstrument failed', e));
-  try{saveDB('instrument', id);}catch(e){console.warn('saveDB',e);} closeModal(); toast('Instrument added');
+  closeModal(); toast('Instrument added');
 }
 
 // Shared save for logwork and createwo
+let _savingWO = false; // prevent double-submit
 function saveWorkEntry(mode) {
+  if (_savingWO) return; // block double click
   const type = document.getElementById('f-type') ? document.getElementById('f-type').value : '';
   const by   = getVal('f-by');
   const desc = getVal('f-desc');
@@ -3772,7 +3786,6 @@ function saveWorkEntry(mode) {
     if (validStatuses.includes(newStatus) && woInst.status !== newStatus) {
       const prevStatus = woInst.status;
       woInst.status = newStatus;
-      // Also move to HQ/SHOP if it's a field instrument
       if (woInst.site !== 'HQ/SHOP' && woInst.site !== 'VENDOR') {
         woInst.site = 'HQ/SHOP';
         addHistory(instId, 'Site changed', `${prevStatus !== newStatus ? prevStatus + ' → ' + newStatus + ' · ' : ''}Moved to HQ/SHOP for WO-${woId}`);
@@ -3783,12 +3796,17 @@ function saveWorkEntry(mode) {
     }
   }
   addHistory(instId, 'Work order created', `WO-${woId} · ${type} · Tech: ${by}${desc?' · '+desc.slice(0,80):''}`);
+  // POST to GAS — lock until response to prevent duplicates
+  _savingWO = true;
   API.post('/work-orders', {
     instrument_id: instId, type, description: desc, tech_name: by
   }).then(result => {
-    if (result && result.id) { newWO.id = result.id; newWO._synced = true; }
-  }).catch(e => console.warn('createWO failed', e));
-  try { saveDB('workorder', woId); } catch(e) { console.warn('saveDB error', e); }
+    if (result && result.id) {
+      newWO.id    = result.id;  // use server-assigned ID
+      newWO._synced = true;
+    }
+  }).catch(e => console.warn('createWO failed', e))
+    .finally(() => { _savingWO = false; });
   closeModal();
   toast('Work order WO-'+woId+' created');
 }
@@ -3873,7 +3891,7 @@ function saveEditWO(wid) {
   wo.type = type; wo.technician = by; wo.description = desc;
   addHistory(wo.instrumentId, 'Work order updated', `WO-${wid} · ${type} · Tech: ${by}${desc ? ' · ' + desc.slice(0, 80) : ''}`);
   syncWorkOrder(wo);
-  saveDB('workorder', wo.id); openWODetail(wid); toast('Work order updated');
+  openWODetail(wid); toast('Work order updated');
 }
 
 function submitForClosure(wid) {
@@ -3891,7 +3909,7 @@ function submitForClosure(wid) {
       addHistory(wo.instrumentId, 'Submitted for closure', `WO-${wo.id} · ${wo.type} · Submitted by: ${ui.currentUser}`);
       addSecurityLog('SUBMIT', `WO-${wo.id} submitted for closure by ${ui.currentUser}`);
       syncWorkOrder(wo);
-      try{saveDB('workorder');}catch(e){console.warn('saveDB',e);} closeModal(); render();
+      closeModal(); render();
       toast('WO-' + wo.id + ' submitted for closure approval');
     }
   });
@@ -3930,7 +3948,7 @@ function confirmRestoreWO() {
   addHistory(wo.instrumentId, 'Submission restored to Open', `WO-${wo.id} · Restored by: ${ui.currentUser} · Reason: ${notes}`);
   addSecurityLog('RESTORE', `WO-${wo.id} restored to Open by ${ui.currentUser}. Reason: ${notes}`);
   syncWorkOrder(wo);
-  try{saveDB('workorder', wo.id);}catch(e){console.warn('saveDB',e);} closeModal(); render();
+  closeModal(); render();
   toast('WO-' + wo.id + ' restored to Open');
 }
 
@@ -3964,7 +3982,7 @@ function confirmApproveWO() {
       syncInstrument(inst);
     }
   }
-  try{saveDB('workorder', wo.id);}catch(e){console.warn('saveDB',e);} closeModal(); render();
+  closeModal(); render();
   toast('✓ WO-' + wo.id + ' approved and closed');
 }
 
@@ -4589,6 +4607,24 @@ function openAddSite() {
   ui.form  = { code:'', type:'Field', address:'', lat:'', lng:'' };
   render();
 }
+// Compress an image to reduce size before uploading to GAS (which has a ~6MB POST limit)
+function compressImage(dataUrl, maxWidth, quality) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality || 0.82));
+    };
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+}
+
 function uploadSitePhoto(siteCode, input) {
   const files = Array.from(input.files);
   if (!files.length) return;
@@ -4606,12 +4642,21 @@ function uploadSitePhoto(siteCode, input) {
       meta.photos.push(placeholder);
       render();
 
+      // Compress image before upload to stay under GAS 6MB limit
+      let uploadData = e.target.result;
+      if (file.type.startsWith('image/')) {
+        try {
+          uploadData = await compressImage(e.target.result, 1200, 0.82);
+        } catch(ce) { uploadData = e.target.result; }
+      }
+
       try {
         // Upload to Google Drive
         const result = await API.uploadFile(
-          e.target.result, file.name, file.type,
+          uploadData, file.name, file.type.startsWith('image/') ? 'image/jpeg' : file.type,
           siteCode, '', 'site_photo'
         );
+        if (!result || !result.fileUrl) throw new Error('Drive upload returned no URL');
         // Save link to Sheets attachments tab
         const saved = await API.post('/attachments', {
           instrument_id: '',
@@ -4642,8 +4687,8 @@ function uploadSitePhoto(siteCode, input) {
         // Fallback: keep base64 locally
         const idx = meta.photos.indexOf(placeholder);
         if (idx !== -1) meta.photos[idx] = { url: e.target.result, fileName: file.name, localOnly: true };
-        toast('⚠ Upload failed — photo saved locally only');
-        console.warn('uploadSitePhoto failed', err);
+        console.warn('uploadSitePhoto failed:', err);
+        toast('⚠ Upload failed: ' + (err.message || 'unknown error'));
       }
       render();
     };
@@ -5019,7 +5064,7 @@ function confirmCloseWO() {
   wo.status = 'Closed'; wo.technician = closedBy; wo.closedBy = closedBy; wo.closedDate = today();
   addHistory(wo.instrumentId, 'Work order closed', 'WO-' + woId + ' · ' + wo.type + ' · Completed by: ' + closedBy);
   addSecurityLog('APPROVAL', `Approved closure of WO-${String(woId).padStart(3,'0')}.`);
-  try{saveDB('workorder', wo.id);}catch(e){console.warn('saveDB',e);} closeModal();
+  closeModal();
   toast('✓ Work order WO-' + woId + ' marked complete');
 }
 
@@ -5072,13 +5117,8 @@ async function syncToServer() {
     for (const instId of _dirty.instruments) {
       const inst = db.instruments.find(i => String(i.id) === instId);
       if (!inst) { await API.del('/instruments/' + instId).catch(()=>{}); continue; }
-      if (!inst._synced) {
-        // New instrument — POST
-        const body = { name: inst.name, serial: inst.serial, status: inst.status, site: inst.site, notes: inst.notes||'' };
-        const created = await API.post('/instruments', body).catch(()=>null);
-        if (created) { inst.id = created.id; inst._synced = true; }
-      } else {
-        // Existing — PUT
+      // Only PUT existing synced instruments — new ones are POSTed directly in saveAdd
+      if (inst._synced && inst.id) {
         await API.put('/instruments/' + inst.id, {
           name: inst.name, serial: inst.serial, status: inst.status,
           site: inst.site, notes: inst.notes||'',
@@ -5091,33 +5131,8 @@ async function syncToServer() {
     _dirty.instruments.clear();
 
     // ── WORK ORDERS ─────────────────────────────────────────
-    for (const woId of _dirty.workOrders) {
-      const wo = db.workOrders.find(w => String(w.id) === woId);
-      if (!wo) { await API.del('/work-orders/' + woId).catch(()=>{}); continue; }
-      if (!wo._synced) {
-        const created = await API.post('/work-orders', {
-          instrument_id: wo.instrumentId, type: wo.type||'',
-          description: wo.description||'', tech_name: wo.technician||'', notes: wo.notes||''
-        }).catch(()=>null);
-        if (created) { wo.id = created.id; wo._synced = true; }
-      } else {
-        // Already synced via syncWorkOrder() which includes all closure fields
-        await API.put('/work-orders/' + wo.id, {
-          status:         wo.status,
-          type:           wo.type            || '',
-          description:    wo.description     || '',
-          tech_name:      wo.technician      || '',
-          notes:          wo.notes           || '',
-          submitted_by:   wo.submittedBy     || '',
-          submitted_date: wo.submittedDate   || '',
-          closed_by:      wo.closedBy        || '',
-          approved_by:    wo.approvedBy      || '',
-          restore_reason: wo.restoreReason   || '',
-          restored_by:    wo.restoredBy      || '',
-          restored_date:  wo.restoredDate    || ''
-        }).catch(()=>{});
-      }
-    }
+    // All WO saves are handled directly via API.post / syncWorkOrder
+    // Dirty sync for WOs is disabled to prevent duplicate rows
     _dirty.workOrders.clear();
 
     // ── SITES ───────────────────────────────────────────────
