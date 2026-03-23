@@ -845,30 +845,33 @@ const SEED = [
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyw4OrLWPQo4J-zul2eKqKFC3A5g2BopsycwD-hxpx7Hdq5kZ74iwfpPZ-BCoTxmx0k/exec';
 
 async function gasRequest(path, action, params, body) {
-  // ── STRATEGY: always use GET with body encoded as URL param ──
-  // GAS redirects POST requests which causes the body to be lost.
-  // GET requests go directly to doGet with no redirect — 100% reliable.
-  // Exception: file uploads use POST because base64 data is too large for URL params.
+  // ── STRATEGY: GET with every field as individual URL param ──
+  // This is the ONLY 100% reliable approach with GAS.
+  // GAS POST redirect drops the body. JSON body param parsing is fragile.
+  // Individual URL params arrive in e.parameter every time, no parsing needed.
+  // Exception: file uploads POST base64 data (too large for URL params).
 
   const isFileUpload = path === 'upload' && action === 'file';
-
   const url = new URL(GAS_URL);
   url.searchParams.set('path', path);
   url.searchParams.set('action', action);
-  if (params) Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, String(v)));
+
+  // Add explicit params (id, key, etc.)
+  if (params) Object.entries(params).forEach(([k,v]) => {
+    if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
+  });
 
   let response;
   try {
     if (isFileUpload) {
-      // File uploads: POST with JSON body (base64 data is too big for URL)
-      response = await fetch(url.toString(), {
-        method: 'POST',
-        body: JSON.stringify(body)
-      });
+      // File uploads: POST with JSON body — base64 too large for URL
+      response = await fetch(url.toString(), { method:'POST', body: JSON.stringify(body) });
     } else if (body !== null && body !== undefined) {
-      // All other mutations: GET with body serialized as URL param
-      // This avoids the GAS POST redirect that silently drops the body
-      url.searchParams.set('body', JSON.stringify(body));
+      // Mutations: flatten every body field into its own URL param
+      // GAS reads e.parameter.status, e.parameter.closed_by, etc. — no JSON parsing
+      Object.entries(body).forEach(([k,v]) => {
+        if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
+      });
       response = await fetch(url.toString());
     } else {
       response = await fetch(url.toString());
@@ -878,13 +881,10 @@ async function gasRequest(path, action, params, body) {
   }
 
   let j;
-  try {
-    j = await response.json();
-  } catch(parseErr) {
-    throw new Error('Invalid response from server (status ' + response.status + ')');
-  }
+  try { j = await response.json(); }
+  catch(e) { throw new Error('Bad response from server'); }
 
-  if (!j.ok) throw new Error(j.error || 'API error');
+  if (!j.ok) throw new Error(j.error || 'Server error');
   return j.data;
 }
 
