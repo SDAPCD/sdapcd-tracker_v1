@@ -916,12 +916,12 @@ const API = {
     const resource = parts[0];
     const sub = parts[1]; // e.g. 'archive', 'delete', 'rename', 'password'
     if (resource === 'admin') {
-      const action = (sub||'').replace(/-/g,'_');
+      const action = (sub||'').replace('-','_');
       return gasRequest('admin', action, null, body);
     }
     // Use sub-path as action if present (e.g. /sites/archive → action='archive')
     const action = sub || 'post';
-    const gasResource = resource.replace(/-/g,'_');
+    const gasResource = resource.replace('-','_');
     return gasRequest(gasResource, action, null, body);
   },
   async put(path, body) {
@@ -940,14 +940,14 @@ const API = {
     const sub = parts[2]; // e.g. 'archive', 'close', 'status', 'site', 'cert'
     const action = sub || 'patch';
     if (resource === 'work-orders') return gasRequest('work_orders', action === 'close' ? 'close' : 'put', {id}, body);
-    return gasRequest(resource.replace(/-/g,'_'), action, {id}, body);
+    return gasRequest(resource.replace('-','_'), action, {id}, body);
   },
   async del(path) {
     const clean = path.replace(/^\//, '');
     const parts = clean.split('/');
     const resource = parts[0];
     const id = parts[1];
-    return gasRequest(resource.replace(/-/g,'_'), 'delete', {id}, {});
+    return gasRequest(resource.replace('-','_'), 'delete', {id}, {});
   }
 };
 
@@ -2106,8 +2106,8 @@ function renderModal() {
   }
 
   if (ui.modal === 'editwo') {
-    const wo   = db.workOrders.find(w => String(w.id) === String(f.woId));
-    const inst = wo ? db.instruments.find(i => String(i.id) === String(wo.instrumentId)) : null;
+    const wo   = db.workOrders.find(w => w.id === f.woId);
+    const inst = wo ? db.instruments.find(i => i.id === wo.instrumentId) : null;
     return modalShell('EDIT WORK ORDER', `
       <div class="modal-sub">${esc(inst?inst.name:'?')} · ${esc(inst?inst.serial:'')}</div>
       ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
@@ -2118,9 +2118,9 @@ function renderModal() {
   }
 
   if (ui.modal === 'editinstrument') {
-    const availableStatuses = isField(db.instruments.find(x=>x.id===f.instId)||{}) ? FIELD_STATUSES
-                           : isVendor(db.instruments.find(x=>x.id===f.instId)||{}) ? VENDOR_STATUSES
-                           : SHOP_STATUSES;
+    const allStatuses = isField(db.instruments.find(x=>x.id===f.instId)||{}) ? FIELD_STATUSES
+                      : isVendor(db.instruments.find(x=>x.id===f.instId)||{}) ? VENDOR_STATUSES
+                      : SHOP_STATUSES;
     return modalShell('EDIT INSTRUMENT', `
       <div class="modal-sub">${esc(f.instName)} · ${esc(f.serial)}</div>
       ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
@@ -2137,7 +2137,7 @@ function renderModal() {
       <div class="form-row">
         <div class="form-group"><label class="form-label">Status</label>
           <select id="f-status" class="form-input">
-            ${availableStatuses.map(s=>`<option ${f.status===s?'selected':''}>${s}</option>`).join('')}
+            ${allStatuses.map(s=>`<option ${f.status===s?'selected':''}>${s}</option>`).join('')}
           </select>
         </div>
         <div class="form-group"><label class="form-label">Location</label>
@@ -2622,7 +2622,7 @@ function renderActivity() {
 
   // Sort by timestamp descending (most recent first)
   // ts format: "Mar 14, 2026, 10:30 AM" — use localeCompare reversed
-  allEvents.sort((a, b) => (b.epoch || 0) - (a.epoch || 0) || (b.ts||'').localeCompare(a.ts||''));
+  allEvents.sort((a, b) => (b.epoch || 0) - (a.epoch || 0) || b.ts.localeCompare(a.ts));
 
   // Filter categories
   const FILTERS = ['All','Work Order','Status Change','Site Change','Certification','Instrument'];
@@ -3403,6 +3403,40 @@ function renderAdmin() {
     }
   </div>
 
+  <div class="group">
+    <div class="group-hdr" onclick="toggleAdminSection(this)">
+      <div class="group-title" style="color:var(--red)">⚠ Danger Zone<span class="group-chevron">▼</span></div>
+    </div>
+    <div class="inst-table" style="border-color:rgba(248,113,113,.3)">
+
+      <div class="dz-row">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Clear History</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">Delete all audit history logs. Instruments, sites, work orders, and notes are preserved.</div>
+        </div>
+        <button class="btn-del-sm" style="padding:6px 16px;font-size:12px;flex-shrink:0" onclick="confirmClearHistory()">CLEAR HISTORY</button>
+      </div>
+
+      <div class="dz-row">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Clear Work Orders</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">Delete all work order records. Instruments, sites, history, and notes are preserved.</div>
+        </div>
+        <button class="btn-del-sm" style="padding:6px 16px;font-size:12px;flex-shrink:0" onclick="confirmClearWorkOrders()">CLEAR WORK ORDERS</button>
+      </div>
+
+      <div class="dz-row">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Clear Notes</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">Remove all notes from every instrument. Everything else is preserved.</div>
+        </div>
+        <button class="btn-del-sm" style="padding:6px 16px;font-size:12px;flex-shrink:0" onclick="confirmClearNotes()">CLEAR NOTES</button>
+      </div>
+
+
+    </div>
+  </div>
+
   <div class="group" id="debug-panel">
     <div class="group-hdr" onclick="toggleAdminSection(this)">
       <div class="group-title" style="color:var(--blue)">🔬 GAS Debug Tester<span class="group-chevron">▼</span></div>
@@ -4112,15 +4146,7 @@ function saveAdd() {
   API.post('/instruments', {
     name, serial, status: newInst.status, site, notes: notes||''
   }).then(result => {
-    if (result && result.id) {
-      const oldId = newInst.id;
-      newInst.id = result.id; newInst._synced = true;
-      // Migrate history entries from local ID to server ID
-      if (db.history[oldId] && oldId !== result.id) {
-        db.history[result.id] = db.history[oldId];
-        delete db.history[oldId];
-      }
-    }
+    if (result && result.id) { newInst.id = result.id; newInst._synced = true; }
   }).catch(e => console.warn('addInstrument failed', e));
   closeModal(); toast('Instrument added');
 }
@@ -4269,7 +4295,7 @@ function saveEditWO(wid) {
   const by   = getVal('f-by');
   const desc = getVal('f-desc');
   if (!by) { ui.form={...ui.form, err:'Technician name is required.', type, by, desc}; render(); return; }
-  const wo = db.workOrders.find(w => String(w.id) === String(wid));
+  const wo = db.workOrders.find(w => w.id === wid);
   if (!wo) return;
   wo.type = type; wo.technician = by; wo.description = desc;
   addHistory(wo.instrumentId, 'Work order updated', `WO-${wid} · ${type} · Tech: ${by}${desc ? ' · ' + desc.slice(0, 80) : ''}`);
@@ -4308,6 +4334,7 @@ function submitForClosure(wid) {
 }
 
 function openApproveWO(wid) {
+  if (!currentUserHasFullControl()) { toast('⚠ Only Full Control users can approve work orders'); return; }
   const wo = db.workOrders.find(w => String(w.id) === String(wid));
   if (!wo) return;
   ui.modal = 'approveworkorder';
@@ -4357,6 +4384,7 @@ function confirmRestoreWO() {
 }
 
 function confirmApproveWO() {
+  if (!currentUserHasFullControl()) { toast('⚠ Only Full Control users can approve work orders'); return; }
   const woId  = ui.form.woId;
   const notes = (document.getElementById('f-approve-notes')?.value || '').trim();
   const wo    = db.workOrders.find(w => String(w.id) === String(woId));
@@ -4682,10 +4710,9 @@ function confirmClearHistory() {
     icon: '⚠',
     msg: 'This will permanently delete all audit history logs for every instrument.',
     detail: 'Instruments, sites, work orders, and notes will not be affected.',
-    onConfirm: async () => {
+    onConfirm: () => {
       db.history = {};
-      await API.post('/admin/clear-history', {}).catch(e => console.warn('clear history failed', e));
-      render(); toast('All history cleared');
+      saveDB('workorder'); render(); toast('All history cleared');
     }
   });
 }
@@ -4696,16 +4723,26 @@ function confirmClearWorkOrders() {
     icon: '⚠',
     msg: 'This will permanently delete all work order records.',
     detail: 'Instruments, sites, history, and notes will not be affected.',
-    onConfirm: async () => {
+    onConfirm: () => {
       db.workOrders = [];
       db.woId = 1;
-      await API.post('/admin/clear-work-orders', {}).catch(e => console.warn('clear WOs failed', e));
-      render(); toast('All work orders cleared');
+      saveDB('workorder'); render(); toast('All work orders cleared');
     }
   });
 }
 
-// confirmClearNotes — defined below as window.confirmClearNotes (with server sync)
+function confirmClearNotes() {
+  showConfirm({
+    title: 'CLEAR ALL NOTES',
+    icon: '⚠',
+    msg: 'This will remove all notes from every instrument.',
+    detail: 'Instruments, sites, work orders, and history will not be affected.',
+    onConfirm: () => {
+      db.instruments.forEach(i => { i.notes = ''; });
+      saveDB('workorder'); render(); toast('All instrument notes cleared');
+    }
+  });
+}
 
 
 
@@ -4756,7 +4793,7 @@ function exportOpenWOPDF() {
     const inst = db.instruments.find(i => i.id === parseInt(instId));
     if (!inst) return '';
     const certInfo = (inst.name==='BC1060'&&inst.lastCertDate)
-      ? '<div class="wo-ch" style="background:#f5f5f5;border-bottom:1px solid #e5e7eb;padding:5px 14px;font-size:10px;font-family:\'IBM Plex Mono\',monospace;color:#222"><strong>EPA CERT</strong>&nbsp;·&nbsp;Last: '+esc(inst.lastCertDate)+'&nbsp;·&nbsp;Next: '+certDueDate(inst.lastCertDate, inst.certIntervalMonths)+'</div>' : '';
+      ? '<div class="wo-ch" style="background:#f5f5f5;border-bottom:1px solid #e5e7eb;padding:5px 14px;font-size:10px;font-family:\'IBM Plex Mono\',monospace;color:#222"><strong>EPA CERT</strong>&nbsp;·&nbsp;Last: '+esc(inst.lastCertDate)+'&nbsp;·&nbsp;Next: '+certDueDate(inst.lastCertDate)+'</div>' : '';
     const woRows = wos.sort((a,b)=>a.id-b.id).map(wo =>
       '<div class="wo-card"><div class="wo-ch"><span class="wo-num">WO-'+wo.id+'</span><span class="wo-type">'+esc(wo.type)+'</span><span class="wo-badge">OPEN</span><span class="wo-date">'+esc(wo.created)+'</span></div>'+
       '<div class="wo-body"><div class="wo-row"><span class="wo-rlbl">Technician:</span><span>'+esc(wo.technician||'—')+'</span></div>'+
@@ -4787,7 +4824,7 @@ function exportOpenWOPDF() {
 }
 
 function printWO(wid) {
-  const wo   = db.workOrders.find(w => String(w.id) === String(wid));
+  const wo   = db.workOrders.find(w => w.id === wid);
   if (!wo) return;
   const inst = db.instruments.find(i => i.id === wo.instrumentId);
   const gen  = new Date().toLocaleString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -4815,7 +4852,7 @@ function printWO(wid) {
   const epaCertRow = (inst && inst.name === 'BC1060')
     ? '<tr><td style="font-weight:600;color:#444;width:110px;white-space:nowrap;padding:7px 14px;border-bottom:1px solid #f3f4f6;border-right:1px solid #d1d5db">EPA Cert</td>'+
       '<td style="color:#111;padding:7px 14px;border-bottom:1px solid #f3f4f6;border-right:1px solid #d1d5db;font-family:monospace;font-size:11px">'+
-        (certDueDate(inst.lastCertDate, inst.certIntervalMonths)||'NO DATE')+
+        (certDueDate(inst.lastCertDate)||'NO DATE')+
       '</td>'+
       '<td style="font-weight:600;color:#444;width:110px;white-space:nowrap;padding:7px 14px;border-bottom:1px solid #f3f4f6;border-right:1px solid #d1d5db">WO Status</td>'+
       '<td style="padding:7px 14px;border-bottom:1px solid #f3f4f6"><span style="background:#f8f9fa;border:1px solid #d1d5db;border-radius:3px;padding:2px 8px;font-size:10px;font-weight:600;font-family:monospace;color:#222">'+esc(wo.status)+'</span></td></tr>'
@@ -4899,7 +4936,7 @@ function printHistory(id) {
   const generated = new Date().toLocaleString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
 
   const rows = hist.map(h =>
-    '<tr><td style="font-family:monospace;font-size:10px;color:#111;white-space:nowrap;padding:7px 10px;border-bottom:1px solid #f3f4f6">' + esc(h.ts||'') + '</td>' +
+    '<tr><td style="font-family:monospace;font-size:10px;color:#111;white-space:nowrap;padding:7px 10px;border-bottom:1px solid #f3f4f6">' + (h.ts||'') + '</td>' +
     '<td style="font-weight:600;color:#111;padding:7px 10px;border-bottom:1px solid #f3f4f6">' + esc(h.action||'') + '</td>' +
     '<td style="color:#111;padding:7px 10px;border-bottom:1px solid #f3f4f6">' + esc(h.detail||'') + '</td></tr>'
   ).join('');
@@ -4954,12 +4991,7 @@ function saveEditSite(idx) {
   if (old !== val) {
     db.sitesMeta[val] = db.sitesMeta[old] || {};
     delete db.sitesMeta[old];
-    db.instruments.forEach(i => {
-      if (i.site === old) {
-        i.site = val;
-        syncInstrument(i);
-      }
-    });
+    db.instruments.forEach(i => { if (i.site === old) i.site = val; });
   }
   db.sites[idx] = val;
   const existing = db.sitesMeta[val] || {};
@@ -4971,7 +5003,7 @@ function saveEditSite(idx) {
 
 
 // ── TECH SELECT ──────────────────────────────────────────────────────
-// techDatalist removed — was dead code
+function techDatalist(id) { return ''; }
 function techSelect(elId, selectedVal, placeholder) {
   const opts = db.techs.map(t =>
     '<option value="' + esc(t.name) + '"' + (selectedVal===t.name?' selected':'') + '>' + esc(t.name) + '</option>'
@@ -5086,75 +5118,6 @@ function driveViewUrl(url) {
   return url;
 }
 
-// ── DIRECT SITE PHOTO UPLOAD TO GOOGLE DRIVE ─────────────────────────
-function uploadSitePhotos(input, siteCode) {
-  const files = Array.from(input.files);
-  if (!files.length) return;
-  const maxSize = 4 * 1024 * 1024; // 4MB per image
-
-  files.forEach(file => {
-    if (file.size > maxSize) {
-      toast('⚠ ' + file.name + ' too large — max 4MB');
-      return;
-    }
-    if (!file.type.startsWith('image/')) {
-      toast('⚠ ' + file.name + ' is not an image');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = async e => {
-      toast('📷 Uploading ' + file.name + '...');
-      let uploadData = e.target.result;
-      try { uploadData = await compressImage(e.target.result, 1400, 0.85); }
-      catch(ce) { uploadData = e.target.result; }
-
-      try {
-        const result = await API.uploadFile(
-          uploadData,
-          file.name,
-          file.type || 'image/jpeg',
-          siteCode,
-          siteCode,
-          'Site Photo'
-        );
-        const saved = await API.post('/attachments', {
-          instrument_id: '',
-          site_code:     siteCode,
-          type:          'site_photo',
-          file_name:     file.name,
-          file_url:      result.fileUrl  || '',
-          file_id:       result.fileId   || '',
-          direct_url:    result.directUrl|| '',
-          tech:          ui.currentUser  || '',
-          date:          today(),
-          work_type:     '',
-          mime_type:     file.type || 'image/jpeg'
-        });
-        if (!db.attachments) db.attachments = [];
-        db.attachments.push({
-          id:        saved.id,
-          type:      'site_photo',
-          siteCode:  siteCode,
-          fileName:  file.name,
-          fileUrl:   result.fileUrl   || '',
-          fileId:    result.fileId    || '',
-          directUrl: result.directUrl || '',
-          tech:      ui.currentUser   || '',
-          date:      today(),
-          mimeType:  file.type || 'image/jpeg'
-        });
-        toast('📷 ' + file.name + ' uploaded');
-        render();
-      } catch(err) {
-        console.warn('Site photo upload failed:', err);
-        toast('⚠ Upload failed: ' + (err.message || String(err)).slice(0, 60));
-      }
-    };
-    reader.readAsDataURL(file);
-  });
-  input.value = '';
-}
-
 function openAddSitePhotoLink(siteCode) {
   ui.modal = 'addSitePhotoLink';
   ui.form  = { siteCode, driveUrl: '', label: '', err: '' };
@@ -5172,7 +5135,7 @@ async function saveAddSitePhotoLink() {
   }
   const directUrl = driveDirectUrl(url);
   const fileName  = label || ('Site Photo ' + new Date().toLocaleDateString());
-  /* showLoading/hideLoading removed — not defined */
+  showLoading('Saving link…');
   try {
     const saved = await API.post('/attachments', {
       instrument_id: '',
@@ -5195,23 +5158,17 @@ async function saveAddSitePhotoLink() {
     render();
   } catch(e) {
     ui.form.err = 'Save failed: ' + e.message; render();
-  } finally { /* loading indicator removed */ }
+  } finally { hideLoading(); }
 }
 
-function removeSitePhotoById(attId) {
+async function removeSitePhotoById(attId) {
   if (!attId) return;
-  showConfirm({
-    title: 'REMOVE PHOTO',
-    icon: '📷',
-    msg: 'Remove this photo link? The file will remain in Google Drive.',
-    onConfirm: async () => {
-      try {
-        await API.del('/attachments/' + attId);
-        db.attachments = (db.attachments||[]).filter(a => a.id !== attId);
-        toast('Photo removed'); render();
-      } catch(e) { toast('⚠ Remove failed: ' + e.message); }
-    }
-  });
+  if (!confirm('Remove this photo link? The file will remain in Google Drive.')) return;
+  try {
+    await API.del('/attachments/' + attId);
+    db.attachments = (db.attachments||[]).filter(a => a.id !== attId);
+    toast('Photo removed'); render();
+  } catch(e) { toast('⚠ Remove failed: ' + e.message); }
 }
 
 function saveAddSite() {
@@ -5222,6 +5179,7 @@ function saveAddSite() {
   const address  = getVal('f-site-address').trim();
   const lat      = getVal('f-site-lat').trim();
   const lng      = getVal('f-site-lng').trim();
+  const driveFolder = getVal('f-drive-folder').trim();
   if (!code) { ui.form={...ui.form,err:'Site code is required.'}; render(); return; }
   if (db.sites.includes(code)) { ui.form={...ui.form,err:'Site "'+code+'" already exists.'}; render(); return; }
   db.sites.push(code);
@@ -5445,14 +5403,13 @@ function renderSites() {
   <div style="margin-top:28px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
       <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--blue)">SITE PHOTOS</div>
-      ${currentUserHasFullControl() ? `
-        <div style="display:flex;gap:6px">
-          <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:var(--green-dim);border:1px solid rgba(63,185,80,.3);color:var(--green);font-family:var(--font-mono);font-size:11px;font-weight:600;padding:5px 12px;border-radius:var(--radius)">
-            <input type="file" accept="image/*" multiple style="display:none" onchange="uploadSitePhotos(this, '${esc(s)}')"/>
-            📷 Upload Photo
-          </label>
-          <button onclick="openAddSitePhotoLink('${esc(s)}')" style="background:var(--blue-dim);border:1px solid rgba(88,166,255,.3);color:var(--blue);font-family:var(--font-mono);font-size:11px;font-weight:600;padding:5px 12px;border-radius:var(--radius);cursor:pointer">+ Paste Drive Link</button>
-        </div>` : ''}
+      ${currentUserHasFullControl() ? `<button onclick="openAddSitePhotoLink('${esc(s)}')" style="background:var(--blue-dim);border:1px solid rgba(88,166,255,.3);color:var(--blue);font-family:var(--font-mono);font-size:11px;font-weight:600;padding:5px 12px;border-radius:var(--radius);cursor:pointer">+ Add Photo Link</button>` : ''}
+    </div>
+    <div style="padding:7px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-mono);font-size:10px;color:var(--subtle);margin-bottom:12px;line-height:1.7">
+      💡 <strong style="color:var(--muted)">How it works:</strong>
+      Upload a photo to <a href="https://drive.google.com" target="_blank" style="color:var(--blue)">Google Drive</a>
+      → right-click → <em>Get link</em> → paste it here.
+      The link is saved to your Sheets <code>attachments</code> tab.
     </div>
     ${photos.length === 0
       ? `<div style="padding:32px;text-align:center;color:var(--subtle);font-family:var(--font-mono);font-size:11px;background:var(--surface2);border:1px dashed var(--border);border-radius:var(--radius-lg)">
@@ -5572,16 +5529,7 @@ function setupAdminSections() {
   });
 }
 
-// ── TOGGLE GROUP (cert tracker collapse/expand) ──────────────────────
-function toggleGroup(prefix) {
-  const el = document.getElementById('cert-group-' + prefix.replace('cert-','').replace(/\s/g,'_'));
-  if (!el) return;
-  const group = el.closest('.group');
-  if (!group) return;
-  group.classList.toggle('group-collapsed');
-}
-
-// ── CONFIRM CLOSE WORK ORDER (deprecated — kept for safety) ─────────
+// ── CONFIRM CLOSE WORK ORDER ─────────────────────────────────────────
 function confirmCloseWO() {
   const woId     = ui.form.woId;
   const byEl     = document.getElementById('f-close-by');
@@ -5590,7 +5538,7 @@ function confirmCloseWO() {
   const confirmed = confEl ? confEl.checked : false;
   if (!closedBy) { ui.form={...ui.form,err:'Please select the technician who completed this work order.'}; render(); return; }
   if (!confirmed) { ui.form={...ui.form,err:'Please confirm all tasks are completed before closing.'}; render(); return; }
-  const wo = db.workOrders.find(w => String(w.id) === String(woId));
+  const wo = db.workOrders.find(w => w.id === woId);
   if (!wo) return;
   wo.status = 'Closed'; wo.technician = closedBy; wo.closedBy = closedBy; wo.closedDate = today();
   addHistory(wo.instrumentId, 'Work order closed', 'WO-' + woId + ' · ' + wo.type + ' · Completed by: ' + closedBy);
@@ -5638,7 +5586,6 @@ window.saveDB = function saveDB(type, id) {
 const _dirty = { instruments: new Set(), workOrders: new Set(), sites: false, techs: false, types: false, statuses: false };
 
 function markDirty(type, id) {
-  if (type === undefined) { ui.dirty = true; return; }
   if (id !== undefined) _dirty[type].add(String(id));
   else _dirty[type] = true;
 }
@@ -5822,16 +5769,9 @@ function resetSessionTimer() {
   }, SESSION_TIMEOUT_MS);
 }
 
-// Reset timer on any user activity (throttled to max once per 30s)
-let _lastSessionReset = 0;
+// Reset timer on any user activity
 ['mousedown','keydown','touchstart','scroll','click'].forEach(evt =>
-  document.addEventListener(evt, () => {
-    if (!ui.currentUser) return;
-    const now = Date.now();
-    if (now - _lastSessionReset < 30000) return;
-    _lastSessionReset = now;
-    resetSessionTimer();
-  }, { passive: true })
+  document.addEventListener(evt, () => { if (ui.currentUser) resetSessionTimer(); }, { passive: true })
 );
 
 // ── BOOTSTRAP ──────────────────────────────────────────────
