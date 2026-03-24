@@ -916,12 +916,12 @@ const API = {
     const resource = parts[0];
     const sub = parts[1]; // e.g. 'archive', 'delete', 'rename', 'password'
     if (resource === 'admin') {
-      const action = (sub||'').replace('-','_');
+      const action = (sub||'').replace(/-/g,'_');
       return gasRequest('admin', action, null, body);
     }
     // Use sub-path as action if present (e.g. /sites/archive → action='archive')
     const action = sub || 'post';
-    const gasResource = resource.replace('-','_');
+    const gasResource = resource.replace(/-/g,'_');
     return gasRequest(gasResource, action, null, body);
   },
   async put(path, body) {
@@ -940,14 +940,14 @@ const API = {
     const sub = parts[2]; // e.g. 'archive', 'close', 'status', 'site', 'cert'
     const action = sub || 'patch';
     if (resource === 'work-orders') return gasRequest('work_orders', action === 'close' ? 'close' : 'put', {id}, body);
-    return gasRequest(resource.replace('-','_'), action, {id}, body);
+    return gasRequest(resource.replace(/-/g,'_'), action, {id}, body);
   },
   async del(path) {
     const clean = path.replace(/^\//, '');
     const parts = clean.split('/');
     const resource = parts[0];
     const id = parts[1];
-    return gasRequest(resource.replace('-','_'), 'delete', {id}, {});
+    return gasRequest(resource.replace(/-/g,'_'), 'delete', {id}, {});
   }
 };
 
@@ -2106,8 +2106,8 @@ function renderModal() {
   }
 
   if (ui.modal === 'editwo') {
-    const wo   = db.workOrders.find(w => w.id === f.woId);
-    const inst = wo ? db.instruments.find(i => i.id === wo.instrumentId) : null;
+    const wo   = db.workOrders.find(w => String(w.id) === String(f.woId));
+    const inst = wo ? db.instruments.find(i => String(i.id) === String(wo.instrumentId)) : null;
     return modalShell('EDIT WORK ORDER', `
       <div class="modal-sub">${esc(inst?inst.name:'?')} · ${esc(inst?inst.serial:'')}</div>
       ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
@@ -2118,9 +2118,9 @@ function renderModal() {
   }
 
   if (ui.modal === 'editinstrument') {
-    const allStatuses = isField(db.instruments.find(x=>x.id===f.instId)||{}) ? FIELD_STATUSES
-                      : isVendor(db.instruments.find(x=>x.id===f.instId)||{}) ? VENDOR_STATUSES
-                      : SHOP_STATUSES;
+    const availableStatuses = isField(db.instruments.find(x=>x.id===f.instId)||{}) ? FIELD_STATUSES
+                           : isVendor(db.instruments.find(x=>x.id===f.instId)||{}) ? VENDOR_STATUSES
+                           : SHOP_STATUSES;
     return modalShell('EDIT INSTRUMENT', `
       <div class="modal-sub">${esc(f.instName)} · ${esc(f.serial)}</div>
       ${f.err ? `<div class="err-msg">${f.err}</div>` : ''}
@@ -2137,7 +2137,7 @@ function renderModal() {
       <div class="form-row">
         <div class="form-group"><label class="form-label">Status</label>
           <select id="f-status" class="form-input">
-            ${allStatuses.map(s=>`<option ${f.status===s?'selected':''}>${s}</option>`).join('')}
+            ${availableStatuses.map(s=>`<option ${f.status===s?'selected':''}>${s}</option>`).join('')}
           </select>
         </div>
         <div class="form-group"><label class="form-label">Location</label>
@@ -2622,7 +2622,7 @@ function renderActivity() {
 
   // Sort by timestamp descending (most recent first)
   // ts format: "Mar 14, 2026, 10:30 AM" — use localeCompare reversed
-  allEvents.sort((a, b) => (b.epoch || 0) - (a.epoch || 0) || b.ts.localeCompare(a.ts));
+  allEvents.sort((a, b) => (b.epoch || 0) - (a.epoch || 0) || (b.ts||'').localeCompare(a.ts||''));
 
   // Filter categories
   const FILTERS = ['All','Work Order','Status Change','Site Change','Certification','Instrument'];
@@ -3138,6 +3138,24 @@ function renderAdmin() {
     </div>
   </div>
 
+  <div class="group" style="margin-bottom:18px;border:2px solid rgba(248,81,73,.35);background:rgba(248,81,73,.04)">
+    <div class="group-hdr" style="background:rgba(248,81,73,.08)">
+      <div class="group-title" style="color:var(--red)">🔌 GAS Connection Tester</div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">Run these tests to diagnose WO sync issues</div>
+    </div>
+    <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-export" onclick="gasTestRead()">① Test READ (load db)</button>
+        <button class="btn-export" onclick="gasTestAppend()">② Test APPEND (write wo_event)</button>
+        <button class="btn-export" onclick="gasTestWOUpdate()">③ Test WO UPDATE (close first open WO)</button>
+        <button class="btn-export" onclick="gasTestMigrate()">④ Run migrateSheets</button>
+      </div>
+      <div id="gas-test-result" style="font-family:var(--font-mono);font-size:11px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);min-height:40px;white-space:pre-wrap;line-height:1.6;color:var(--text)">
+        Click a test button above to see results here.
+      </div>
+    </div>
+  </div>
+
   <div class="group">
     <div class="group-hdr" onclick="toggleAdminSection(this)">
       <div class="group-title">⊟ Instruments<span class="group-chevron">▼</span></div>
@@ -3385,39 +3403,154 @@ function renderAdmin() {
     }
   </div>
 
-  <div class="group">
+  <div class="group" id="debug-panel">
     <div class="group-hdr" onclick="toggleAdminSection(this)">
-      <div class="group-title" style="color:var(--red)">⚠ Danger Zone<span class="group-chevron">▼</span></div>
+      <div class="group-title" style="color:var(--blue)">🔬 GAS Debug Tester<span class="group-chevron">▼</span></div>
     </div>
-    <div class="inst-table" style="border-color:rgba(248,113,113,.3)">
-
-      <div class="dz-row">
-        <div>
-          <div style="font-size:13px;font-weight:600;color:var(--text)">Clear History</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px">Delete all audit history logs. Instruments, sites, work orders, and notes are preserved.</div>
-        </div>
-        <button class="btn-del-sm" style="padding:6px 16px;font-size:12px;flex-shrink:0" onclick="confirmClearHistory()">CLEAR HISTORY</button>
+    <div style="padding:16px;background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius-lg) var(--radius-lg)">
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-bottom:14px">
+        Use these tests to find exactly where GAS fails. Each test shows the raw URL sent and the raw response received.
       </div>
 
-      <div class="dz-row">
-        <div>
-          <div style="font-size:13px;font-weight:600;color:var(--text)">Clear Work Orders</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px">Delete all work order records. Instruments, sites, history, and notes are preserved.</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+
+        <div style="padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg)">
+          <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--blue);margin-bottom:8px">TEST 1 — Read (GET /db)</div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-bottom:8px">Confirms GAS is reachable and responding.</div>
+          <button onclick="debugTest1()" style="background:var(--blue-dim);border:1px solid rgba(88,166,255,.3);color:var(--blue);font-family:var(--font-mono);font-size:11px;padding:6px 14px;border-radius:var(--radius);cursor:pointer;font-weight:600">▶ Run Test 1</button>
+          <div id="debug-result-1" style="margin-top:8px;display:none"></div>
         </div>
-        <button class="btn-del-sm" style="padding:6px 16px;font-size:12px;flex-shrink:0" onclick="confirmClearWorkOrders()">CLEAR WORK ORDERS</button>
-      </div>
 
-      <div class="dz-row">
-        <div>
-          <div style="font-size:13px;font-weight:600;color:var(--text)">Clear Notes</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px">Remove all notes from every instrument. Everything else is preserved.</div>
+        <div style="padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg)">
+          <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--amber);margin-bottom:8px">TEST 2 — Write via POST (update WO status)</div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-bottom:6px">Pick a real Open WO — this will write "Closed" to its status column.</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+            <select id="debug-wo-select" style="font-family:var(--font-mono);font-size:11px;padding:5px 8px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text)">
+              ${db.workOrders.filter(w=>w.status!=='Closed').map(w => {
+                const i = db.instruments.find(x=>x.id===w.instrumentId);
+                return `<option value="${w.id}|${w.instrumentId}">WO-${w.id} · ${i?i.name:'?'} · ${w.status}</option>`;
+              }).join('') || '<option value="">No open WOs</option>'}
+            </select>
+          </div>
+          <button onclick="debugTest2('post')" style="background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);color:var(--amber);font-family:var(--font-mono);font-size:11px;padding:6px 14px;border-radius:var(--radius);cursor:pointer;font-weight:600">▶ Test via POST</button>
+          <div id="debug-result-2-post" style="margin-top:8px;display:none"></div>
         </div>
-        <button class="btn-del-sm" style="padding:6px 16px;font-size:12px;flex-shrink:0" onclick="confirmClearNotes()">CLEAR NOTES</button>
+
+        <div style="padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg)">
+          <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--green);margin-bottom:8px">TEST 3 — Write via GET params (update WO status)</div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-bottom:6px">Same WO as Test 2 — sends status as URL param instead of POST body.</div>
+          <button onclick="debugTest2('get')" style="background:var(--green-dim);border:1px solid rgba(63,185,80,.3);color:var(--green);font-family:var(--font-mono);font-size:11px;padding:6px 14px;border-radius:var(--radius);cursor:pointer;font-weight:600">▶ Test via GET</button>
+          <div id="debug-result-2-get" style="margin-top:8px;display:none"></div>
+        </div>
+
+        <div style="padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg)">
+          <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--purple);margin-bottom:8px">TEST 4 — GAS Execution Logs</div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-bottom:8px">After running Tests 2 or 3, check your GAS execution logs:<br>
+          GAS Editor → Executions (left sidebar) → look for Logger.log entries.</div>
+          <a href="https://script.google.com" target="_blank" style="background:var(--surface);border:1px solid var(--border2);color:var(--text);font-family:var(--font-mono);font-size:11px;padding:6px 14px;border-radius:var(--radius);text-decoration:none;display:inline-block">↗ Open GAS Editor</a>
+        </div>
+
       </div>
-
-
     </div>
   </div>`;
+}
+
+// ── DEBUG FUNCTIONS ────────────────────────────────────────────
+function debugShow(elId, data, isError) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.style.display = 'block';
+  const color = isError ? 'var(--red)' : 'var(--green)';
+  const json = JSON.stringify(data, null, 2);
+  el.innerHTML = `<pre style="font-family:var(--font-mono);font-size:10px;color:${color};background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto">${esc(json)}</pre>`;
+}
+
+async function debugTest1() {
+  const el = document.getElementById('debug-result-1');
+  el.style.display = 'block';
+  el.innerHTML = '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">⏳ Sending request…</span>';
+  const url = new URL(GAS_URL);
+  url.searchParams.set('path', 'db');
+  url.searchParams.set('action', 'get');
+  const fullUrl = url.toString();
+  try {
+    const r = await fetch(fullUrl);
+    const text = await r.text();
+    let json; try { json = JSON.parse(text); } catch(e) { json = {raw: text}; }
+    const preview = { ok: json.ok, hasInstruments: !!(json.data && json.data.instruments), count: json.data && json.data.instruments ? json.data.instruments.length : null, httpStatus: r.status };
+    debugShow('debug-result-1', { result: 'SUCCESS', url: fullUrl.slice(0,120)+'...', response: preview }, false);
+  } catch(e) {
+    debugShow('debug-result-1', { result: 'FAILED', url: fullUrl.slice(0,120)+'...', error: e.message }, true);
+  }
+}
+
+async function debugTest2(method) {
+  const sel = document.getElementById('debug-wo-select');
+  const val = sel && sel.value;
+  const elId = 'debug-result-2-' + method;
+  const el = document.getElementById(elId);
+  if (!val || val.includes('No open')) {
+    el.style.display = 'block';
+    el.innerHTML = '<span style="font-family:var(--font-mono);font-size:10px;color:var(--red)">No open WO selected</span>';
+    return;
+  }
+  const [woId, instId] = val.split('|');
+  el.style.display = 'block';
+  el.innerHTML = '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">⏳ Sending ' + method.toUpperCase() + ' request…</span>';
+
+  const url = new URL(GAS_URL);
+  url.searchParams.set('path', 'work-orders');
+  url.searchParams.set('action', 'put');
+  url.searchParams.set('id', woId);
+
+  const testFields = {
+    status:       'DEBUG_TEST',
+    instrument_id: instId,
+    closed_by:    'DEBUG_USER',
+    approved_by:  'DEBUG_USER',
+    notes:        'This is a debug test — safe to ignore'
+  };
+
+  let response, text, json;
+  const sentUrl = url.toString();
+  try {
+    if (method === 'post') {
+      response = await fetch(sentUrl, { method: 'POST', body: JSON.stringify(testFields) });
+    } else {
+      Object.entries(testFields).forEach(([k,v]) => url.searchParams.set(k, v));
+      response = await fetch(url.toString());
+    }
+    text = await response.text();
+    try { json = JSON.parse(text); } catch(e) { json = { parseError: e.message, raw: text.slice(0,300) }; }
+    const isOk = json && json.ok;
+    debugShow(elId, {
+      method: method.toUpperCase(),
+      httpStatus: response.status,
+      redirected: response.redirected,
+      finalUrl: response.url ? response.url.slice(0,100)+'...' : '?',
+      sentFields: testFields,
+      rawResponse: json
+    }, !isOk);
+
+    if (isOk) {
+      // Revert the debug change back to original status
+      const wo = db.workOrders.find(w => String(w.id) === String(woId));
+      if (wo) {
+        const revertUrl = new URL(GAS_URL);
+        revertUrl.searchParams.set('path', 'work-orders');
+        revertUrl.searchParams.set('action', 'put');
+        revertUrl.searchParams.set('id', woId);
+        revertUrl.searchParams.set('status', wo.status);
+        revertUrl.searchParams.set('instrument_id', instId);
+        revertUrl.searchParams.set('closed_by', '');
+        revertUrl.searchParams.set('approved_by', '');
+        revertUrl.searchParams.set('notes', wo.notes||'');
+        await fetch(revertUrl.toString()).catch(()=>{});
+      }
+    }
+  } catch(e) {
+    debugShow(elId, { method: method.toUpperCase(), error: e.message, sentUrl: sentUrl.slice(0,200) }, true);
+  }
 }
 
 function exportDeleteLogCSV() {
@@ -3486,6 +3619,104 @@ function submitAdminPassword() {
   ui.page = 'admin';
   render();
 }
+// ── GAS CONNECTION TESTS ─────────────────────────────────────
+function gasTestLog(msg, ok) {
+  const el = document.getElementById('gas-test-result');
+  if (!el) return;
+  const ts = new Date().toLocaleTimeString();
+  const icon = ok === true ? '✅' : ok === false ? '❌' : '⏳';
+  el.textContent = icon + ' [' + ts + '] ' + msg;
+  el.style.color = ok === true ? 'var(--green)' : ok === false ? 'var(--red)' : 'var(--amber)';
+}
+
+async function gasTestRead() {
+  gasTestLog('Testing READ — calling getFullDB...', null);
+  try {
+    const url = new URL(GAS_URL);
+    url.searchParams.set('path', 'db');
+    url.searchParams.set('action', 'get');
+    const r = await fetch(url.toString());
+    const j = await r.json();
+    if (j.ok) {
+      const wos = j.data?.workOrders?.length || 0;
+      const insts = j.data?.instruments?.length || 0;
+      gasTestLog('READ OK — ' + insts + ' instruments, ' + wos + ' work orders loaded from Sheets', true);
+    } else {
+      gasTestLog('READ FAILED — GAS error: ' + j.error, false);
+    }
+  } catch(e) {
+    gasTestLog('READ FAILED — Network error: ' + e.message, false);
+  }
+}
+
+async function gasTestAppend() {
+  gasTestLog('Testing APPEND — writing test event to wo_events...', null);
+  try {
+    const url = new URL(GAS_URL);
+    url.searchParams.set('path', 'work_events');
+    url.searchParams.set('action', 'test');
+    url.searchParams.set('wo_id', '0');
+    url.searchParams.set('status', 'TEST_' + Date.now());
+    url.searchParams.set('instrument_id', '0');
+    url.searchParams.set('closed_by', ui.currentUser || 'test');
+    const r = await fetch(url.toString());
+    const j = await r.json();
+    if (j.ok) {
+      gasTestLog('APPEND OK — event written. Check wo_events tab in Sheets. Result: ' + JSON.stringify(j.data), true);
+    } else {
+      gasTestLog('APPEND FAILED — GAS error: ' + j.error, false);
+    }
+  } catch(e) {
+    gasTestLog('APPEND FAILED — Network error: ' + e.message, false);
+  }
+}
+
+async function gasTestWOUpdate() {
+  const openWO = db.workOrders.find(w => w.status === 'Open' || w.status === 'Pending Closure');
+  if (!openWO) { gasTestLog('No open WOs found to test with — create one first', false); return; }
+  gasTestLog('Testing WO UPDATE — sending status update for WO-' + openWO.id + '...', null);
+  try {
+    const url = new URL(GAS_URL);
+    url.searchParams.set('path', 'work-orders');
+    url.searchParams.set('action', 'put');
+    url.searchParams.set('id', String(openWO.id));
+    url.searchParams.set('instrument_id', String(openWO.instrumentId));
+    url.searchParams.set('status', openWO.status); // same status — just testing it writes
+    url.searchParams.set('closed_by', ui.currentUser || 'test');
+    url.searchParams.set('approved_by', ui.currentUser || 'test');
+    const r = await fetch(url.toString());
+    const text = await r.text();
+    let j;
+    try { j = JSON.parse(text); } catch(e) { gasTestLog('FAILED — non-JSON response: ' + text.slice(0,200), false); return; }
+    if (j.ok) {
+      gasTestLog('WO UPDATE OK — WO-' + openWO.id + ' event appended. Check wo_events tab. Result: ' + JSON.stringify(j.data), true);
+    } else {
+      gasTestLog('WO UPDATE FAILED — GAS error: ' + (j.error||'unknown'), false);
+    }
+  } catch(e) {
+    gasTestLog('WO UPDATE FAILED — Network error: ' + e.message, false);
+  }
+}
+
+async function gasTestMigrate() {
+  gasTestLog('Running migrateSheets — creating wo_events tab if missing...', null);
+  try {
+    const url = new URL(GAS_URL);
+    url.searchParams.set('path', 'admin');
+    url.searchParams.set('action', 'migrate');
+    const r = await fetch(url.toString());
+    const j = await r.json();
+    if (j.ok) {
+      gasTestLog('MIGRATE OK — all sheet tabs verified/created. wo_events tab should now exist.', true);
+    } else {
+      gasTestLog('MIGRATE FAILED — GAS error: ' + j.error, false);
+    }
+  } catch(e) {
+    gasTestLog('MIGRATE FAILED — Network error: ' + e.message, false);
+  }
+}
+// ─────────────────────────────────────────────────────────────
+
 function lockAdmin() { navigateTo('dashboard'); }
 function openChangePassword() { ui.modal = 'changepw'; ui.form = {}; render(); }
 function saveAdminPassword() {
@@ -3881,7 +4112,15 @@ function saveAdd() {
   API.post('/instruments', {
     name, serial, status: newInst.status, site, notes: notes||''
   }).then(result => {
-    if (result && result.id) { newInst.id = result.id; newInst._synced = true; }
+    if (result && result.id) {
+      const oldId = newInst.id;
+      newInst.id = result.id; newInst._synced = true;
+      // Migrate history entries from local ID to server ID
+      if (db.history[oldId] && oldId !== result.id) {
+        db.history[result.id] = db.history[oldId];
+        delete db.history[oldId];
+      }
+    }
   }).catch(e => console.warn('addInstrument failed', e));
   closeModal(); toast('Instrument added');
 }
@@ -4030,7 +4269,7 @@ function saveEditWO(wid) {
   const by   = getVal('f-by');
   const desc = getVal('f-desc');
   if (!by) { ui.form={...ui.form, err:'Technician name is required.', type, by, desc}; render(); return; }
-  const wo = db.workOrders.find(w => w.id === wid);
+  const wo = db.workOrders.find(w => String(w.id) === String(wid));
   if (!wo) return;
   wo.type = type; wo.technician = by; wo.description = desc;
   addHistory(wo.instrumentId, 'Work order updated', `WO-${wid} · ${type} · Tech: ${by}${desc ? ' · ' + desc.slice(0, 80) : ''}`);
@@ -4443,9 +4682,10 @@ function confirmClearHistory() {
     icon: '⚠',
     msg: 'This will permanently delete all audit history logs for every instrument.',
     detail: 'Instruments, sites, work orders, and notes will not be affected.',
-    onConfirm: () => {
+    onConfirm: async () => {
       db.history = {};
-      saveDB('workorder'); render(); toast('All history cleared');
+      await API.post('/admin/clear-history', {}).catch(e => console.warn('clear history failed', e));
+      render(); toast('All history cleared');
     }
   });
 }
@@ -4456,26 +4696,16 @@ function confirmClearWorkOrders() {
     icon: '⚠',
     msg: 'This will permanently delete all work order records.',
     detail: 'Instruments, sites, history, and notes will not be affected.',
-    onConfirm: () => {
+    onConfirm: async () => {
       db.workOrders = [];
       db.woId = 1;
-      saveDB('workorder'); render(); toast('All work orders cleared');
+      await API.post('/admin/clear-work-orders', {}).catch(e => console.warn('clear WOs failed', e));
+      render(); toast('All work orders cleared');
     }
   });
 }
 
-function confirmClearNotes() {
-  showConfirm({
-    title: 'CLEAR ALL NOTES',
-    icon: '⚠',
-    msg: 'This will remove all notes from every instrument.',
-    detail: 'Instruments, sites, work orders, and history will not be affected.',
-    onConfirm: () => {
-      db.instruments.forEach(i => { i.notes = ''; });
-      saveDB('workorder'); render(); toast('All instrument notes cleared');
-    }
-  });
-}
+// confirmClearNotes — defined below as window.confirmClearNotes (with server sync)
 
 
 
@@ -4526,7 +4756,7 @@ function exportOpenWOPDF() {
     const inst = db.instruments.find(i => i.id === parseInt(instId));
     if (!inst) return '';
     const certInfo = (inst.name==='BC1060'&&inst.lastCertDate)
-      ? '<div class="wo-ch" style="background:#f5f5f5;border-bottom:1px solid #e5e7eb;padding:5px 14px;font-size:10px;font-family:\'IBM Plex Mono\',monospace;color:#222"><strong>EPA CERT</strong>&nbsp;·&nbsp;Last: '+esc(inst.lastCertDate)+'&nbsp;·&nbsp;Next: '+certDueDate(inst.lastCertDate)+'</div>' : '';
+      ? '<div class="wo-ch" style="background:#f5f5f5;border-bottom:1px solid #e5e7eb;padding:5px 14px;font-size:10px;font-family:\'IBM Plex Mono\',monospace;color:#222"><strong>EPA CERT</strong>&nbsp;·&nbsp;Last: '+esc(inst.lastCertDate)+'&nbsp;·&nbsp;Next: '+certDueDate(inst.lastCertDate, inst.certIntervalMonths)+'</div>' : '';
     const woRows = wos.sort((a,b)=>a.id-b.id).map(wo =>
       '<div class="wo-card"><div class="wo-ch"><span class="wo-num">WO-'+wo.id+'</span><span class="wo-type">'+esc(wo.type)+'</span><span class="wo-badge">OPEN</span><span class="wo-date">'+esc(wo.created)+'</span></div>'+
       '<div class="wo-body"><div class="wo-row"><span class="wo-rlbl">Technician:</span><span>'+esc(wo.technician||'—')+'</span></div>'+
@@ -4557,7 +4787,7 @@ function exportOpenWOPDF() {
 }
 
 function printWO(wid) {
-  const wo   = db.workOrders.find(w => w.id === wid);
+  const wo   = db.workOrders.find(w => String(w.id) === String(wid));
   if (!wo) return;
   const inst = db.instruments.find(i => i.id === wo.instrumentId);
   const gen  = new Date().toLocaleString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -4585,7 +4815,7 @@ function printWO(wid) {
   const epaCertRow = (inst && inst.name === 'BC1060')
     ? '<tr><td style="font-weight:600;color:#444;width:110px;white-space:nowrap;padding:7px 14px;border-bottom:1px solid #f3f4f6;border-right:1px solid #d1d5db">EPA Cert</td>'+
       '<td style="color:#111;padding:7px 14px;border-bottom:1px solid #f3f4f6;border-right:1px solid #d1d5db;font-family:monospace;font-size:11px">'+
-        (certDueDate(inst.lastCertDate)||'NO DATE')+
+        (certDueDate(inst.lastCertDate, inst.certIntervalMonths)||'NO DATE')+
       '</td>'+
       '<td style="font-weight:600;color:#444;width:110px;white-space:nowrap;padding:7px 14px;border-bottom:1px solid #f3f4f6;border-right:1px solid #d1d5db">WO Status</td>'+
       '<td style="padding:7px 14px;border-bottom:1px solid #f3f4f6"><span style="background:#f8f9fa;border:1px solid #d1d5db;border-radius:3px;padding:2px 8px;font-size:10px;font-weight:600;font-family:monospace;color:#222">'+esc(wo.status)+'</span></td></tr>'
@@ -4669,7 +4899,7 @@ function printHistory(id) {
   const generated = new Date().toLocaleString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
 
   const rows = hist.map(h =>
-    '<tr><td style="font-family:monospace;font-size:10px;color:#111;white-space:nowrap;padding:7px 10px;border-bottom:1px solid #f3f4f6">' + (h.ts||'') + '</td>' +
+    '<tr><td style="font-family:monospace;font-size:10px;color:#111;white-space:nowrap;padding:7px 10px;border-bottom:1px solid #f3f4f6">' + esc(h.ts||'') + '</td>' +
     '<td style="font-weight:600;color:#111;padding:7px 10px;border-bottom:1px solid #f3f4f6">' + esc(h.action||'') + '</td>' +
     '<td style="color:#111;padding:7px 10px;border-bottom:1px solid #f3f4f6">' + esc(h.detail||'') + '</td></tr>'
   ).join('');
@@ -4724,7 +4954,12 @@ function saveEditSite(idx) {
   if (old !== val) {
     db.sitesMeta[val] = db.sitesMeta[old] || {};
     delete db.sitesMeta[old];
-    db.instruments.forEach(i => { if (i.site === old) i.site = val; });
+    db.instruments.forEach(i => {
+      if (i.site === old) {
+        i.site = val;
+        syncInstrument(i);
+      }
+    });
   }
   db.sites[idx] = val;
   const existing = db.sitesMeta[val] || {};
@@ -4736,7 +4971,7 @@ function saveEditSite(idx) {
 
 
 // ── TECH SELECT ──────────────────────────────────────────────────────
-function techDatalist(id) { return ''; }
+// techDatalist removed — was dead code
 function techSelect(elId, selectedVal, placeholder) {
   const opts = db.techs.map(t =>
     '<option value="' + esc(t.name) + '"' + (selectedVal===t.name?' selected':'') + '>' + esc(t.name) + '</option>'
@@ -4851,6 +5086,75 @@ function driveViewUrl(url) {
   return url;
 }
 
+// ── DIRECT SITE PHOTO UPLOAD TO GOOGLE DRIVE ─────────────────────────
+function uploadSitePhotos(input, siteCode) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  const maxSize = 4 * 1024 * 1024; // 4MB per image
+
+  files.forEach(file => {
+    if (file.size > maxSize) {
+      toast('⚠ ' + file.name + ' too large — max 4MB');
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      toast('⚠ ' + file.name + ' is not an image');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = async e => {
+      toast('📷 Uploading ' + file.name + '...');
+      let uploadData = e.target.result;
+      try { uploadData = await compressImage(e.target.result, 1400, 0.85); }
+      catch(ce) { uploadData = e.target.result; }
+
+      try {
+        const result = await API.uploadFile(
+          uploadData,
+          file.name,
+          file.type || 'image/jpeg',
+          siteCode,
+          siteCode,
+          'Site Photo'
+        );
+        const saved = await API.post('/attachments', {
+          instrument_id: '',
+          site_code:     siteCode,
+          type:          'site_photo',
+          file_name:     file.name,
+          file_url:      result.fileUrl  || '',
+          file_id:       result.fileId   || '',
+          direct_url:    result.directUrl|| '',
+          tech:          ui.currentUser  || '',
+          date:          today(),
+          work_type:     '',
+          mime_type:     file.type || 'image/jpeg'
+        });
+        if (!db.attachments) db.attachments = [];
+        db.attachments.push({
+          id:        saved.id,
+          type:      'site_photo',
+          siteCode:  siteCode,
+          fileName:  file.name,
+          fileUrl:   result.fileUrl   || '',
+          fileId:    result.fileId    || '',
+          directUrl: result.directUrl || '',
+          tech:      ui.currentUser   || '',
+          date:      today(),
+          mimeType:  file.type || 'image/jpeg'
+        });
+        toast('📷 ' + file.name + ' uploaded');
+        render();
+      } catch(err) {
+        console.warn('Site photo upload failed:', err);
+        toast('⚠ Upload failed: ' + (err.message || String(err)).slice(0, 60));
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
 function openAddSitePhotoLink(siteCode) {
   ui.modal = 'addSitePhotoLink';
   ui.form  = { siteCode, driveUrl: '', label: '', err: '' };
@@ -4868,7 +5172,7 @@ async function saveAddSitePhotoLink() {
   }
   const directUrl = driveDirectUrl(url);
   const fileName  = label || ('Site Photo ' + new Date().toLocaleDateString());
-  showLoading('Saving link…');
+  /* showLoading/hideLoading removed — not defined */
   try {
     const saved = await API.post('/attachments', {
       instrument_id: '',
@@ -4891,17 +5195,23 @@ async function saveAddSitePhotoLink() {
     render();
   } catch(e) {
     ui.form.err = 'Save failed: ' + e.message; render();
-  } finally { hideLoading(); }
+  } finally { /* loading indicator removed */ }
 }
 
-async function removeSitePhotoById(attId) {
+function removeSitePhotoById(attId) {
   if (!attId) return;
-  if (!confirm('Remove this photo link? The file will remain in Google Drive.')) return;
-  try {
-    await API.del('/attachments/' + attId);
-    db.attachments = (db.attachments||[]).filter(a => a.id !== attId);
-    toast('Photo removed'); render();
-  } catch(e) { toast('⚠ Remove failed: ' + e.message); }
+  showConfirm({
+    title: 'REMOVE PHOTO',
+    icon: '📷',
+    msg: 'Remove this photo link? The file will remain in Google Drive.',
+    onConfirm: async () => {
+      try {
+        await API.del('/attachments/' + attId);
+        db.attachments = (db.attachments||[]).filter(a => a.id !== attId);
+        toast('Photo removed'); render();
+      } catch(e) { toast('⚠ Remove failed: ' + e.message); }
+    }
+  });
 }
 
 function saveAddSite() {
@@ -4912,7 +5222,6 @@ function saveAddSite() {
   const address  = getVal('f-site-address').trim();
   const lat      = getVal('f-site-lat').trim();
   const lng      = getVal('f-site-lng').trim();
-  const driveFolder = getVal('f-drive-folder').trim();
   if (!code) { ui.form={...ui.form,err:'Site code is required.'}; render(); return; }
   if (db.sites.includes(code)) { ui.form={...ui.form,err:'Site "'+code+'" already exists.'}; render(); return; }
   db.sites.push(code);
@@ -5136,13 +5445,14 @@ function renderSites() {
   <div style="margin-top:28px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
       <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--blue)">SITE PHOTOS</div>
-      ${currentUserHasFullControl() ? `<button onclick="openAddSitePhotoLink('${esc(s)}')" style="background:var(--blue-dim);border:1px solid rgba(88,166,255,.3);color:var(--blue);font-family:var(--font-mono);font-size:11px;font-weight:600;padding:5px 12px;border-radius:var(--radius);cursor:pointer">+ Add Photo Link</button>` : ''}
-    </div>
-    <div style="padding:7px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-mono);font-size:10px;color:var(--subtle);margin-bottom:12px;line-height:1.7">
-      💡 <strong style="color:var(--muted)">How it works:</strong>
-      Upload a photo to <a href="https://drive.google.com" target="_blank" style="color:var(--blue)">Google Drive</a>
-      → right-click → <em>Get link</em> → paste it here.
-      The link is saved to your Sheets <code>attachments</code> tab.
+      ${currentUserHasFullControl() ? `
+        <div style="display:flex;gap:6px">
+          <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:var(--green-dim);border:1px solid rgba(63,185,80,.3);color:var(--green);font-family:var(--font-mono);font-size:11px;font-weight:600;padding:5px 12px;border-radius:var(--radius)">
+            <input type="file" accept="image/*" multiple style="display:none" onchange="uploadSitePhotos(this, '${esc(s)}')"/>
+            📷 Upload Photo
+          </label>
+          <button onclick="openAddSitePhotoLink('${esc(s)}')" style="background:var(--blue-dim);border:1px solid rgba(88,166,255,.3);color:var(--blue);font-family:var(--font-mono);font-size:11px;font-weight:600;padding:5px 12px;border-radius:var(--radius);cursor:pointer">+ Paste Drive Link</button>
+        </div>` : ''}
     </div>
     ${photos.length === 0
       ? `<div style="padding:32px;text-align:center;color:var(--subtle);font-family:var(--font-mono);font-size:11px;background:var(--surface2);border:1px dashed var(--border);border-radius:var(--radius-lg)">
@@ -5262,7 +5572,16 @@ function setupAdminSections() {
   });
 }
 
-// ── CONFIRM CLOSE WORK ORDER ─────────────────────────────────────────
+// ── TOGGLE GROUP (cert tracker collapse/expand) ──────────────────────
+function toggleGroup(prefix) {
+  const el = document.getElementById('cert-group-' + prefix.replace('cert-','').replace(/\s/g,'_'));
+  if (!el) return;
+  const group = el.closest('.group');
+  if (!group) return;
+  group.classList.toggle('group-collapsed');
+}
+
+// ── CONFIRM CLOSE WORK ORDER (deprecated — kept for safety) ─────────
 function confirmCloseWO() {
   const woId     = ui.form.woId;
   const byEl     = document.getElementById('f-close-by');
@@ -5271,7 +5590,7 @@ function confirmCloseWO() {
   const confirmed = confEl ? confEl.checked : false;
   if (!closedBy) { ui.form={...ui.form,err:'Please select the technician who completed this work order.'}; render(); return; }
   if (!confirmed) { ui.form={...ui.form,err:'Please confirm all tasks are completed before closing.'}; render(); return; }
-  const wo = db.workOrders.find(w => w.id === woId);
+  const wo = db.workOrders.find(w => String(w.id) === String(woId));
   if (!wo) return;
   wo.status = 'Closed'; wo.technician = closedBy; wo.closedBy = closedBy; wo.closedDate = today();
   addHistory(wo.instrumentId, 'Work order closed', 'WO-' + woId + ' · ' + wo.type + ' · Completed by: ' + closedBy);
@@ -5319,6 +5638,7 @@ window.saveDB = function saveDB(type, id) {
 const _dirty = { instruments: new Set(), workOrders: new Set(), sites: false, techs: false, types: false, statuses: false };
 
 function markDirty(type, id) {
+  if (type === undefined) { ui.dirty = true; return; }
   if (id !== undefined) _dirty[type].add(String(id));
   else _dirty[type] = true;
 }
@@ -5502,9 +5822,16 @@ function resetSessionTimer() {
   }, SESSION_TIMEOUT_MS);
 }
 
-// Reset timer on any user activity
+// Reset timer on any user activity (throttled to max once per 30s)
+let _lastSessionReset = 0;
 ['mousedown','keydown','touchstart','scroll','click'].forEach(evt =>
-  document.addEventListener(evt, () => { if (ui.currentUser) resetSessionTimer(); }, { passive: true })
+  document.addEventListener(evt, () => {
+    if (!ui.currentUser) return;
+    const now = Date.now();
+    if (now - _lastSessionReset < 30000) return;
+    _lastSessionReset = now;
+    resetSessionTimer();
+  }, { passive: true })
 );
 
 // ── BOOTSTRAP ──────────────────────────────────────────────
