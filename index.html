@@ -6,6 +6,7 @@
 <title>SDAPCD / Instrument Management</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 <style>:root {
   /* ── CORE PALETTE ────────────────────────────────────── */
   --bg:        #0d1117;
@@ -549,7 +550,9 @@ body {
 .btn-act:hover { background: var(--surface3); border-color: rgba(148,163,184,.38); color: var(--text); }
 .btn-logwork  { background: rgba(34,211,238,.09);  color: var(--blue);   border-color: rgba(34,211,238,.26); }
 .btn-logwork:hover  { background: rgba(34,211,238,.17); border-color: var(--blue); box-shadow: var(--glow-sm); }
-.btn-history  { background: var(--surface2); color: var(--slate); border-color: var(--border); }
+.btn-history  { background: var(--surface2); color: var(--slate); border-color: var(--border); position: relative; }
+.hist-badge { display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:var(--purple);color:#fff;font-size:9px;font-weight:700;margin-left:5px;line-height:1;letter-spacing:0; }
+.btn-qr { padding: 4px 7px; font-size: 13px; }
 .btn-createwo { background: rgba(34,211,238,.06);  color: var(--blue);   border-color: rgba(34,211,238,.18); }
 .wo-badge {
   font-family: var(--font-mono); font-size: 11px;
@@ -690,6 +693,49 @@ body {
 .print-header h1 { font-size: 18px; font-weight: 700; color: #1d4ed8; margin-bottom: 4px; }
 .print-header p  { font-size: 11px; color: #555; }
 
+/* ── MOBILE RESPONSIVE ─────────────────────────────────── */
+.mobile-menu-btn { display: none; position: fixed; top: 12px; left: 12px; z-index: 250; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 10px; font-size: 18px; color: var(--muted); cursor: pointer; box-shadow: var(--shadow); }
+
+@media (max-width: 768px) {
+  :root { --sb-width: 0px; }
+  .mobile-menu-btn { display: block; }
+  #sidebar, .sidebar {
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    width: 240px;
+    z-index: 300;
+  }
+  #sidebar.mobile-open, .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  .mobile-overlay {
+    position: fixed; inset: 0; z-index: 299;
+    background: rgba(0,0,0,.5);
+  }
+  .main { padding: 16px 12px; margin-left: 0; padding-top: 52px; }
+  .section-hdr { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .stat-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+  .inst-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .inst-table table { min-width: 600px; }
+  .actions { flex-wrap: wrap; gap: 4px; }
+  .btn-act { padding: 5px 8px; font-size: 10px; }
+  .form-row { flex-direction: column; gap: 0; }
+  .wo-tabs { flex-wrap: wrap; width: 100%; }
+  .wo-tab { padding: 5px 12px; font-size: 10px; }
+  .wo-grid { grid-template-columns: 1fr 1fr !important; }
+  .modal-content { max-width: 95vw !important; max-height: 90vh !important; margin: 10px; }
+  .search-box { min-width: 0 !important; max-width: 100% !important; }
+  .filter-sel { font-size: 10px !important; }
+  .btn-qr { display: none; }
+}
+
+@media (max-width: 480px) {
+  .stat-grid { grid-template-columns: 1fr !important; }
+  .wo-grid { grid-template-columns: 1fr !important; }
+  .main { padding: 10px 8px; padding-top: 52px; }
+  .modal-content { padding: 16px !important; }
+}
+
 /* ── WORK ORDER TABS ────────────────────────────────────── */
 .wo-tabs { display: flex; gap: 3px; margin-bottom: 18px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 4px; width: fit-content; }
 .wo-tab { padding: 6px 18px; border-radius: var(--radius); font-size: 11px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .06em; cursor: pointer; border: none; background: transparent; color: var(--subtle); transition: all .15s; }
@@ -800,6 +846,8 @@ const SHOP_STATUSES  = ['Operational','Maintenance','Repair','Calibration','Offl
 const FIELD_STATUSES = ['Deployed','Maintenance','Repair','Calibration','Offline'];
 const VENDOR_STATUSES= ['At Vendor','Repair','Calibration'];
 const WO_TYPES       = ['Maintenance','Repair','Calibration','Inspection','Vendor Certification','Other'];
+const WO_PRIORITIES  = ['Low','Medium','High','Critical'];
+const PRIORITY_COLORS = { Critical:{bg:'rgba(248,81,73,.12)',color:'var(--red)',border:'rgba(248,81,73,.3)',icon:'⬤'}, High:{bg:'rgba(210,153,34,.12)',color:'var(--amber)',border:'rgba(210,153,34,.3)',icon:'◉'}, Medium:{bg:'rgba(88,166,255,.1)',color:'var(--blue)',border:'rgba(88,166,255,.25)',icon:'◎'}, Low:{bg:'rgba(139,148,158,.1)',color:'var(--slate)',border:'rgba(139,148,158,.25)',icon:'○'} };
 const CERT_WARN_DAYS = 90; // show "Due Soon" within 90 days of due date
 const DEFAULT_SITES  = ['HQ/SHOP','VENDOR','SES - 1','MAR - 2','SAY - 3','OVB - 4','LCC - 5','CTB - 7','DVN - 10','ALP - 11'];
 const PROTECTED_SITES = ['HQ/SHOP','VENDOR'];
@@ -842,7 +890,7 @@ const SEED = [
 
 // ── API CLIENT ─────────────────────────────────────────────
 // ── GOOGLE APPS SCRIPT API CLIENT ──────────────────────────
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzBDLoUIv0DtURTnl1yiLdrJjJI-hqIj8EgrPKCGEosBXAK-XhjRMSwZ3YoW6sWOkHW/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwJKTKlGM960-mAQuCOSHI1-1p0fJcYsD0Q7Rb-Xm3dcig9Md5s-lTJXRkSXk_QLkuX/exec';
                  
 
 async function gasRequest(path, action, params, body) {
@@ -1337,6 +1385,7 @@ function render() {
   `;
 
   document.getElementById('root').innerHTML = `
+  <button class="mobile-menu-btn" onclick="toggleMobileMenu()" title="Menu">☰</button>
   <div class="main">
   <button onclick="toggleTheme()" title="Toggle theme" style="position:fixed;top:16px;right:20px;z-index:300;background:${ui.theme==='light' ? 'rgba(100,116,139,.12)' : 'var(--surface)'};border:1px solid ${ui.theme==='light' ? 'rgba(100,116,139,.35)' : 'var(--border)'};color:${ui.theme==='light' ? '#64748b' : 'var(--muted)'};border-radius:var(--radius);padding:6px 10px;font-size:15px;cursor:pointer;transition:all .15s;box-shadow:var(--shadow-xs)" onmouseover="this.style.borderColor='rgba(34,211,238,.35)'" onmouseout="this.style.borderColor='${ui.theme==='light' ? 'rgba(100,116,139,.35)' : 'var(--border)'}'">${ui.theme==='light' ? '☀' : '🌙'}</button>
   ${ui.page === 'admin' ? renderAdmin() : ui.page === 'workorders' ? renderWorkOrders() : ui.page === 'activity' ? renderActivity() : ui.page === 'sites' ? renderSites() : ui.page === 'servicelog' ? renderServiceLog() : `
@@ -1483,8 +1532,8 @@ function renderFieldRow(i, fieldSites) {
     <td>
       <div class="actions">
         <button class="btn-act btn-logwork" onclick="openLogWork(${i.id})" title="Log Work Entry (L)">▣ LOG WORK</button>
-        <button class="btn-act btn-history" onclick="openHistory(${i.id})" title="View History (H)">▤ HISTORY</button>
-        ${(db.attachments||[]).filter(a=>String(a.instrumentId)===String(i.id)&&a.type!=='site_photo').length > 0 ? `<button class="btn-act" style="background:rgba(167,139,250,.13);border-color:rgba(167,139,250,.3);color:var(--purple)" onclick="openAttachments(${i.id})" title="View Attachments">📎 FILES (${(db.attachments||[]).filter(a=>String(a.instrumentId)===String(i.id)&&a.type!=='site_photo').length})</button>` : ''}
+        <button class="btn-act btn-history" onclick="openHistory(${i.id})" title="View History (H)">▤ HISTORY${(() => { const ac = (db.attachments||[]).filter(a=>String(a.instrumentId)===String(i.id)&&a.type!=='site_photo').length; return ac > 0 ? `<span class="hist-badge">${ac}</span>` : ''; })()}</button>
+        <button class="btn-act btn-qr" onclick="showQR(${i.id})" title="QR Code">⊟</button>
       </div>
     </td>
   </tr>`;
@@ -1521,8 +1570,8 @@ function renderShopRow(i) {
     <td>
       <div class="actions">
         <button class="btn-act btn-logwork" onclick="openLogWork(${i.id})" title="Log Work Entry (L)">▣ LOG WORK</button>
-        <button class="btn-act btn-history" onclick="openHistory(${i.id})" title="View History (H)">▤ HISTORY</button>
-        ${(db.attachments||[]).filter(a=>String(a.instrumentId)===String(i.id)&&a.type!=='site_photo').length > 0 ? `<button class="btn-act" style="background:rgba(167,139,250,.13);border-color:rgba(167,139,250,.3);color:var(--purple)" onclick="openAttachments(${i.id})" title="View Attachments">📎 FILES (${(db.attachments||[]).filter(a=>String(a.instrumentId)===String(i.id)&&a.type!=='site_photo').length})</button>` : ''}
+        <button class="btn-act btn-history" onclick="openHistory(${i.id})" title="View History (H)">▤ HISTORY${(() => { const ac = (db.attachments||[]).filter(a=>String(a.instrumentId)===String(i.id)&&a.type!=='site_photo').length; return ac > 0 ? `<span class="hist-badge">${ac}</span>` : ''; })()}</button>
+        <button class="btn-act btn-qr" onclick="showQR(${i.id})" title="QR Code">⊟</button>
       </div>
     </td>
   </tr>`;
@@ -1558,8 +1607,8 @@ function renderVendorRow(i) {
     <td>
       <div class="actions">
         <button class="btn-act btn-logwork" onclick="openLogWork(${i.id})" title="Log Work Entry (L)">▣ LOG WORK</button>
-        <button class="btn-act btn-history" onclick="openHistory(${i.id})" title="View History (H)">▤ HISTORY</button>
-        ${(db.attachments||[]).filter(a=>String(a.instrumentId)===String(i.id)&&a.type!=='site_photo').length > 0 ? `<button class="btn-act" style="background:rgba(167,139,250,.13);border-color:rgba(167,139,250,.3);color:var(--purple)" onclick="openAttachments(${i.id})" title="View Attachments">📎 FILES (${(db.attachments||[]).filter(a=>String(a.instrumentId)===String(i.id)&&a.type!=='site_photo').length})</button>` : ''}
+        <button class="btn-act btn-history" onclick="openHistory(${i.id})" title="View History (H)">▤ HISTORY${(() => { const ac = (db.attachments||[]).filter(a=>String(a.instrumentId)===String(i.id)&&a.type!=='site_photo').length; return ac > 0 ? `<span class="hist-badge">${ac}</span>` : ''; })()}</button>
+        <button class="btn-act btn-qr" onclick="showQR(${i.id})" title="QR Code">⊟</button>
       </div>
     </td>
   </tr>`;
@@ -1571,14 +1620,17 @@ function renderLoginScreen() {
   if (ui._loginView === 'changepw') {
     const cpErr = ui._cpErr || '';
     return `
-    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px">
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(145deg, #0a0e14 0%, #0d1117 40%, #101820 100%)">
       <div style="width:100%;max-width:380px">
-        <div style="text-align:center;margin-bottom:32px">
-          <div style="font-family:var(--font-mono);font-size:22px;font-weight:700;color:var(--blue);letter-spacing:.1em;text-shadow:0 0 22px rgba(34,211,238,.5)">SDAPCD</div>
-          <div style="font-family:var(--font-mono);font-size:11px;color:var(--subtle);margin-top:6px;letter-spacing:.06em">INSTRUMENT MANAGEMENT · SAN DIEGO APCD</div>
+        <div style="text-align:center;margin-bottom:36px">
+          <div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:14px;background:rgba(88,166,255,.08);border:1px solid rgba(88,166,255,.15);margin-bottom:16px">
+            <span style="font-size:24px;color:var(--blue);opacity:.8">◈</span>
+          </div>
+          <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:var(--text);letter-spacing:.12em;margin-bottom:6px">SDAPCD</div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);letter-spacing:.06em">INSTRUMENT MANAGEMENT · San Diego APCD</div>
         </div>
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:28px;box-shadow:var(--shadow-lg)">
-          <div style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--text);margin-bottom:20px;letter-spacing:.04em">Change Password</div>
+        <div style="background:rgba(22,27,34,.92);border:1px solid var(--border);border-radius:var(--radius-xl);padding:28px 26px;box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 0 1px rgba(48,54,61,.3)">
+          <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--muted);margin-bottom:20px;letter-spacing:.06em">CHANGE PASSWORD</div>
           ${cpErr ? `<div class="err-msg" style="margin-bottom:14px">${esc(cpErr)}</div>` : ''}
           <div class="form-group">
             <label class="form-label">Username</label>
@@ -1607,34 +1659,39 @@ function renderLoginScreen() {
     </div>`;
   }
   return `
-  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px">
+  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(145deg, #0a0e14 0%, #0d1117 40%, #101820 100%)">
     <div style="width:100%;max-width:380px">
-      <div style="text-align:center;margin-bottom:32px">
-        <div style="font-family:var(--font-mono);font-size:22px;font-weight:700;color:var(--blue);letter-spacing:.1em;text-shadow:0 0 22px rgba(34,211,238,.5)">SDAPCD</div>
-        <div style="font-family:var(--font-mono);font-size:11px;color:var(--subtle);margin-top:6px;letter-spacing:.06em">INSTRUMENT MANAGEMENT · SAN DIEGO APCD</div>
+      <div style="text-align:center;margin-bottom:36px">
+        <div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:14px;background:rgba(88,166,255,.08);border:1px solid rgba(88,166,255,.15);margin-bottom:16px">
+          <span style="font-size:24px;color:var(--blue);opacity:.8">◈</span>
+        </div>
+        <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:var(--text);letter-spacing:.12em;margin-bottom:6px">SDAPCD</div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);letter-spacing:.08em">INSTRUMENT MANAGEMENT</div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);letter-spacing:.06em;margin-top:2px">San Diego APCD</div>
       </div>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:28px;box-shadow:var(--shadow-lg)">
-        <div style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--text);margin-bottom:20px;letter-spacing:.04em">Sign In</div>
+      <div style="background:rgba(22,27,34,.92);border:1px solid var(--border);border-radius:var(--radius-xl);padding:28px 26px;box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 0 1px rgba(48,54,61,.3)">
+        <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--muted);margin-bottom:20px;letter-spacing:.06em">SIGN IN</div>
         ${err ? `<div class="err-msg" style="margin-bottom:14px">${esc(err)}</div>` : ''}
         <div class="form-group">
-          <label class="form-label">Username</label>
-          <input id="login-username" class="form-input" placeholder="Username"
+          <label class="form-label" style="color:var(--subtle)">Username</label>
+          <input id="login-username" class="form-input" placeholder="Enter username"
             autocomplete="username" autocapitalize="none" spellcheck="false"
             onkeydown="if(event.key==='Enter')document.getElementById('login-pw').focus()"/>
         </div>
-        <div class="form-group" style="margin-top:12px">
-          <label class="form-label">Password</label>
-          <input id="login-pw" class="form-input" type="password" placeholder="Password"
+        <div class="form-group" style="margin-top:14px">
+          <label class="form-label" style="color:var(--subtle)">Password</label>
+          <input id="login-pw" class="form-input" type="password" placeholder="Enter password"
             autocomplete="current-password"
             onkeydown="if(event.key==='Enter')submitLogin()"/>
         </div>
-        <button class="btn-save" onclick="submitLogin()" style="width:100%;margin-top:18px;justify-content:center">
-          Sign In →
+        <button class="btn-save" onclick="submitLogin()" style="width:100%;margin-top:20px;justify-content:center;padding:9px 20px;font-size:12px">
+          Sign In
         </button>
-        <div style="text-align:center;margin-top:14px">
-          <button onclick="ui._loginView='changepw';render()" style="background:none;border:none;font-family:var(--font-mono);font-size:10px;color:var(--subtle);cursor:pointer;letter-spacing:.03em;text-decoration:underline;text-underline-offset:3px">Change Password</button>
+        <div style="text-align:center;margin-top:16px">
+          <button onclick="ui._loginView='changepw';render()" style="background:none;border:none;font-family:var(--font-mono);font-size:10px;color:var(--subtle);cursor:pointer;letter-spacing:.03em;opacity:.6;transition:opacity .15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.6'">Change Password</button>
         </div>
       </div>
+      <div style="text-align:center;margin-top:24px;font-family:var(--font-mono);font-size:9px;color:rgba(72,79,88,.6);letter-spacing:.06em">SDAPCD INSTRUMENT TRACKER v2.0</div>
     </div>
   </div>`;
 }
@@ -1777,6 +1834,14 @@ function woFormBody(f) {
         ${techSelect('f-by', f.by||'', 'Select technician')}
       </div>
     </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Priority</label>
+        <select id="f-priority" class="form-input">
+          ${WO_PRIORITIES.map(p=>`<option ${(f.priority||'Medium')===p?'selected':''}>${p}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group"></div>
+    </div>
     <div class="form-group"><label class="form-label">Description</label>
       <textarea id="f-desc" class="form-input" rows="3" placeholder="Describe the work..." oninput="markDirty()">${esc(f.desc||'')}</textarea>
     </div>`;
@@ -1798,7 +1863,8 @@ function renderModal() {
           <input id="f-custom-name" class="form-input" placeholder="Enter custom type name" style="margin-top:6px;display:${f.name==='custom'?'block':'none'}"/>
         </div>
         <div class="form-group"><label class="form-label">Serial Number *</label>
-          <input id="f-serial" class="form-input" value="${esc(f.serial||'')}" placeholder="e.g. Y21836"/>
+          <input id="f-serial" class="form-input" value="${esc(f.serial||'')}" placeholder="e.g. Y21836" oninput="checkDuplicateSerial(this.value)"/>
+          <div id="dup-serial-warn" style="display:none;font-family:var(--font-mono);font-size:10px;color:var(--amber);margin-top:4px;padding:4px 8px;background:var(--amber-dim);border:1px solid rgba(210,153,34,.25);border-radius:var(--radius)"></div>
         </div>
       </div>
       <div class="form-row">
@@ -2065,6 +2131,7 @@ function renderModal() {
         <div><div class="wo-field-label">INSTRUMENT</div><div class="wo-field-val" style="font-family:var(--font-mono);font-size:15px">${esc(inst?inst.name:'?')}</div></div>
         <div><div class="wo-field-label">SERIAL</div><div class="wo-field-val inst-sn">${esc(inst?inst.serial:'—')}</div></div>
         <div><div class="wo-field-label">TYPE</div><div class="wo-field-val">${esc(wo.type)}</div></div>
+        <div><div class="wo-field-label">PRIORITY</div><div class="wo-field-val">${(() => { const p = PRIORITY_COLORS[wo.priority] || PRIORITY_COLORS.Medium; return `<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:var(--radius);font-size:11px;font-weight:600;font-family:var(--font-mono);background:${p.bg};color:${p.color};border:1px solid ${p.border}">${p.icon} ${esc(wo.priority||'Medium')}</span>`; })()}</div></div>
         <div><div class="wo-field-label">TECHNICIAN</div><div class="wo-field-val inst-sn">${esc(wo.technician||'—')}</div></div>
         <div><div class="wo-field-label">STATUS</div><span class="${statusClass(wo.status)}" style="padding:3px 8px;border-radius:var(--radius);font-size:11px;font-weight:600">${esc(wo.status)}</span></div>
         <div><div class="wo-field-label">CREATED</div><div class="wo-field-val" style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">${esc(wo.created)}</div></div>
@@ -2510,7 +2577,7 @@ function renderWorkOrders() {
   const allCount     = db.workOrders.length;
 
   const rows = filtered.length === 0
-    ? `<tr class="empty-row"><td colspan="6">No work orders match your filter</td></tr>`
+    ? `<tr class="empty-row"><td colspan="7">No work orders match your filter</td></tr>`
     : filtered.map(wo => {
         const inst = db.instruments.find(i => String(i.id) === String(wo.instrumentId));
         const statusBadge =
@@ -2525,12 +2592,15 @@ function renderWorkOrders() {
             : `<span style="font-family:var(--font-mono);font-size:10px;color:var(--amber)">Awaiting approval</span>`)
           : `<button class="btn-submit-closure" onclick="submitForClosure(${wo.id})">↑ Submit for Closure</button>`;
 
+        const pri = PRIORITY_COLORS[wo.priority] || PRIORITY_COLORS.Medium;
+        const priBadge = `<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:var(--radius);font-size:10px;font-weight:600;font-family:var(--font-mono);letter-spacing:.04em;background:${pri.bg};color:${pri.color};border:1px solid ${pri.border}">${pri.icon} ${esc(wo.priority||'Medium')}</span>`;
         return `<tr>
           <td>
             <div class="wo-id" onclick="openWODetail(${wo.id})">WO-${wo.id}</div>
             <div class="wo-inst">${inst ? esc(inst.name) + ' · ' + esc(inst.serial) : '—'}</div>
           </td>
           <td style="font-family:var(--font-mono);font-size:12px">${esc(wo.type)}</td>
+          <td>${priBadge}</td>
           <td>${statusBadge}</td>
           <td style="font-family:var(--font-mono);font-size:12px;color:var(--muted)">${esc(wo.technician||'—')}</td>
           <td style="font-family:var(--font-mono);font-size:11px;color:var(--subtle)">${esc(wo.created)}</td>
@@ -2600,6 +2670,7 @@ function renderWorkOrders() {
           <tr>
             <th>WO # / INSTRUMENT</th>
             <th>TYPE</th>
+            <th>PRIORITY</th>
             <th>STATUS</th>
             <th>TECHNICIAN</th>
             <th>CREATED</th>
@@ -3575,6 +3646,9 @@ function exportSecurityLogCSV() {
 
 // ── INSTRUMENT ACTIONS ─────────────────────────────────────
 function navigateTo(page) {
+  // Close mobile menu if open
+  const sb = document.getElementById('sidebar');
+  if (sb && sb.classList.contains('mobile-open')) toggleMobileMenu();
   if (ui.page === 'admin' && page !== 'admin') { ui._openAdminSections = new Set(); }
   // Admin page is accessible to Full Control users without extra password
   if (page === 'admin') {
@@ -3747,7 +3821,96 @@ function toggleTheme() {
 }
 // markDirty is defined in the sync layer below
 function closeModal() { ui.modal = null; ui.form = {}; ui.dirty = false; render(); }
+
+function toggleMobileMenu() {
+  const sb = document.getElementById('sidebar');
+  if (!sb) return;
+  if (sb.classList.contains('mobile-open')) {
+    sb.classList.remove('mobile-open');
+    const ov = document.querySelector('.mobile-overlay');
+    if (ov) ov.remove();
+  } else {
+    sb.classList.add('mobile-open');
+    const ov = document.createElement('div');
+    ov.className = 'mobile-overlay';
+    ov.onclick = () => toggleMobileMenu();
+    document.body.appendChild(ov);
+  }
+}
+
+// ── PDF PREVIEW ───────────────────────────────────────────
+function previewPDF(url, filename) {
+  // Use Google Drive preview embed if it's a Drive URL
+  let embedUrl = url;
+  const driveMatch = url.match(/\/d\/([^\/]+)/);
+  if (driveMatch) {
+    embedUrl = 'https://drive.google.com/file/d/' + driveMatch[1] + '/preview';
+  }
+  const overlay = document.createElement('div');
+  overlay.id = 'pdf-preview-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;width:min(90vw,900px);margin-bottom:10px">
+      <span style="font-family:var(--font-mono);font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 ${filename||'PDF Preview'}</span>
+      <div style="display:flex;gap:8px;flex-shrink:0">
+        <a href="${url}" target="_blank" style="font-family:var(--font-mono);font-size:11px;color:var(--blue);text-decoration:none;padding:5px 12px;border:1px solid rgba(88,166,255,.3);border-radius:var(--radius);background:var(--blue-dim)">↗ Open in Drive</a>
+        <button onclick="document.getElementById('pdf-preview-overlay').remove()" style="font-family:var(--font-mono);font-size:11px;color:var(--red);background:var(--red-dim);border:1px solid rgba(248,81,73,.3);border-radius:var(--radius);padding:5px 12px;cursor:pointer">✕ Close</button>
+      </div>
+    </div>
+    <iframe src="${embedUrl}" style="width:min(90vw,900px);height:min(80vh,700px);border:1px solid var(--border);border-radius:var(--radius-lg);background:#fff" allowfullscreen></iframe>
+  `;
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
 function setStatFilter(k) { ui.activeStatCard = ui.activeStatCard === k ? null : k; render(); }
+
+// ── QR CODE ───────────────────────────────────────────────
+function showQR(instId) {
+  const inst = db.instruments.find(i => i.id === instId);
+  if (!inst) return;
+  const qrData = `SDAPCD|${inst.name}|${inst.serial}|${inst.site}|ID:${inst.id}`;
+  let qrImg = '';
+  try {
+    const qr = qrcode(0, 'M');
+    qr.addData(qrData);
+    qr.make();
+    qrImg = qr.createImgTag(5, 8);
+  } catch(e) { qrImg = '<div style="color:var(--red)">QR generation failed</div>'; }
+  const overlay = document.createElement('div');
+  overlay.id = 'qr-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:28px;max-width:340px;width:100%;text-align:center;box-shadow:var(--shadow-lg)">
+      <div style="font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--subtle);margin-bottom:12px">QR CODE</div>
+      <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">${esc(inst.name)}</div>
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--blue);margin-bottom:16px">${esc(inst.serial)}</div>
+      <div style="background:#fff;display:inline-block;padding:12px;border-radius:var(--radius-lg);margin-bottom:16px">${qrImg}</div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);margin-bottom:16px">${esc(inst.site)} · ID: ${inst.id}</div>
+      <div style="display:flex;gap:8px;justify-content:center">
+        <button onclick="printQR(${instId})" style="padding:6px 14px;background:var(--blue-dim);border:1px solid rgba(88,166,255,.3);border-radius:var(--radius);font-family:var(--font-mono);font-size:11px;color:var(--blue);cursor:pointer">⎙ Print</button>
+        <button onclick="document.getElementById('qr-overlay').remove()" style="padding:6px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-mono);font-size:11px;color:var(--muted);cursor:pointer">Close</button>
+      </div>
+    </div>
+  `;
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
+function printQR(instId) {
+  const inst = db.instruments.find(i => i.id === instId);
+  if (!inst) return;
+  const qrData = `SDAPCD|${inst.name}|${inst.serial}|${inst.site}|ID:${inst.id}`;
+  const qr = qrcode(0, 'M');
+  qr.addData(qrData);
+  qr.make();
+  const w = window.open('', '_blank', 'width=400,height=500');
+  w.document.write(`<html><head><title>QR - ${esc(inst.name)}</title><style>body{font-family:monospace;text-align:center;padding:40px}h2{margin:0 0 4px}p{margin:4px 0;color:#555}</style></head><body>
+    <h2>${esc(inst.name)}</h2><p>${esc(inst.serial)}</p><p>${esc(inst.site)}</p>
+    <div style="margin:20px 0">${qr.createImgTag(6, 10)}</div>
+    <p style="font-size:10px;color:#999">SDAPCD Instrument Management</p>
+    <script>window.onload=function(){window.print()}<\/script></body></html>`);
+  w.document.close();
+}
 
 // ── CONFIRM HELPER ─────────────────────────────────────────
 let _confirmCallback = null;
@@ -3847,7 +4010,8 @@ function syncWorkOrder(wo) {
     approved_by:    woToSync.approvedBy      || '',
     restore_reason: woToSync.restoreReason   || '',
     restored_by:    woToSync.restoredBy      || '',
-    restored_date:  woToSync.restoredDate    || ''
+    restored_date:  woToSync.restoredDate    || '',
+    priority:       woToSync.priority        || 'Medium'
   }).catch(e => { toast('⚠ WO sync failed: ' + e.message, 'error'); console.error('syncWorkOrder failed', e); });
 }
 
@@ -4083,8 +4247,20 @@ function openAttachments(instId) {
 function openEditWO(wid) {
   const wo = db.workOrders.find(w => String(w.id) === String(wid));
   if (!wo) return;
-  ui.modal='editwo'; ui.form={woId:wo.id, type:wo.type, by:wo.technician||'', desc:wo.description||''};
+  ui.modal='editwo'; ui.form={woId:wo.id, type:wo.type, by:wo.technician||'', desc:wo.description||'', priority:wo.priority||'Medium'};
   render();
+}
+
+function checkDuplicateSerial(val) {
+  const warn = document.getElementById('dup-serial-warn');
+  if (!warn || !val.trim()) { if (warn) warn.style.display = 'none'; return; }
+  const match = db.instruments.find(i => i.serial.toLowerCase() === val.trim().toLowerCase());
+  if (match) {
+    warn.style.display = 'block';
+    warn.innerHTML = `⚠ Serial "<strong>${esc(val.trim())}</strong>" already exists — ${esc(match.name)} at ${esc(match.site)}`;
+  } else {
+    warn.style.display = 'none';
+  }
 }
 
 function saveAdd() {
@@ -4133,12 +4309,13 @@ function saveWorkEntry(mode) {
   const type = document.getElementById('f-type') ? document.getElementById('f-type').value : '';
   const by   = getVal('f-by');
   const desc = getVal('f-desc');
-  if (!by) { ui.form={...ui.form, err:'Technician is required.', type, by, desc}; render(); return; }
+  const priority = document.getElementById('f-priority') ? document.getElementById('f-priority').value : 'Medium';
+  if (!by) { ui.form={...ui.form, err:'Technician is required.', type, by, desc, priority}; render(); return; }
   const { instId } = ui.form;
   const maxId = db.workOrders.reduce((m, w) => Math.max(m, parseInt(w.id)||0), 0);
   const woId = maxId + 1;
   db.woId = woId + 1;
-  const newWO = { id:woId, instrumentId:instId, type, description:desc, technician:by, status:'Open', created:today() };
+  const newWO = { id:woId, instrumentId:instId, type, description:desc, technician:by, status:'Open', created:today(), priority };
   db.workOrders.push(newWO);
   // Auto-update instrument status to match the WO type and move to HQ/SHOP
   const woInst = db.instruments.find(i => String(i.id) === String(instId));
@@ -4170,7 +4347,7 @@ function saveWorkEntry(mode) {
   closeModal();
   toast('✓ Work order created — saving to Sheets...');
   API.post('/work-orders', {
-    instrument_id: instId, type, description: desc, tech_name: by
+    instrument_id: instId, type, description: desc, tech_name: by, priority
   }).then(result => {
     if (result && result.id) {
       // Update the WO in db with server-assigned id
@@ -4269,10 +4446,11 @@ function saveEditWO(wid) {
   const type = document.getElementById('f-type').value;
   const by   = getVal('f-by');
   const desc = getVal('f-desc');
-  if (!by) { ui.form={...ui.form, err:'Technician name is required.', type, by, desc}; render(); return; }
+  const priority = document.getElementById('f-priority') ? document.getElementById('f-priority').value : 'Medium';
+  if (!by) { ui.form={...ui.form, err:'Technician name is required.', type, by, desc, priority}; render(); return; }
   const wo = db.workOrders.find(w => String(w.id) === String(wid));
   if (!wo) return;
-  wo.type = type; wo.technician = by; wo.description = desc;
+  wo.type = type; wo.technician = by; wo.description = desc; wo.priority = priority;
   addHistory(wo.instrumentId, 'Work order updated', `WO-${wid} · ${type} · Tech: ${by}${desc ? ' · ' + desc.slice(0, 80) : ''}`);
   syncWorkOrder(wo);
   openWODetail(wid); toast('Work order updated');
@@ -5835,10 +6013,325 @@ let _lastSessionReset = 0;
   }, { passive: true })
 );
 
+// ══════════════════════════════════════════════════════════════
+// ── FEATURE: AUTO-REFRESH (every 2 minutes) ──────────────────
+// ══════════════════════════════════════════════════════════════
+let _autoRefreshInterval = null;
+function startAutoRefresh() {
+  if (_autoRefreshInterval) clearInterval(_autoRefreshInterval);
+  _autoRefreshInterval = setInterval(async () => {
+    if (!ui.currentUser) return; // don't refresh if not logged in
+    if (ui.modal) return; // don't refresh while a modal is open
+    try {
+      const d = await API.get('/db');
+      // Preserve local UI state, only update data
+      const oldPage = ui.page;
+      const oldFilter = ui.woFilter;
+      db = d;
+      if (!db.customStatuses) db.customStatuses = [];
+      if (!db.sitesMeta) db.sitesMeta = {};
+      if (!db.securityLog) db.securityLog = [];
+      if (!db.deleteLog) db.deleteLog = [];
+      if (!db.history) db.history = {};
+      if (!db.attachments) db.attachments = [];
+      if (db.instruments) {
+        db.instruments.forEach(i => {
+          if (i.cert_interval_months !== undefined && i.certIntervalMonths === undefined)
+            i.certIntervalMonths = i.cert_interval_months ? Number(i.cert_interval_months) : null;
+          if (i.last_cert_date !== undefined && i.lastCertDate === undefined)
+            i.lastCertDate = i.last_cert_date || null;
+        });
+      }
+      if (db.attachments.length > 0) {
+        db.instruments.forEach(inst => {
+          const instAtt = db.attachments.filter(a => String(a.instrumentId) === String(inst.id) && a.type === 'work');
+          if (instAtt.length > 0) inst.workAttachments = instAtt;
+        });
+        db.attachments.filter(a => a.type === 'site_photo' && a.siteCode).forEach(a => {
+          if (!db.sitesMeta[a.siteCode]) db.sitesMeta[a.siteCode] = {};
+          if (!db.sitesMeta[a.siteCode].photos) db.sitesMeta[a.siteCode].photos = [];
+          db.sitesMeta[a.siteCode].photos.push({ url: a.directUrl || a.fileUrl, attachmentId: a.id, fileName: a.fileName });
+        });
+      }
+      if (!db.adminPassword) db.adminPassword = 'circuit';
+      markAllSynced();
+      // Save to offline cache
+      try { localStorage.setItem('sdapcd_db_cache', JSON.stringify(db)); } catch(e) {}
+      // Update activity badge
+      updateActivityBadge();
+      render();
+    } catch(e) { /* silent fail on background refresh */ }
+  }, 120000); // 2 minutes
+}
+
+// ══════════════════════════════════════════════════════════════
+// ── FEATURE: OFFLINE MODE (localStorage cache) ──────────────
+// ══════════════════════════════════════════════════════════════
+function saveDBToCache() {
+  try { localStorage.setItem('sdapcd_db_cache', JSON.stringify(db)); } catch(e) {}
+}
+function loadDBFromCache() {
+  try {
+    const cached = localStorage.getItem('sdapcd_db_cache');
+    if (cached) {
+      db = JSON.parse(cached);
+      if (!db.customStatuses) db.customStatuses = [];
+      if (!db.sitesMeta) db.sitesMeta = {};
+      if (!db.securityLog) db.securityLog = [];
+      if (!db.deleteLog) db.deleteLog = [];
+      if (!db.history) db.history = {};
+      if (!db.attachments) db.attachments = [];
+      render();
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+// Patch loadDBFromServer to save cache on success and fallback on failure
+const _originalLoadDB = loadDBFromServer;
+loadDBFromServer = async function() {
+  try {
+    await _originalLoadDB();
+    saveDBToCache();
+    startAutoRefresh();
+    updateActivityBadge();
+  } catch(e) {
+    console.warn('Server load failed, trying offline cache...');
+    if (loadDBFromCache()) {
+      toast('📡 Offline mode — showing cached data');
+    } else {
+      toast('⚠ No connection and no cached data available');
+    }
+  }
+};
+
+// ══════════════════════════════════════════════════════════════
+// ── FEATURE: WO TEMPLATES ────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+const WO_TEMPLATES = [
+  { name: '— No template —', type: '', desc: '' },
+  { name: 'Routine Quarterly Maintenance', type: 'Maintenance', desc: 'Quarterly scheduled maintenance: filter replacement, flow check, leak test, general cleaning and inspection.' },
+  { name: 'Annual EPA Certification', type: 'Vendor Certification', desc: 'Annual EPA Method 9 certification. Ship to vendor for calibration and certification per 40 CFR Part 60.' },
+  { name: 'Filter Replacement', type: 'Maintenance', desc: 'Replace particulate filter. Check flow rate and verify readings post-replacement.' },
+  { name: 'Repair — Power Issue', type: 'Repair', desc: 'Unit not powering on / intermittent power. Diagnose power supply, check fuses, battery, and connections.' },
+  { name: 'Repair — Sensor Issue', type: 'Repair', desc: 'Erratic or no readings from sensor. Clean optics, check alignment, replace sensor if needed.' },
+  { name: 'Field Calibration Check', type: 'Calibration', desc: 'On-site span and zero calibration check. Record pre/post cal readings.' },
+  { name: 'Site Deployment', type: 'Inspection', desc: 'Deploy instrument to field site. Verify power, data connection, shelter condition, and initial readings.' }
+];
+
+// Override woFormBody to add template selector
+const _origWoFormBody = woFormBody;
+woFormBody = function(f) {
+  const templateOptions = WO_TEMPLATES.map((t, i) =>
+    `<option value="${i}" ${f._template === i ? 'selected' : ''}>${esc(t.name)}</option>`
+  ).join('');
+
+  return `
+    <div class="form-group" style="margin-bottom:12px">
+      <label class="form-label">Template <span style="color:var(--subtle);font-weight:400">(optional — pre-fills fields)</span></label>
+      <select class="form-input" onchange="applyWOTemplate(Number(this.value))">
+        ${templateOptions}
+      </select>
+    </div>
+    ${_origWoFormBody(f)}`;
+};
+
+window.applyWOTemplate = function(idx) {
+  const t = WO_TEMPLATES[idx];
+  if (!t || idx === 0) return;
+  const typeEl = document.getElementById('f-type');
+  const descEl = document.getElementById('f-desc');
+  if (typeEl && t.type) {
+    for (let i = 0; i < typeEl.options.length; i++) {
+      if (typeEl.options[i].value === t.type) { typeEl.selectedIndex = i; break; }
+    }
+  }
+  if (descEl && t.desc) descEl.value = t.desc;
+  ui.form._template = idx;
+  ui.dirty = true;
+};
+
+// ══════════════════════════════════════════════════════════════
+// ── FEATURE: ACTIVITY BADGE ──────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+let _activityBadgeCount = 0;
+
+function updateActivityBadge() {
+  const lastSeen = sessionStorage.getItem('sdapcd_activity_last_seen') || '';
+  if (!lastSeen) { _activityBadgeCount = 0; return; }
+  let count = 0;
+  // Count history entries newer than lastSeen
+  Object.values(db.history || {}).forEach(arr => {
+    arr.forEach(h => {
+      if ((h.ts || '') > lastSeen) count++;
+    });
+  });
+  // Count security log entries newer than lastSeen
+  (db.securityLog || []).forEach(e => {
+    if ((e.ts || '') > lastSeen) count++;
+  });
+  _activityBadgeCount = Math.min(count, 99);
+}
+
+function markActivitySeen() {
+  sessionStorage.setItem('sdapcd_activity_last_seen', nowTs());
+  _activityBadgeCount = 0;
+}
+
+// Patch navigateTo to clear badge when visiting activity page
+const _origNavigateTo = navigateTo;
+navigateTo = function(page) {
+  if (page === 'activity') markActivitySeen();
+  return _origNavigateTo(page);
+};
+
+// Inject badge into Activity nav button via render patch
+const _origRender = render;
+render = function() {
+  _origRender();
+  // Add badge to Activity nav button after render
+  const navBtns = document.querySelectorAll('.btn-nav, .btn-dash');
+  navBtns.forEach(btn => {
+    if (btn.textContent.includes('Activity') && _activityBadgeCount > 0) {
+      const existing = btn.querySelector('.activity-badge');
+      if (existing) existing.remove();
+      const badge = document.createElement('span');
+      badge.className = 'activity-badge';
+      badge.style.cssText = 'background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:6px;font-family:var(--font-mono);min-width:16px;text-align:center;display:inline-block';
+      badge.textContent = _activityBadgeCount > 99 ? '99+' : _activityBadgeCount;
+      btn.appendChild(badge);
+    }
+  });
+};
+
+// ══════════════════════════════════════════════════════════════
+// ── FEATURE: PRINT SITE REPORT ──────────────────────────────
+// ══════════════════════════════════════════════════════════════
+window.printSiteReport = function(siteCode) {
+  const meta = db.sitesMeta[siteCode] || {};
+  const siteInstruments = db.instruments.filter(i => i.site === siteCode && !i.archived);
+  const siteWOs = db.workOrders.filter(wo => {
+    const inst = db.instruments.find(i => String(i.id) === String(wo.instrumentId));
+    return inst && inst.site === siteCode;
+  });
+  const openWOs = siteWOs.filter(w => w.status !== 'Closed');
+  const now = new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' });
+
+  const instRows = siteInstruments.map(i => {
+    const certInfo = (i.lastCertDate && i.certIntervalMonths)
+      ? certDueDate(i.lastCertDate, i.certIntervalMonths) || 'N/A'
+      : '—';
+    const instWOs = db.workOrders.filter(w => String(w.instrumentId) === String(i.id) && w.status !== 'Closed');
+    return '<tr>' +
+      '<td style="padding:6px 10px;border:1px solid #d1d5db;font-weight:600">' + esc(i.name) + '</td>' +
+      '<td style="padding:6px 10px;border:1px solid #d1d5db;font-family:monospace">' + esc(i.serial) + '</td>' +
+      '<td style="padding:6px 10px;border:1px solid #d1d5db">' + esc(i.status) + '</td>' +
+      '<td style="padding:6px 10px;border:1px solid #d1d5db;font-family:monospace;font-size:11px">' + certInfo + '</td>' +
+      '<td style="padding:6px 10px;border:1px solid #d1d5db;text-align:center">' + instWOs.length + '</td>' +
+      '</tr>';
+  }).join('');
+
+  const woRows = openWOs.slice(0, 20).map(wo => {
+    const inst = db.instruments.find(i => String(i.id) === String(wo.instrumentId));
+    return '<tr>' +
+      '<td style="padding:5px 10px;border:1px solid #d1d5db;font-family:monospace">WO-' + wo.id + '</td>' +
+      '<td style="padding:5px 10px;border:1px solid #d1d5db">' + esc(inst ? inst.serial : '—') + '</td>' +
+      '<td style="padding:5px 10px;border:1px solid #d1d5db">' + esc(wo.type) + '</td>' +
+      '<td style="padding:5px 10px;border:1px solid #d1d5db">' + esc(wo.technician || '—') + '</td>' +
+      '<td style="padding:5px 10px;border:1px solid #d1d5db;font-family:monospace;font-size:11px">' + esc(wo.created) + '</td>' +
+      '</tr>';
+  }).join('');
+
+  const recentHistory = [];
+  siteInstruments.forEach(i => {
+    (db.history[i.id] || []).slice(0, 5).forEach(h => {
+      recentHistory.push({ ...h, serial: i.serial, instName: i.name });
+    });
+  });
+  recentHistory.sort((a, b) => (b.ts || '').localeCompare(a.ts || ''));
+  const histRows = recentHistory.slice(0, 15).map(h =>
+    '<tr>' +
+    '<td style="padding:4px 8px;border:1px solid #e5e7eb;font-family:monospace;font-size:10px">' + esc(h.ts || '') + '</td>' +
+    '<td style="padding:4px 8px;border:1px solid #e5e7eb">' + esc(h.serial) + '</td>' +
+    '<td style="padding:4px 8px;border:1px solid #e5e7eb">' + esc(h.action || '') + '</td>' +
+    '<td style="padding:4px 8px;border:1px solid #e5e7eb;font-size:11px">' + esc((h.detail || '').slice(0, 80)) + '</td>' +
+    '</tr>'
+  ).join('');
+
+  const html = `<!DOCTYPE html><html><head><title>Site Report — ${esc(siteCode)}</title>
+    <style>
+      body{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:12px;color:#111;margin:20px;line-height:1.5}
+      h1{font-size:18px;margin:0 0 4px;color:#0969da}
+      h2{font-size:14px;margin:24px 0 8px;color:#0969da;border-bottom:2px solid #0969da;padding-bottom:4px}
+      table{width:100%;border-collapse:collapse;margin-bottom:16px}
+      th{background:#f1f5f9;padding:6px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border:1px solid #d1d5db}
+      .meta{display:grid;grid-template-columns:100px 1fr;gap:4px 16px;margin-bottom:16px;font-size:12px}
+      .meta-label{font-weight:700;color:#555}
+      .summary{display:flex;gap:24px;margin-bottom:20px}
+      .summary-card{background:#f8fafc;border:1px solid #d1d5db;border-radius:6px;padding:12px 18px;text-align:center}
+      .summary-num{font-size:24px;font-weight:700;color:#0969da}
+      .summary-label{font-size:10px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.08em}
+      @media print{body{margin:10px}h2{page-break-after:avoid}}
+    </style></head><body>
+    <h1>SDAPCD — Site Report: ${esc(siteCode)}</h1>
+    <div style="font-size:11px;color:#555;margin-bottom:16px">San Diego Air Pollution Control District &nbsp;·&nbsp; Generated: ${now}</div>
+
+    <div class="meta">
+      <span class="meta-label">Site Name</span><span>${esc(meta.siteName || '—')}</span>
+      <span class="meta-label">Type</span><span>${esc(meta.type || '—')}</span>
+      <span class="meta-label">Address</span><span>${esc(meta.address || '—')}</span>
+    </div>
+
+    <div class="summary">
+      <div class="summary-card"><div class="summary-num">${siteInstruments.length}</div><div class="summary-label">Instruments</div></div>
+      <div class="summary-card"><div class="summary-num">${openWOs.length}</div><div class="summary-label">Open WOs</div></div>
+      <div class="summary-card"><div class="summary-num">${siteInstruments.filter(i=>i.status==='Deployed').length}</div><div class="summary-label">Deployed</div></div>
+      <div class="summary-card"><div class="summary-num">${siteInstruments.filter(i=>{const d=certDueDate(i.lastCertDate,i.certIntervalMonths);return d&&typeof d==='string'&&d.includes('OVERDUE');}).length}</div><div class="summary-label">Certs Overdue</div></div>
+    </div>
+
+    <h2>Instruments at Site</h2>
+    <table><thead><tr><th>Type</th><th>Serial</th><th>Status</th><th>Cert Due</th><th>Open WOs</th></tr></thead>
+    <tbody>${instRows || '<tr><td colspan="5" style="padding:12px;text-align:center;color:#888">No instruments at this site</td></tr>'}</tbody></table>
+
+    ${openWOs.length > 0 ? '<h2>Open Work Orders</h2><table><thead><tr><th>WO #</th><th>Serial</th><th>Type</th><th>Tech</th><th>Created</th></tr></thead><tbody>' + woRows + '</tbody></table>' : ''}
+
+    <h2>Recent Activity (Last 15 entries)</h2>
+    <table><thead><tr><th>Date</th><th>Serial</th><th>Action</th><th>Detail</th></tr></thead>
+    <tbody>${histRows || '<tr><td colspan="4" style="padding:12px;text-align:center;color:#888">No recent activity</td></tr>'}</tbody></table>
+
+    <div style="margin-top:32px;font-size:10px;color:#888;border-top:1px solid #d1d5db;padding-top:8px">
+      SDAPCD Instrument Management System &nbsp;·&nbsp; Report generated by ${esc(ui.currentUser || 'Unknown')}
+    </div>
+  </body></html>`;
+
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(() => w.print(), 400);
+};
+
+// Add print button to the site info page — inject into renderSites
+const _origRenderSites = renderSites;
+renderSites = function() {
+  let result = _origRenderSites();
+  // Add a Print Site Report button next to the site tabs header
+  const s = ui.selectedSite || db.sites[0];
+  if (s) {
+    result = result.replace(
+      'MONITORING SITE INFORMATION',
+      'MONITORING SITE INFORMATION</div><button class="btn-export" onclick="printSiteReport(\'' + esc(s).replace(/'/g,"\\'") + '\')" style="font-size:11px;padding:6px 14px;margin-left:12px">⎙ Print Site Report</button><div style="display:none"'
+    );
+  }
+  return result;
+};
+
+// ══════════════════════════════════════════════════════════════
 // ── BOOTSTRAP ──────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
 // Show a loading state then fetch real data from server
 render(); // initial paint with empty db
-loadDBFromServer(); // fetch from SQLite and re-render
+loadDBFromServer(); // fetch from server, cache offline, start auto-refresh
 </script>
 </body>
 </html>
