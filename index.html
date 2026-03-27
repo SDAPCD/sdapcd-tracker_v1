@@ -1005,7 +1005,7 @@ const API = {
     const resource = parts[0];
     const id = parts[1];
     if (resource === 'settings') return gasRequest('settings', 'put', {key: id}, body);
-    return gasRequest(resource, 'put', {id}, body);
+    return gasRequest(resource.replace(/-/g,'_'), 'put', {id}, body);
   },
   async patch(path, body) {
     const clean = path.replace(/^\//, '');
