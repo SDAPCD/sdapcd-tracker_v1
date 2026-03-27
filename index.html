@@ -945,7 +945,7 @@ async function gasRequest(path, action, params, body) {
       // Mutations: flatten every body field into its own URL param
       // GAS reads e.parameter.status, e.parameter.closed_by, etc. — no JSON parsing
       Object.entries(body).forEach(([k,v]) => {
-        if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
+        if (v !== undefined && v !== null && k !== 'path' && k !== 'action') url.searchParams.set(k, String(v));
       });
       response = await fetch(url.toString());
     } else {
@@ -1239,7 +1239,7 @@ function addHistory(instId, action, detail) {
   const detailWithUser = detail ? `${detail} · by: ${user}` : `by: ${user}`;
   db.history[instId].unshift({ ts: nowTs(), epoch: Date.now(), action, detail: detailWithUser, user });
   if (db.history[instId].length > 10000) db.history[instId].length = 10000;
-  API.post('/history', { instrument_id: instId, action, detail: detailWithUser }).catch(e => console.warn('history save failed', e));
+  API.post('/history', { instrument_id: instId, hist_action: action, detail: detailWithUser }).catch(e => console.warn('history save failed', e));
 }
 function addSecurityLog(type, detail) {
   if (!db.securityLog) db.securityLog = [];
@@ -1581,7 +1581,6 @@ function renderFieldRow(i, fieldSites) {
 }
 
 function renderShopRow(i) {
-  const wo = db.workOrders.filter(w => w.instrumentId===i.id && w.status!=='Closed').sort((a,b)=>b.id-a.id)[0];
   return `<tr>
     <td><div class="inst-name">${esc(i.name)}</div><div class="inst-sn">${esc(i.serial)}</div>${i.notes?`<div class="inst-notes" title="${esc(i.notes)}">${esc(i.notes)}</div>`:''}</td>
     <td>
@@ -1624,7 +1623,6 @@ function renderShopRow(i) {
 }
 
 function renderVendorRow(i) {
-  const wo = db.workOrders.filter(w => w.instrumentId===i.id && w.status!=='Closed').sort((a,b)=>b.id-a.id)[0];
   return `<tr>
     <td><div class="inst-name">${esc(i.name)}</div><div class="inst-sn">${esc(i.serial)}</div>${i.notes?`<div class="inst-notes" title="${esc(i.notes)}">${esc(i.notes)}</div>`:''}</td>
     <td>
@@ -2327,7 +2325,7 @@ function renderModal() {
     const months  = f.certIntervalMonths || '';
     const due     = certDueDate(f.certDate || today(), months);
     const isEdit  = !!f.editMode;
-    const inst    = db.instruments.find(x => x.id === f.instId);
+    const inst    = db.instruments.find(x => String(x.id) === String(f.instId));
     const PRESET_MONTHS = [
       {label:'1 month',  val:1},  {label:'3 months', val:3},
       {label:'6 months', val:6},  {label:'1 year',   val:12},
@@ -2743,7 +2741,7 @@ function renderActivity() {
   // Flatten all history across all instruments into one sorted array
   const allEvents = [];
   Object.entries(db.history || {}).forEach(([instId, events]) => {
-    const inst = db.instruments.find(i => i.id === Number(instId));
+    const inst = db.instruments.find(i => String(i.id) === String(instId));
     (events || []).forEach(ev => allEvents.push({ ...ev, instId: Number(instId), inst }));
   });
 
@@ -2829,7 +2827,7 @@ function renderActivity() {
     .sort((a,b) => b[1]-a[1])
     .slice(0,10)
     .map(([id,count]) => {
-      const inst = db.instruments.find(i => i.id === Number(id));
+      const inst = db.instruments.find(i => String(i.id) === String(id));
       return inst ? { inst, count } : null;
     }).filter(Boolean);
 
@@ -3931,7 +3929,7 @@ function getInstrumentUrl(instId) {
 }
 
 function showQR(instId) {
-  const inst = db.instruments.find(i => i.id === instId);
+  const inst = db.instruments.find(i => String(i.id) === String(instId));
   if (!inst) return;
   const qrUrl = getInstrumentUrl(instId);
   let qrImg = '';
@@ -3971,7 +3969,7 @@ function generateQRDataURL(text, cellSize) {
 }
 
 function printSingleLabel(instId) {
-  const inst = db.instruments.find(i => i.id === instId);
+  const inst = db.instruments.find(i => String(i.id) === String(instId));
   if (!inst) return;
   const url = getInstrumentUrl(instId);
   const qrImg = generateQRDataURL(url, 3);
@@ -4145,7 +4143,7 @@ function handleScanResult(text) {
   const urlMatch = text.match(/#instrument=(\d+)/);
   if (urlMatch) {
     const instId = Number(urlMatch[1]);
-    const inst = db.instruments.find(function(i) { return i.id === instId; });
+    const inst = db.instruments.find(function(i) { return String(i.id) === String(instId); });
     if (inst) {
       closeScanner();
       openHistory(instId);
@@ -4170,7 +4168,7 @@ function handleScanResult(text) {
     // Try matching by instrument ID number
     const idNum = Number(trimmed);
     if (!isNaN(idNum)) {
-      const instById = db.instruments.find(function(i) { return i.id === idNum; });
+      const instById = db.instruments.find(function(i) { return String(i.id) === String(idNum); });
       if (instById) {
         closeScanner();
         openHistory(instById.id);
@@ -4202,7 +4200,7 @@ function handleDeepLink() {
     history.replaceState(null, '', window.location.pathname + window.location.search);
     // Wait for data to load, then open history
     const tryOpen = () => {
-      const inst = db.instruments.find(i => i.id === instId);
+      const inst = db.instruments.find(i => String(i.id) === String(instId));
       if (inst) {
         openHistory(instId);
       } else if (db.instruments.length === 0) {
@@ -4230,7 +4228,7 @@ function showConfirm({ title, icon, msg, detail, onConfirm }) {
 }
 
 function updateStatus(id, val) {
-  const i = db.instruments.find(x => x.id === id);
+  const i = db.instruments.find(x => String(x.id) === String(id));
   if (!i) return;
   const prev = i.status;
   showConfirm({
@@ -4248,7 +4246,7 @@ function updateStatus(id, val) {
 }
 
 function updateSite(id, val) {
-  const i = db.instruments.find(x => x.id === id);
+  const i = db.instruments.find(x => String(x.id) === String(id));
   if (!i) return;
   const prev = i.site;
   showConfirm({
@@ -4318,7 +4316,8 @@ function syncWorkOrder(wo) {
     restored_by:     woToSync.restoredBy      || '',
     restored_date:   woToSync.restoredDate    || '',
     priority:        woToSync.priority        || 'Medium',
-    previous_status: woToSync.previousStatus  || ''
+    previous_status: woToSync.previousStatus  || '',
+    closed_date:     woToSync.closedDate      || ''
   }).catch(e => { toast('⚠ WO sync failed: ' + e.message, 'error'); console.error('syncWorkOrder failed', e); });
 }
 
@@ -4343,14 +4342,14 @@ function deleteFromSheet(resource, id) {
   API.del('/' + resource + '/' + id).catch(e => console.warn('deleteFromSheet failed', e));
 }
 function openEditInstrument(id) {
-  const i = db.instruments.find(x => x.id === id);
+  const i = db.instruments.find(x => String(x.id) === String(id));
   if (!i) return;
   ui.modal = 'editinstrument';
   ui.form  = { instId: id, instName: i.name, serial: i.serial, name: i.name, status: i.status, site: i.site, notes: i.notes||'' };
   render();
 }
 function saveEditInstrument(id) {
-  const i = db.instruments.find(x => x.id === id);
+  const i = db.instruments.find(x => String(x.id) === String(id));
   if (!i) return;
   const nameEl = document.getElementById('f-name');
   const name   = nameEl ? nameEl.value : i.name;
@@ -4376,7 +4375,7 @@ function saveEditInstrument(id) {
   try{saveDB('instrument');}catch(e){console.warn('saveDB',e);} closeModal(); toast('Instrument updated');
 }
 function openLogWork(id) {
-  const i = db.instruments.find(x => x.id === id);
+  const i = db.instruments.find(x => String(x.id) === String(id));
   if (!i) return;
   ui.modal = 'logwork';
   ui.form  = { instId: id, instName: i.name, serial: i.serial, by: '', desc: '',
@@ -4387,7 +4386,7 @@ function openLogWork(id) {
 function attachLogWorkFiles(input) {
   const files = Array.from(input.files);
   if (!ui.form.attachments) ui.form.attachments = [];
-  const inst = db.instruments.find(x => x.id === ui.form.instId);
+  const inst = db.instruments.find(x => String(x.id) === String(ui.form.instId));
 
   files.forEach(file => {
     const isPDF = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
@@ -4461,10 +4460,10 @@ function attachLogWorkFiles(input) {
     reader.readAsDataURL(file);
   });
 }
-function openCreateWO(id) { const i=db.instruments.find(x=>x.id===id); if (!i) return; ui.modal='createwo'; ui.form={instId:id,instName:i.name,serial:i.serial}; render(); }
-function openHistory(id)  { const i=db.instruments.find(x=>x.id===id); if (!i) return; ui.modal='history';  ui.form={instId:id,instName:i.name,serial:i.serial}; render(); }
+function openCreateWO(id) { const i=db.instruments.find(x=>String(x.id)===String(id)); if (!i) return; ui.modal='createwo'; ui.form={instId:id,instName:i.name,serial:i.serial}; render(); }
+function openHistory(id)  { const i=db.instruments.find(x=>String(x.id)===String(id)); if (!i) return; ui.modal='history';  ui.form={instId:id,instName:i.name,serial:i.serial}; render(); }
 function openLogCert(id)  {
-  const i = db.instruments.find(x => x.id === id);
+  const i = db.instruments.find(x => String(x.id) === String(id));
   if (!i) return;
   ui.modal = 'logcert';
   ui.form  = { instId: id, instName: i.name, serial: i.serial,
@@ -4473,7 +4472,7 @@ function openLogCert(id)  {
   render();
 }
 function openEditCert(id) {
-  const i = db.instruments.find(x => x.id === id);
+  const i = db.instruments.find(x => String(x.id) === String(id));
   if (!i) return;
   ui.modal = 'logcert';
   ui.form  = { instId: id, instName: i.name, serial: i.serial,
@@ -4482,7 +4481,7 @@ function openEditCert(id) {
   render();
 }
 function openSetCertInterval(id) {
-  const i = db.instruments.find(x => x.id === id);
+  const i = db.instruments.find(x => String(x.id) === String(id));
   if (!i) return;
   ui.modal = 'setcertinterval';
   ui.form  = { instId: id, instName: i.name, serial: i.serial,
@@ -4497,7 +4496,7 @@ function saveSetCertInterval() {
     ui.form = {...ui.form, err: 'Enter a valid interval between 1 and 120 months.'};
     render(); return;
   }
-  const i = db.instruments.find(x => x.id === ui.form.instId);
+  const i = db.instruments.find(x => String(x.id) === String(ui.form.instId));
   if (!i) return;
   i.certIntervalMonths = months;
   API.put('/instruments/' + i.id, {
@@ -4889,7 +4888,8 @@ function confirmApproveWO() {
     submitted_date: wo.submittedDate   || '',
     restore_reason: wo.restoreReason   || '',
     restored_by:    wo.restoredBy      || '',
-    restored_date:  wo.restoredDate    || ''
+    restored_date:  wo.restoredDate    || '',
+    closed_date:    today()
   }).catch(e => { toast('⚠ Save failed: ' + e.message, 'error'); console.error('approveWO failed', e); });
   // Instrument → Operational at HQ/SHOP
   const inst = db.instruments.find(i => String(i.id) === String(wo.instrumentId));
@@ -4963,7 +4963,7 @@ function permanentlyDeleteSite(name) {
   });
 }
 function archiveInstrument(id) {
-  const i = db.instruments.find(x => x.id === id);
+  const i = db.instruments.find(x => String(x.id) === String(id));
   if (!i) return;
   showConfirm({
     title: 'ARCHIVE INSTRUMENT',
@@ -4980,7 +4980,7 @@ function archiveInstrument(id) {
   });
 }
 function restoreInstrument(id) {
-  const i = db.instruments.find(x => x.id === id);
+  const i = db.instruments.find(x => String(x.id) === String(id));
   if (!i) return;
   i.archived = false;
   delete i.archivedDate;
@@ -4989,7 +4989,7 @@ function restoreInstrument(id) {
   saveDB('instrument'); render(); toast(`${i.serial} restored`);
 }
 function permanentlyDeleteInstrument(id) {
-  const i = db.instruments.find(x => x.id === id);
+  const i = db.instruments.find(x => String(x.id) === String(id));
   if (!i || !i.archived) return;
   showConfirm({
     title: 'PERMANENTLY DELETE',
@@ -5243,7 +5243,7 @@ function exportCSV() {
 function exportWOCSV() {
   const rows = [['WO #','Instrument Type','Serial Number','WO Type','Status','Technician','Description','Created']];
   db.workOrders.forEach(wo => {
-    const inst = db.instruments.find(i => i.id === wo.instrumentId);
+    const inst = db.instruments.find(i => String(i.id) === String(wo.instrumentId));
     rows.push([
       `WO-${wo.id}`,
       inst ? inst.name  : '—',
@@ -5270,7 +5270,7 @@ function exportOpenWOPDF() {
   const generatedDate = new Date().toLocaleString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
 
   const instSections = Object.entries(byInst).map(([instId, wos]) => {
-    const inst = db.instruments.find(i => i.id === parseInt(instId));
+    const inst = db.instruments.find(i => String(i.id) === String(instId));
     if (!inst) return '';
     const certInfo = (inst.name==='BC1060'&&inst.lastCertDate)
       ? '<div style="padding:6px 16px;font-size:10px;font-family:\'IBM Plex Mono\',monospace;color:#555;border-bottom:1px solid #e5e7eb"><strong>EPA CERT</strong> · Last: '+esc(inst.lastCertDate)+' · Next: '+certDueDate(inst.lastCertDate, inst.certIntervalMonths)+'</div>' : '';
@@ -5344,8 +5344,10 @@ body{font-family:'IBM Plex Sans',sans-serif;font-size:12px;color:#1e293b;backgro
 function printWO(wid) {
   const wo   = db.workOrders.find(w => String(w.id) === String(wid));
   if (!wo) return;
-  const inst = db.instruments.find(i => i.id === wo.instrumentId);
+  const inst = db.instruments.find(i => String(i.id) === String(wo.instrumentId));
   const gen  = new Date().toLocaleString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  const qrText = inst ? (inst.name + ' | S/N: ' + inst.serial + ' | WO-' + wo.id) : ('WO-' + wo.id);
+  const qrDataUrl = generateQRDataURL(qrText, 3);
 
   const statusClass = wo.status==='Closed'?'status-closed':wo.status==='Open'?'status-open':'status-other';
   const epaCert = (inst && inst.name === 'BC1060' && inst.lastCertDate)
@@ -5356,7 +5358,7 @@ function printWO(wid) {
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'IBM Plex Sans',sans-serif;font-size:12px;color:#1e293b;background:#fff}
 @media print{*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.no-print{display:none!important}@page{margin:12mm 14mm;size:letter}}
-.page{max-width:800px;margin:0 auto}
+.page{max-width:800px;margin:0 auto;position:relative;min-height:calc(100vh - 20px);padding-bottom:120px}
 .header{padding:24px 32px 20px;border-bottom:2px solid #334155;display:flex;justify-content:space-between;align-items:flex-start;background:linear-gradient(135deg,#f0f5fa 0%,#e8eef6 100%)}
 .header-left{display:flex;align-items:center;gap:16px}
 .logo-mark{width:40px;height:40px;border:2px solid #3b82f6;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#1e40af;background:#dbeafe}
@@ -5386,12 +5388,11 @@ body{font-family:'IBM Plex Sans',sans-serif;font-size:12px;color:#1e293b;backgro
 .sec-hdr{padding:8px 16px;font-size:9px;font-weight:700;color:#3b82f6;letter-spacing:.1em;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;border-bottom:1px solid #cbd5e1;background:#f0f5fa}
 .sec-body{padding:16px;font-size:12px;line-height:1.7;color:#1e293b;min-height:40px}
 .sec-body.empty{color:#94a3b8;font-style:italic}
-.sign-section{margin:20px 32px 0;border:1px solid #cbd5e1;overflow:hidden}
-.sign-hdr{padding:8px 16px;font-size:9px;font-weight:700;color:#3b82f6;letter-spacing:.1em;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;border-bottom:1px solid #cbd5e1;background:#f0f5fa}
-.sign-grid{display:grid;grid-template-columns:1fr 1fr 1fr;padding:16px;gap:20px}
-.sign-field{display:flex;flex-direction:column;gap:24px}
-.sign-label{font-size:9px;font-weight:600;color:#64748b;letter-spacing:.08em;text-transform:uppercase;font-family:'IBM Plex Mono',monospace}
-.sign-line{border-bottom:1px solid #334155;height:28px}
+.sign-section{margin:0 32px;position:absolute;bottom:80px;left:0;right:0}
+.sign-grid{display:flex;gap:32px;align-items:flex-end}
+.sign-field{flex:1}
+.sign-label{font-size:8px;font-weight:600;color:#94a3b8;letter-spacing:.08em;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;margin-bottom:2px}
+.sign-line{border-bottom:1px solid #94a3b8;height:20px}
 .footer{margin-top:20px;padding:10px 32px;border-top:2px solid #334155;display:flex;justify-content:space-between;font-size:8px;color:#64748b;font-family:'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;background:#f8fafc}
 .print-bar{text-align:center;padding:16px;border-top:1px solid #e2e8f0;margin-top:8px}
 .print-btn{background:#3b82f6;color:#fff;border:none;padding:10px 28px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;letter-spacing:.02em}
@@ -5406,7 +5407,9 @@ body{font-family:'IBM Plex Sans',sans-serif;font-size:12px;color:#1e293b;backgro
         '<div class="logo-mark">SD</div>' +
         '<div><div class="org-name">SDAPCD</div><div class="org-sub">San Diego Air Pollution Control District</div></div>' +
       '</div>' +
-      '<div class="header-right"><div>Generated</div><strong>'+gen+'</strong></div>' +
+      '<div class="header-right">' +
+        (qrDataUrl ? '<img src="'+qrDataUrl+'" style="width:60px;height:60px;margin-bottom:4px;border:1px solid #cbd5e1;border-radius:3px"/>' : '') +
+        '<div style="font-size:9px;color:#64748b">Generated</div><strong>'+gen+'</strong></div>' +
     '</div>' +
 
     '<div class="wo-banner">' +
@@ -5442,11 +5445,11 @@ body{font-family:'IBM Plex Sans',sans-serif;font-size:12px;color:#1e293b;backgro
       '<div class="sec-body'+(wo.description?'':' empty')+'">'+(wo.description?esc(wo.description):'No description recorded.')+'</div>' +
     '</div>' +
 
-    '<div class="sign-section"><div class="sign-hdr">Completion Sign-Off</div>' +
+    '<div class="sign-section">' +
       '<div class="sign-grid">' +
-        '<div class="sign-field"><div><div class="sign-label">Completed By</div><div class="sign-line"></div></div></div>' +
-        '<div class="sign-field"><div><div class="sign-label">Title</div><div class="sign-line"></div></div></div>' +
-        '<div class="sign-field"><div><div class="sign-label">Date Completed</div><div class="sign-line"></div></div></div>' +
+        '<div class="sign-field"><div class="sign-line"></div><div class="sign-label">Completed By</div></div>' +
+        '<div class="sign-field"><div class="sign-line"></div><div class="sign-label">Title</div></div>' +
+        '<div class="sign-field"><div class="sign-line"></div><div class="sign-label">Date</div></div>' +
       '</div>' +
     '</div>' +
 
@@ -5463,7 +5466,7 @@ body{font-family:'IBM Plex Sans',sans-serif;font-size:12px;color:#1e293b;backgro
 
 
 function printHistory(id) {
-  const inst = db.instruments.find(x => x.id === id);
+  const inst = db.instruments.find(x => String(x.id) === String(id));
   if (!inst) return;
   const hist = db.history[id] || [];
   const generated = new Date().toLocaleString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -6009,7 +6012,7 @@ function renderSites() {
   const m    = (db.sitesMeta || {})[s] || {};
   const siteInsts = db.instruments.filter(i => !i.archived && i.site === s);
   const openWOs   = db.workOrders.filter(w => {
-    const inst = db.instruments.find(i => i.id === w.instrumentId);
+    const inst = db.instruments.find(i => String(i.id) === String(w.instrumentId));
     return inst && inst.site === s && w.status !== 'Closed';
   }).length;
   const overdueCount = siteInsts.filter(i => { const d = certDaysLeft(i); return d !== null && d < 0; }).length;
