@@ -556,6 +556,7 @@ body {
 .btn-history  { background: var(--surface2); color: var(--slate); border-color: var(--border); position: relative; }
 .hist-badge { display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:var(--purple);color:#fff;font-size:9px;font-weight:700;margin-left:5px;line-height:1;letter-spacing:0; }
 .btn-qr { padding: 4px 7px; font-size: 13px; }
+.toast { position:fixed;bottom:32px;left:50%;transform:translateX(-50%);z-index:9999;padding:10px 22px;border-radius:var(--radius);font-family:var(--font-mono);font-size:12px;font-weight:600;background:var(--surface2);color:var(--text);border:1px solid var(--border);box-shadow:0 4px 16px rgba(0,0,0,.25);white-space:nowrap; }
 .more-menu-wrap { position: relative; display: inline-block; }
 .btn-more { padding: 4px 8px; font-size: 15px; font-weight: 700; letter-spacing: 2px; }
 .more-menu { display: none; position: absolute; right: 0; top: 100%; margin-top: 4px; min-width: 140px; background: var(--surface3); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 8px 24px rgba(0,0,0,.45); z-index: 50; padding: 4px 0; }
@@ -821,15 +822,15 @@ body {
 /* ── TOAST ──────────────────────────────────────────────── */
 #toast {
   position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
-  background: linear-gradient(135deg, rgba(20,28,44,.99), rgba(12,18,30,.99));
-  border: 1px solid rgba(34,211,238,.24);
-  color: var(--text);
+  background: #1e293b;
+  border: 1px solid rgba(100,116,139,.4);
+  color: #f1f5f9;
   padding: 10px 18px;
   border-radius: var(--radius-lg);
   font-family: var(--font-mono); font-size: 12px;
   z-index: 10000;
   display: none;
-  box-shadow: var(--shadow-md), var(--glow-sm);
+  box-shadow: 0 4px 12px rgba(0,0,0,.3);
   animation: toast-in .2s ease;
   max-width: 340px;
   letter-spacing: .01em;
@@ -917,7 +918,7 @@ const SEED = [
 
 // ── API CLIENT ─────────────────────────────────────────────
 // ── GOOGLE APPS SCRIPT API CLIENT ──────────────────────────
-const GAS_URL = 'https://script.google.com/macros/s/AKfycby06qwg0bTTIPIeOoFtGBsHfWuW10QZxkkcwLF_fqLrkXJrDWyxvSF4L_WnrgKOY4Q8/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwk7fxGsSTaRNMWWVSz9ISyJLBoSuJDXE7_TMqMJSIOmFX8dLDS0GAehMCrOMbK3As2/exec';
 
 const GAS_KEY = 'sdapcd-8f3k2m9x7q4w1e6r';
 
@@ -969,7 +970,7 @@ const API = {
       instrName:   instrName  || '',
       instrSerial: instrSerial|| '',
       workType:    workType   || '',
-      uploadDate:  new Date().toISOString().slice(0,10)
+      uploadDate:  today()
     });
   },
   async get(path) {
@@ -1164,8 +1165,8 @@ let ui = {
 })();
 
 // ── HELPERS ────────────────────────────────────────────────
-const today       = () => new Date().toISOString().slice(0, 10);
-const nowTs       = () => new Date().toLocaleString('en-US', {month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'});
+const today       = () => new Date().toLocaleDateString('en-US', {timeZone:'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit'}).replace(/(\d+)\/(\d+)\/(\d+)/, '$3-$1-$2');
+const nowTs       = () => new Date().toLocaleString('en-US', {timeZone:'America/Los_Angeles',month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'});
 const esc         = s  => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const plural      = (n, w) => `${n} ${w}${n !== 1 ? 's' : ''}`;
 const statusClass = s  => ({
@@ -1257,6 +1258,7 @@ function getVal(id) {
 let _toastTimer;
 function toggleMoreMenu(btn) {
   const menu = btn.nextElementSibling;
+  if (!menu) return;
   const wasOpen = menu.classList.contains('open');
   document.querySelectorAll('.more-menu.open').forEach(m => m.classList.remove('open'));
   if (!wasOpen) menu.classList.add('open');
@@ -1266,10 +1268,13 @@ document.addEventListener('click', function(e) {
     document.querySelectorAll('.more-menu.open').forEach(m => m.classList.remove('open'));
   }
 });
+let _moreMenuTimer;
 document.addEventListener('mouseover', function(e) {
-  if (!e.target.closest('.more-menu-wrap')) {
+  clearTimeout(_moreMenuTimer);
+  if (e.target.closest('.more-menu-wrap')) return;
+  _moreMenuTimer = setTimeout(function() {
     document.querySelectorAll('.more-menu.open').forEach(m => m.classList.remove('open'));
-  }
+  }, 400);
 });
 
 function toast(msg, severity) {
@@ -2177,11 +2182,42 @@ function renderModal() {
       </div>
     </div>` : '';
 
+    // Work orders for this instrument
+    const instWOs = db.workOrders.filter(w => String(w.instrumentId) === String(f.instId))
+      .sort((a,b) => Number(b.id) - Number(a.id));
+    const woSection = instWOs.length > 0 ? `
+    <div style="margin-top:16px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg)">
+      <div style="font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--subtle);margin-bottom:10px">WORK ORDERS (${instWOs.length})</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${instWOs.map(w => {
+          const p = typeof PRIORITY_COLORS !== 'undefined' ? (PRIORITY_COLORS[w.priority] || PRIORITY_COLORS.Medium) : {bg:'transparent',color:'var(--muted)',border:'var(--border)',icon:''};
+          return `
+          <div style="padding:8px 10px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);cursor:pointer" onclick="openWO(${w.id})">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
+              <strong style="font-family:var(--font-mono);font-size:12px;color:var(--text)">WO-${esc(String(w.id))}</strong>
+              <span class="${statusClass(w.status)}" style="padding:2px 7px;border-radius:var(--radius);font-size:10px;font-weight:600">${esc(w.status)}</span>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;font-family:var(--font-mono);font-size:10px;color:var(--muted)">
+              <span>${esc(w.type||'—')}</span>
+              <span>·</span>
+              <span style="display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:var(--radius);background:${p.bg};color:${p.color};border:1px solid ${p.border};font-size:10px">${p.icon} ${esc(w.priority||'Medium')}</span>
+              <span>·</span>
+              <span>${esc(w.technician||'Unassigned')}</span>
+              <span>·</span>
+              <span>${esc(w.created||'')}</span>
+            </div>
+            ${w.problem ? `<div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(w.problem)}</div>` : ''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>` : '';
+
     return modalShell('INSTRUMENT HISTORY', `
       <div class="modal-sub">${esc(f.instName)} · ${esc(f.serial)}</div>
       ${hist.length === 0
         ? '<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">No history recorded yet.</div>'
         : `<div style="border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">${entries}</div>`}
+      ${woSection}
       ${allAttachSection}`,
       `<button class="btn-export" onclick="printHistory(${f.instId})">⎙ Print PDF</button>
        <button class="btn-save" onclick="closeModal()">Close</button>`
@@ -2752,7 +2788,7 @@ function renderWorkOrders() {
   return `
   <div class="print-header">
     <h1>SDAPCD — Open Work Orders</h1>
-    <p>San Diego Air Pollution Control District &nbsp;·&nbsp; Instrument Management &nbsp;·&nbsp; Generated: ${new Date().toLocaleString('en-US',{dateStyle:'long',timeStyle:'short'})}</p>
+    <p>San Diego Air Pollution Control District &nbsp;·&nbsp; Instrument Management &nbsp;·&nbsp; Generated: ${new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles',dateStyle:'long',timeStyle:'short'})}</p>
   </div>
 
   <div class="section-hdr print-hide">
@@ -3836,7 +3872,7 @@ function submitAdminPassword() {
 function gasTestLog(msg, ok) {
   const el = document.getElementById('gas-test-result');
   if (!el) return;
-  const ts = new Date().toLocaleTimeString();
+  const ts = new Date().toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles'});
   const icon = ok === true ? '✅' : ok === false ? '❌' : '⏳';
   el.textContent = icon + ' [' + ts + '] ' + msg;
   el.style.color = ok === true ? 'var(--green)' : ok === false ? 'var(--red)' : 'var(--amber)';
@@ -4663,9 +4699,9 @@ function checkDuplicateSerial(val) {
 function saveAdd() {
   const nameEl   = document.getElementById('f-name');
   const customEl = document.getElementById('f-custom-name');
-  const name     = nameEl.value === 'custom'
+  const name     = nameEl && nameEl.value === 'custom'
     ? (customEl ? customEl.value.trim().toUpperCase() : '')
-    : nameEl.value;
+    : (nameEl ? nameEl.value : '');
   const serial = getVal('f-serial');
   const statusEl = document.getElementById('f-status');
   const siteEl   = document.getElementById('f-site');
@@ -4846,7 +4882,8 @@ function saveLogWork() {
 }
 
 function saveEditWO(wid) {
-  const type = document.getElementById('f-type').value;
+  const typeEl = document.getElementById('f-type');
+  const type = typeEl ? typeEl.value : '';
   const by   = getVal('f-by');
   const desc = getVal('f-desc');
   const priority = document.getElementById('f-priority') ? document.getElementById('f-priority').value : 'Medium';
@@ -5356,7 +5393,7 @@ function exportOpenWOPDF() {
   if (openWOs.length === 0) { toast('⚠ No open work orders to export'); return; }
   const byInst = {};
   openWOs.forEach(wo => { if (!byInst[wo.instrumentId]) byInst[wo.instrumentId]=[]; byInst[wo.instrumentId].push(wo); });
-  const generatedDate = new Date().toLocaleString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  const generatedDate = new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles',weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
 
   const instSections = Object.entries(byInst).map(([instId, wos]) => {
     const inst = db.instruments.find(i => String(i.id) === String(instId));
@@ -5434,7 +5471,7 @@ function printWO(wid) {
   const wo   = db.workOrders.find(w => String(w.id) === String(wid));
   if (!wo) return;
   const inst = db.instruments.find(i => String(i.id) === String(wo.instrumentId));
-  const gen  = new Date().toLocaleString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  const gen  = new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles',weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
   const qrDataUrl = inst ? generateQRDataURL(getInstrumentUrl(inst.id), 3) : '';
 
   const statusClass = wo.status==='Closed'?'status-closed':wo.status==='Open'?'status-open':'status-other';
@@ -5557,7 +5594,7 @@ function printHistory(id) {
   const inst = db.instruments.find(x => String(x.id) === String(id));
   if (!inst) return;
   const hist = db.history[id] || [];
-  const generated = new Date().toLocaleString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  const generated = new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles',weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
 
   const rows = hist.map(h =>
     '<tr><td class="ts">' + esc(h.ts||'') + '</td><td class="act">' + esc(h.action||'') + '</td><td>' + esc(h.detail||'') + '</td></tr>'
@@ -5865,7 +5902,7 @@ async function saveAddSitePhotoLink() {
     ui.form.err = 'Please paste a valid Google Drive URL'; render(); return;
   }
   const directUrl = driveDirectUrl(url);
-  const fileName  = label || ('Site Photo ' + new Date().toLocaleDateString());
+  const fileName  = label || ('Site Photo ' + new Date().toLocaleDateString('en-US',{timeZone:'America/Los_Angeles'}));
   /* showLoading/hideLoading removed — not defined */
   try {
     const saved = await API.post('/attachments', {
