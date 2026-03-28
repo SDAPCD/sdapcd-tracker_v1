@@ -556,7 +556,6 @@ body {
 .btn-history  { background: var(--surface2); color: var(--slate); border-color: var(--border); position: relative; }
 .hist-badge { display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:var(--purple);color:#fff;font-size:9px;font-weight:700;margin-left:5px;line-height:1;letter-spacing:0; }
 .btn-qr { padding: 4px 7px; font-size: 13px; }
-.toast { position:fixed;bottom:32px;left:50%;transform:translateX(-50%);z-index:9999;padding:10px 22px;border-radius:var(--radius);font-family:var(--font-mono);font-size:12px;font-weight:600;background:var(--surface2);color:var(--text);border:1px solid var(--border);box-shadow:0 4px 16px rgba(0,0,0,.25);white-space:nowrap; }
 .more-menu-wrap { position: relative; display: inline-block; }
 .btn-more { padding: 4px 8px; font-size: 15px; font-weight: 700; letter-spacing: 2px; }
 .more-menu { display: none; position: absolute; right: 0; top: 100%; margin-top: 4px; min-width: 140px; background: var(--surface3); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 8px 24px rgba(0,0,0,.45); z-index: 50; padding: 4px 0; }
@@ -604,7 +603,7 @@ body {
   max-height: calc(100vh - 32px);
   overflow: hidden;
   display: flex; flex-direction: column;
-  min-height: 0;
+  flex-grow: 0; flex-shrink: 0; flex-basis: auto;
   animation: modal-in .18s cubic-bezier(.22,.9,.28,1);
   box-shadow: 0 0 0 1px rgba(34,211,238,.05), var(--shadow-lg);
 }
@@ -673,8 +672,8 @@ body {
 .wo-tab.cert-tab.active { color: var(--purple); border-color: rgba(167,139,250,.3); background: rgba(167,139,250,.1); }
 
 /* ── CONFIRM MODAL ──────────────────────────────────────── */
-.confirm-modal { max-width: 420px; }
-.confirm-icon { font-size: 30px; margin-bottom: 12px; display: block; }
+.confirm-modal { width: 380px; max-width: 90vw; padding: 18px 22px; }
+.confirm-icon { font-size: 26px; margin-bottom: 8px; display: block; }
 .confirm-msg { font-size: 13px; color: var(--text); line-height: 1.65; margin-bottom: 6px; }
 .confirm-detail { font-family: var(--font-mono); font-size: 11px; color: var(--blue); background: var(--blue-dim); border: 1px solid rgba(34,211,238,.18); border-radius: var(--radius); padding: 8px 12px; margin-bottom: 4px; }
 .btn-confirm-ok { background: rgba(248,113,113,.11); color: var(--red); border: 1px solid rgba(248,113,113,.27); padding: 7px 20px; border-radius: var(--radius); font-size: 12px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .04em; cursor: pointer; transition: all .15s; }
