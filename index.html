@@ -917,7 +917,7 @@ const SEED = [
 
 // ── API CLIENT ─────────────────────────────────────────────
 // ── GOOGLE APPS SCRIPT API CLIENT ──────────────────────────
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzn8QHKyw25o3GeGQ8frQsZgUA9lvlKrGGScTLdlkKlAxDC4lxgQJ7On8nSLKWfsu8Y/exec';
+const GAS_URL = 'https://https://script.google.com/macros/s/AKfycbwli72JAIakq76l_MyFp8C48nBFslwBqYOflJ0rk5UhIyN3auJLCOt89l0JQsNOL-D6/exec';
 const GAS_KEY = 'sdapcd-8f3k2m9x7q4w1e6r';
 
 async function gasRequest(path, action, params, body) {
@@ -6175,7 +6175,7 @@ function renderSites() {
               <span style="font-family:var(--font-mono);font-size:9px;color:var(--subtle);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100px" title="${esc(label)}">${esc(label)}</span>
               <div style="display:flex;gap:4px">
                 <a href="${esc(viewUrl)}" target="_blank" style="font-family:var(--font-mono);font-size:9px;color:var(--blue);text-decoration:none;padding:2px 5px;border:1px solid rgba(88,166,255,.2);border-radius:var(--radius)">↗</a>
-                ${currentUserHasFullControl() ? `<button onclick="removeSitePhotoById(${p.id})" style="background:none;border:1px solid rgba(248,81,73,.2);color:var(--red);font-family:var(--font-mono);font-size:9px;padding:2px 5px;border-radius:var(--radius);cursor:pointer">✕</button>` : ''}
+                ${currentUserHasFullControl() ? `<button onclick="removeSitePhotoById(${p.attachmentId})" style="background:none;border:1px solid rgba(248,81,73,.2);color:var(--red);font-family:var(--font-mono);font-size:9px;padding:2px 5px;border-radius:var(--radius);cursor:pointer">✕</button>` : ''}
               </div>
             </div>
           </div>`;}).join('')}
