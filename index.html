@@ -145,6 +145,7 @@
 [data-theme="light"] .c-green { text-shadow: none; }
 [data-theme="light"] .c-amber { text-shadow: none; }
 [data-theme="light"] .c-red   { text-shadow: none; }
+[data-theme="light"] .stat-card.active { background: rgba(100,116,139,.18); border-color: rgba(100,116,139,.4); }
 [data-theme="light"] .stat-card.active .stat-num { text-shadow: none; }
 
 /* ── RESET ──────────────────────────────────────────────── */
@@ -241,20 +242,6 @@ body {
   overflow-y: auto;
   min-height: 0;
 }
-.btn-dash {
-  display: flex; align-items: center; gap: 10px;
-  width: 100%; text-align: left;
-  background: transparent; color: var(--muted);
-  border: 1px solid transparent;
-  padding: 9px 12px; border-radius: var(--radius);
-  font-size: 12px; font-weight: 500;
-  font-family: var(--font-mono); letter-spacing: .03em;
-  cursor: pointer;
-  transition: background .15s, border-color .15s, color .15s;
-}
-.btn-dash:hover { border-color: rgba(34,211,238,.2); color: var(--blue); background: rgba(34,211,238,.07); }
-.btn-dash.active { background: linear-gradient(135deg,rgba(34,211,238,.12),rgba(34,211,238,.05)); color:var(--blue); border-color:rgba(34,211,238,.32); font-weight:600; box-shadow:inset 3px 0 0 var(--blue); }
-.btn-dash .nav-icon { font-size: 14px; width: 20px; text-align: center; flex-shrink: 0; }
 .btn-nav {
   display: flex; align-items: center; gap: 10px;
   width: 100%; text-align: left;
@@ -263,7 +250,7 @@ body {
   color: var(--muted);
   padding: 9px 12px;
   border-radius: var(--radius);
-  font-size: 12px; font-weight: 500;
+  font-size: 13px; font-weight: 500;
   font-family: var(--font-mono); letter-spacing: .03em;
   cursor: pointer;
   transition: background .15s, color .15s, border-color .15s, box-shadow .15s;
@@ -280,7 +267,7 @@ body {
   font-weight: 600;
   box-shadow: inset 3px 0 0 var(--blue), var(--glow-sm);
 }
-.btn-nav .nav-icon { font-size: 14px; width: 20px; text-align: center; flex-shrink: 0; opacity: .8; }
+.btn-nav .nav-icon { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; opacity: .9; }
 .btn-nav.active .nav-icon { opacity: 1; }
 .sb-footer {
   padding: 10px 10px 16px;
@@ -368,11 +355,11 @@ body {
 }
 .stat-card:hover { transform: translateY(-2px); border-color: rgba(34,211,238,.38); box-shadow: 0 6px 28px rgba(0,0,0,.55), var(--glow-sm); }
 .stat-card:hover::after { opacity: 1; transform: scaleX(1); }
-.stat-card.active { border-color: rgba(148,163,184,.5); background: linear-gradient(145deg, rgba(148,163,184,.1) 0%, rgba(14,20,34,.96) 60%); box-shadow: 0 4px 24px rgba(0,0,0,.5), 0 0 14px rgba(148,163,184,.15); }
+.stat-card.active { border-color: var(--border); background: transparent; box-shadow: none; }
 .stat-card.active::after { opacity: 1; transform: scaleX(1); background: var(--slate); }
 .stat-label { font-size: 9.5px; font-weight: 600; color: var(--subtle); letter-spacing: .11em; margin-bottom: 10px; text-transform: uppercase; font-family: var(--font-mono); }
 .stat-num { font-size: 32px; font-weight: 600; line-height: 1; color: var(--text); font-family: var(--font-mono); letter-spacing: -.02em; }
-.stat-card.active .stat-num { color: var(--slate); text-shadow: 0 0 18px rgba(148,163,184,.35); }
+.stat-card.active .stat-num { color: var(--slate); text-shadow: none; }
 .c-blue  { color: var(--blue);   text-shadow: 0 0 12px rgba(34,211,238,.4); }
 .c-green { color: var(--green);  text-shadow: 0 0 12px rgba(52,211,153,.35); }
 .c-amber { color: var(--amber);  text-shadow: 0 0 12px rgba(251,191,36,.3); }
@@ -457,7 +444,7 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow: visible;
   box-shadow: var(--shadow);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -483,6 +470,19 @@ body {
 .inst-table tbody tr:nth-child(even) td { background: rgba(255,255,255,.015); }
 .inst-table tr:hover td { background: rgba(34,211,238,.04); transition: background .1s; }
 .empty-row td { text-align: center; padding: 36px; color: var(--subtle); font-size: 13px; font-family: var(--font-mono); }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; padding: 14px; }
+.inst-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; transition: border-color .15s, box-shadow .15s; }
+.inst-card:hover { border-color: rgba(34,211,238,.25); box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+.inst-card-hdr { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.inst-card-name { font-size: 14px; font-weight: 700; color: var(--text); font-family: var(--font-mono); }
+.inst-card-sn { font-size: 11px; color: var(--blue); font-family: var(--font-mono); margin-top: 2px; }
+.inst-card-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 12px; }
+.inst-card-lbl { color: var(--subtle); font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.inst-card-val { color: var(--text); font-family: var(--font-mono); font-size: 12px; font-weight: 500; }
+.inst-card-actions { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border2); flex-wrap: wrap; }
+.view-toggle { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.view-toggle button { background: var(--surface2); border: none; padding: 5px 10px; cursor: pointer; font-size: 13px; color: var(--muted); transition: all .15s; }
+.view-toggle button.active { background: var(--blue); color: #fff; }
 .inst-name { font-size: 13px; font-weight: 600; color: var(--text); font-family: var(--font-mono); }
 .inst-sn   { font-family: var(--font-mono); font-size: 11px; color: var(--blue); margin-top: 2px; opacity: .78; }
 .inst-notes { font-size: 11px; color: var(--subtle); margin-top: 3px; font-style: italic; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -917,17 +917,13 @@ const SEED = [
 
 // ── API CLIENT ─────────────────────────────────────────────
 // ── GOOGLE APPS SCRIPT API CLIENT ──────────────────────────
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxloApkh9V6TkmX85xoVr4Vc4ogUKvvCbjTVPthSLuILl6jJXXRLgJEHkX05NKkEFLB/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzn8QHKyw25o3GeGQ8frQsZgUA9lvlKrGGScTLdlkKlAxDC4lxgQJ7On8nSLKWfsu8Y/exec';
+const GAS_KEY = 'sdapcd-8f3k2m9x7q4w1e6r';
 
 async function gasRequest(path, action, params, body) {
-  // ── STRATEGY: GET with every field as individual URL param ──
-  // This is the ONLY 100% reliable approach with GAS.
-  // GAS POST redirect drops the body. JSON body param parsing is fragile.
-  // Individual URL params arrive in e.parameter every time, no parsing needed.
-  // Exception: file uploads POST base64 data (too large for URL params).
-
   const isFileUpload = path === 'upload' && action === 'file';
   const url = new URL(GAS_URL);
+  url.searchParams.set('apikey', GAS_KEY);
   url.searchParams.set('path', path);
   url.searchParams.set('action', action);
 
@@ -1062,8 +1058,7 @@ async function loadDBFromServer() {
       });
     }
     markAllSynced();
-    // Admin password comes directly from GAS getFullDB as db.adminPassword
-    if (!db.adminPassword) db.adminPassword = 'circuit';
+    if (!db.adminPassword) db.adminPassword = null;
     // Load attachments — map to instruments and sitesMeta
     if (!db.attachments) db.attachments = [];
     if (db.attachments.length > 0) {
@@ -1093,18 +1088,15 @@ async function loadDBFromServer() {
 
 // ── SESSION USER ───────────────────────────────────────────
 // ── PASSWORD HELPERS ────────────────────────────────────────
-// Passwords stored as plain text in Google Sheets (technicians.password)
-// Admin password stored in settings tab as 'admin_password'
-// Default password for all users: circuit
 
 function getStoredPassword(username) {
   if (!username) return null;
   if (username.toLowerCase() === 'admin') {
-    return db.adminPassword || 'circuit';
+    return db.adminPassword || null;
   }
   const all = [...(db.techs||[]), ...(db.archivedTechs||[])];
   const tech = all.find(t => (t.username||'').toLowerCase() === username.toLowerCase());
-  return tech ? (tech.password || 'circuit') : null;
+  return tech ? (tech.password || null) : null;
 }
 
 function setStoredPassword(username, newPw) {
@@ -1145,6 +1137,7 @@ function clearSessionUser() {
 let ui = {
   page: 'dashboard', modal: null, form: {},
   search: '', statusF: 'All Statuses', typeF: 'All Types', locationF: 'Field & Shop',
+  viewMode: 'table',
   activeStatCard: null, adminInstrSearch: '',
   woFilter: 'Open', woSearch: '', woTypeF: 'All Status', woDateFrom: '', woDateTo: '',
   certSearch: '', certStatusF: 'All Status', certDateFrom: '', certDateTo: '',
@@ -1152,7 +1145,7 @@ let ui = {
   slSearch: '', slTypeF: 'All Types', slTechF: 'All Techs', slDateFrom: '', slDateTo: '',
   selectedSite: '',
   dirty: false,
-  theme: (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('sdapcd_theme')) || 'dark',
+  theme: (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('sdapcd_theme')) || 'light',
   currentUser: getSessionUser(),
   currentUsername: (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('sdapcd_username')) || '',
   adminUnlocked: false,
@@ -1272,6 +1265,11 @@ document.addEventListener('click', function(e) {
     document.querySelectorAll('.more-menu.open').forEach(m => m.classList.remove('open'));
   }
 });
+document.addEventListener('mouseover', function(e) {
+  if (!e.target.closest('.more-menu-wrap')) {
+    document.querySelectorAll('.more-menu.open').forEach(m => m.classList.remove('open'));
+  }
+});
 
 function toast(msg, severity) {
   clearTimeout(_toastTimer);
@@ -1352,7 +1350,7 @@ function render() {
   const shop      = inst.filter(isShop);
   const vendor    = inst.filter(isVendor);
   const opCount   = inst.filter(i => i.status === 'Operational').length;
-  const instWithWO = new Set(db.workOrders.filter(w => w.status !== 'Closed').map(w => w.instrumentId));
+  const instWithWO = new Set(db.workOrders.filter(w => w.status !== 'Closed').map(w => String(w.instrumentId)));
   const openWOCount = db.workOrders.filter(w => w.status !== 'Closed').length;
 
   const filtered = inst.filter(i => {
@@ -1364,7 +1362,7 @@ function render() {
     if (ui.activeStatCard === 'operational') return mq && i.status === 'Operational';
     if (ui.activeStatCard === 'field')       return mq && isField(i);
     if (ui.activeStatCard === 'shop')        return mq && isShop(i);
-    if (ui.activeStatCard === 'nowork')      return mq && instWithWO.has(i.id);
+    if (ui.activeStatCard === 'nowork')      return mq && instWithWO.has(String(i.id));
     const ms = ui.statusF   === 'All Statuses' || i.status === ui.statusF;
     const mt = ui.typeF     === 'All Types'    || i.name   === ui.typeF;
     const ml = ui.locationF === 'Field & Shop'
@@ -1377,7 +1375,7 @@ function render() {
 
   const fField      = filtered.filter(isField);
   const fShopAll    = filtered.filter(isShop);
-  const hasOpenWO   = i => db.workOrders.some(w => w.instrumentId === i.id && w.status !== 'Closed');
+  const hasOpenWO   = i => db.workOrders.some(w => String(w.instrumentId) === String(i.id) && w.status !== 'Closed');
   const fStorage    = fShopAll.filter(i => i.status === 'Operational' && !hasOpenWO(i));
   const fShop       = fShopAll.filter(i => i.status !== 'Operational' || hasOpenWO(i));
   const fVendor     = filtered.filter(isVendor);
@@ -1391,7 +1389,7 @@ function render() {
       <span class="breadcrumb">Instrument Management<br>San Diego APCD</span>
     </div>
     <div class="sb-nav">
-      <button class="btn-dash ${ui.page==='dashboard'?'active':''}" onclick="navigateTo('dashboard')">
+      <button class="btn-nav ${ui.page==='dashboard'?'active':''}" onclick="navigateTo('dashboard')">
         <span class="nav-icon">⊞</span>Dashboard
       </button>
       <button class="btn-nav ${ui.page==='workorders' && ui.woFilter!=='cert'?'active':''}" onclick="navigateTo('workorders')">
@@ -1419,7 +1417,7 @@ function render() {
         <div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);letter-spacing:.06em;margin-bottom:4px">SIGNED IN AS</div>
         <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(ui.currentUser)}</div>
       </div>
-      <button class="btn-nav" onclick="signOut()" style="color:var(--subtle);font-size:11px">
+      <button class="btn-nav" onclick="signOut()" style="color:var(--subtle)">
         <span class="nav-icon">⎋</span>Sign Out
       </button>
     </div>
@@ -1478,6 +1476,10 @@ function render() {
         ${['Field & Shop','In the Field','In the Shop','Storage / Operational','At Vendor'].map(l=>`<option ${ui.locationF===l?'selected':''}>${l}</option>`).join('')}
       </select>
       <button class="btn-act" onclick="ui.search='';ui.statusF='All Statuses';ui.typeF='All Types';ui.locationF='Field & Shop';ui.activeStatCard=null;filterDashboard('');render()" style="white-space:nowrap">✕ Clear</button>
+      <div class="view-toggle">
+        <button class="${ui.viewMode==='table'?'active':''}" onclick="ui.viewMode='table';render()" title="Table view">☰</button>
+        <button class="${ui.viewMode==='card'?'active':''}" onclick="ui.viewMode='card';render()" title="Card view">▦</button>
+      </div>
     </div>
 
     ${(ui.locationF==='Field & Shop'||ui.locationF==='In the Field') ? `
@@ -1486,12 +1488,14 @@ function render() {
         <div class="group-title">▶ In the Field</div>
         <div class="group-count">${plural(fField.length,'instrument')}</div>
       </div>
-      <div class="inst-table inst-table--field"><table>
+      ${ui.viewMode==='card'
+        ? `<div class="card-grid">${fField.length===0?'<div style="grid-column:1/-1;text-align:center;padding:36px;color:var(--subtle);font-family:var(--font-mono)">No field instruments match your filter</div>':fField.map(i=>renderFieldCard(i,fieldSites)).join('')}</div>`
+        : `<div class="inst-table inst-table--field"><table>
         <thead><tr><th>TYPE / SERIAL</th><th>SITE</th><th>STATUS</th><th>ACTIONS</th></tr></thead>
         <tbody>${fField.length===0
           ? '<tr class="empty-row"><td colspan="4">No field instruments match your filter</td></tr>'
           : fField.map(i => renderFieldRow(i, fieldSites)).join('')}</tbody>
-      </table></div>
+      </table></div>`}
     </div>` : ''}
 
     ${(ui.locationF==='Field & Shop'||ui.locationF==='In the Shop'||ui.locationF==='Storage / Operational') ? `
@@ -1500,24 +1504,28 @@ function render() {
         <div class="group-title">🔧 In the Shop</div>
         <div class="group-count">${plural(fShop.length,'instrument')}</div>
       </div>
-      <div class="inst-table inst-table--shop"><table>
+      ${ui.viewMode==='card'
+        ? `<div class="card-grid">${fShop.length===0?'<div style="grid-column:1/-1;text-align:center;padding:36px;color:var(--subtle);font-family:var(--font-mono)">No instruments currently in service</div>':fShop.map(renderShopCard).join('')}</div>`
+        : `<div class="inst-table inst-table--shop"><table>
         <thead><tr><th>TYPE / SERIAL</th><th>LOCATION</th><th>STATUS</th><th>WORK ORDER</th><th>ACTIONS</th></tr></thead>
         <tbody>${fShop.length===0
           ? '<tr class="empty-row"><td colspan="5">No instruments currently in service</td></tr>'
           : fShop.map(renderShopRow).join('')}</tbody>
-      </table></div>
+      </table></div>`}
     </div>
     <div class="group">
       <div class="group-hdr">
         <div class="group-title">📦 Storage / Operational</div>
         <div class="group-count">${plural(fStorage.length,'instrument')}</div>
       </div>
-      <div class="inst-table inst-table--storage"><table>
+      ${ui.viewMode==='card'
+        ? `<div class="card-grid">${fStorage.length===0?'<div style="grid-column:1/-1;text-align:center;padding:36px;color:var(--subtle);font-family:var(--font-mono)">No operational instruments in storage</div>':fStorage.map(renderShopCard).join('')}</div>`
+        : `<div class="inst-table inst-table--storage"><table>
         <thead><tr><th>TYPE / SERIAL</th><th>LOCATION</th><th>STATUS</th><th>WORK ORDER</th><th>ACTIONS</th></tr></thead>
         <tbody>${fStorage.length===0
           ? '<tr class="empty-row"><td colspan="5">No operational instruments in storage</td></tr>'
           : fStorage.map(renderShopRow).join('')}</tbody>
-      </table></div>
+      </table></div>`}
     </div>` : ''}
 
     ${(ui.locationF==='Field & Shop'||ui.locationF==='At Vendor') && (fVendor.length > 0 || ui.locationF==='At Vendor') ? `
@@ -1526,12 +1534,14 @@ function render() {
         <div class="group-title">◈ At Vendor</div>
         <div class="group-count">${plural(fVendor.length,'instrument')}</div>
       </div>
-      <div class="inst-table inst-table--vendor"><table>
+      ${ui.viewMode==='card'
+        ? `<div class="card-grid">${fVendor.length===0?'<div style="grid-column:1/-1;text-align:center;padding:36px;color:var(--subtle);font-family:var(--font-mono)">No instruments currently at vendor</div>':fVendor.map(renderVendorCard).join('')}</div>`
+        : `<div class="inst-table inst-table--vendor"><table>
         <thead><tr><th>TYPE / SERIAL</th><th>LOCATION</th><th>STATUS</th><th>WORK ORDER</th><th>ACTIONS</th></tr></thead>
         <tbody>${fVendor.length===0
           ? '<tr class="empty-row"><td colspan="5">No instruments currently at vendor</td></tr>'
           : fVendor.map(renderVendorRow).join('')}</tbody>
-      </table></div>
+      </table></div>`}
     </div>` : ''}
   `}
   </div>
@@ -1598,9 +1608,9 @@ function renderShopRow(i) {
     </td>
     <td>
       ${(() => {
-        const openWOs = db.workOrders.filter(w => w.instrumentId===i.id && w.status!=='Closed');
+        const openWOs = db.workOrders.filter(w => String(w.instrumentId)===String(i.id) && w.status!=='Closed');
         if (!openWOs.length) return `<button class="btn-act btn-createwo" onclick="openCreateWO(${i.id})" title="Create Work Order (C)">+ CREATE WO</button>`;
-        const latest = openWOs.sort((a,b)=>b.id-a.id)[0];
+        const latest = openWOs.sort((a,b)=>Number(b.id)-Number(a.id))[0];
         return '<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">' +
           `<span class="wo-badge" onclick="openWODetail(${latest.id})">WO-${latest.id} · ${esc(latest.type)}</span>` +
           (openWOs.length > 1 ? `<span style="background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.35);color:var(--amber);border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700;font-family:var(--font-mono);cursor:pointer" onclick="ui.woFilter='Open';ui.page='workorders';render()">+${openWOs.length-1}</span>` : '') +
@@ -1639,9 +1649,9 @@ function renderVendorRow(i) {
     </td>
     <td>
       ${(() => {
-        const openWOs = db.workOrders.filter(w => w.instrumentId===i.id && w.status!=='Closed');
+        const openWOs = db.workOrders.filter(w => String(w.instrumentId)===String(i.id) && w.status!=='Closed');
         if (!openWOs.length) return `<button class="btn-act btn-createwo" onclick="openCreateWO(${i.id})" title="Create Work Order (C)">+ CREATE WO</button>`;
-        const latest = openWOs.sort((a,b)=>b.id-a.id)[0];
+        const latest = openWOs.sort((a,b)=>Number(b.id)-Number(a.id))[0];
         return '<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">' +
           `<span class="wo-badge" onclick="openWODetail(${latest.id})">WO-${latest.id} · ${esc(latest.type)}</span>` +
           (openWOs.length > 1 ? `<span style="background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.35);color:var(--amber);border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700;font-family:var(--font-mono);cursor:pointer" onclick="ui.woFilter='Open';ui.page='workorders';render()">+${openWOs.length-1}</span>` : '') +
@@ -1662,6 +1672,64 @@ function renderVendorRow(i) {
     </td>
   </tr>`;
 }
+
+// ── CARD RENDERERS ──────────────────────────────────────────
+function renderFieldCard(i, fieldSites) {
+  return `<div class="inst-card">
+    <div class="inst-card-hdr">
+      <div><div class="inst-card-name">${esc(i.name)}</div><div class="inst-card-sn">S/N: ${esc(i.serial)}</div></div>
+      <span class="${statusClass(i.status)}" style="padding:2px 8px;border-radius:var(--radius);font-size:10px;font-weight:600;font-family:var(--font-mono)">${esc(i.status)}</span>
+    </div>
+    ${i.notes?`<div style="font-size:11px;color:var(--subtle);font-style:italic;margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(i.notes)}</div>`:''}
+    <div class="inst-card-row"><span class="inst-card-lbl">Site</span><span class="inst-card-val">${esc(i.site||'—')}</span></div>
+    <div class="inst-card-actions">
+      <button class="btn-act btn-history" onclick="openHistory(${i.id})" style="font-size:11px">▤ HISTORY</button>
+      <button class="btn-act" onclick="openLogWork(${i.id})" style="font-size:11px">▣ Log Work</button>
+      <button class="btn-act" onclick="showQR(${i.id})" style="font-size:11px">⊞ QR</button>
+    </div>
+  </div>`;
+}
+
+function renderShopCard(i) {
+  const openWOs = db.workOrders.filter(w => String(w.instrumentId)===String(i.id) && w.status!=='Closed');
+  const latest = openWOs.sort((a,b)=>Number(b.id)-Number(a.id))[0];
+  return `<div class="inst-card">
+    <div class="inst-card-hdr">
+      <div><div class="inst-card-name">${esc(i.name)}</div><div class="inst-card-sn">S/N: ${esc(i.serial)}</div></div>
+      <span class="${statusClass(i.status)}" style="padding:2px 8px;border-radius:var(--radius);font-size:10px;font-weight:600;font-family:var(--font-mono)">${esc(i.status)}</span>
+    </div>
+    ${i.notes?`<div style="font-size:11px;color:var(--subtle);font-style:italic;margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(i.notes)}</div>`:''}
+    <div class="inst-card-row"><span class="inst-card-lbl">Location</span><span class="inst-card-val">${esc(i.site||'—')}</span></div>
+    <div class="inst-card-row"><span class="inst-card-lbl">Work Order</span><span class="inst-card-val">${latest?`<span class="wo-badge" onclick="openWODetail(${latest.id})" style="cursor:pointer">WO-${latest.id} · ${esc(latest.type)}</span>`:'None'}</span></div>
+    <div class="inst-card-actions">
+      <button class="btn-act btn-history" onclick="openHistory(${i.id})" style="font-size:11px">▤ HISTORY</button>
+      ${!latest?`<button class="btn-act btn-createwo" onclick="openCreateWO(${i.id})" style="font-size:11px">+ WO</button>`:''}
+      <button class="btn-act" onclick="openLogWork(${i.id})" style="font-size:11px">▣ Log Work</button>
+      <button class="btn-act" onclick="showQR(${i.id})" style="font-size:11px">⊞ QR</button>
+    </div>
+  </div>`;
+}
+
+function renderVendorCard(i) {
+  const openWOs = db.workOrders.filter(w => String(w.instrumentId)===String(i.id) && w.status!=='Closed');
+  const latest = openWOs.sort((a,b)=>Number(b.id)-Number(a.id))[0];
+  return `<div class="inst-card">
+    <div class="inst-card-hdr">
+      <div><div class="inst-card-name">${esc(i.name)}</div><div class="inst-card-sn">S/N: ${esc(i.serial)}</div></div>
+      <span class="${statusClass(i.status)}" style="padding:2px 8px;border-radius:var(--radius);font-size:10px;font-weight:600;font-family:var(--font-mono)">${esc(i.status)}</span>
+    </div>
+    ${i.notes?`<div style="font-size:11px;color:var(--subtle);font-style:italic;margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(i.notes)}</div>`:''}
+    <div class="inst-card-row"><span class="inst-card-lbl">Location</span><span class="inst-card-val">VENDOR</span></div>
+    <div class="inst-card-row"><span class="inst-card-lbl">Work Order</span><span class="inst-card-val">${latest?`<span class="wo-badge" onclick="openWODetail(${latest.id})" style="cursor:pointer">WO-${latest.id} · ${esc(latest.type)}</span>`:'None'}</span></div>
+    <div class="inst-card-actions">
+      <button class="btn-act btn-history" onclick="openHistory(${i.id})" style="font-size:11px">▤ HISTORY</button>
+      ${!latest?`<button class="btn-act btn-createwo" onclick="openCreateWO(${i.id})" style="font-size:11px">+ WO</button>`:''}
+      <button class="btn-act" onclick="openLogWork(${i.id})" style="font-size:11px">▣ Log Work</button>
+      <button class="btn-act" onclick="showQR(${i.id})" style="font-size:11px">⊞ QR</button>
+    </div>
+  </div>`;
+}
+
 function renderLoginScreen() {
   const err = ui._loginErr || '';
 
@@ -1669,17 +1737,14 @@ function renderLoginScreen() {
   if (ui._loginView === 'changepw') {
     const cpErr = ui._cpErr || '';
     return `
-    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(145deg, #0a0e14 0%, #0d1117 40%, #101820 100%)">
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#cbd5e1">
       <div style="width:100%;max-width:380px">
         <div style="text-align:center;margin-bottom:36px">
-          <div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:14px;background:rgba(88,166,255,.08);border:1px solid rgba(88,166,255,.15);margin-bottom:16px">
-            <span style="font-size:24px;color:var(--blue);opacity:.8">◈</span>
-          </div>
-          <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:var(--text);letter-spacing:.12em;margin-bottom:6px">SDAPCD</div>
-          <div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);letter-spacing:.06em">INSTRUMENT MANAGEMENT · San Diego APCD</div>
+          <div style="font-family:var(--font-mono);font-size:24px;font-weight:800;color:#1e293b;letter-spacing:.12em;margin-bottom:6px">SDAPCD</div>
+          <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:#64748b;letter-spacing:.06em">INSTRUMENT MANAGEMENT · San Diego APCD</div>
         </div>
-        <div style="background:rgba(22,27,34,.92);border:1px solid var(--border);border-radius:var(--radius-xl);padding:28px 26px;box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 0 1px rgba(48,54,61,.3)">
-          <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--muted);margin-bottom:20px;letter-spacing:.06em">CHANGE PASSWORD</div>
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:var(--radius-xl);padding:28px 26px;box-shadow:0 4px 16px rgba(0,0,0,.06),0 1px 3px rgba(0,0,0,.08)">
+          <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:#334155;margin-bottom:20px;letter-spacing:.06em">CHANGE PASSWORD</div>
           ${cpErr ? `<div class="err-msg" style="margin-bottom:14px">${esc(cpErr)}</div>` : ''}
           <div class="form-group">
             <label class="form-label">Username</label>
@@ -1701,46 +1766,57 @@ function renderLoginScreen() {
             Update Password
           </button>
           <div style="text-align:center;margin-top:14px">
-            <button onclick="ui._loginView='';ui._cpErr='';render()" style="background:none;border:none;font-family:var(--font-mono);font-size:10px;color:var(--subtle);cursor:pointer;letter-spacing:.03em;text-decoration:underline;text-underline-offset:3px">← Back to Sign In</button>
+            <button onclick="ui._loginView='';ui._cpErr='';render()" style="background:none;border:none;font-family:var(--font-mono);font-size:10px;color:#64748b;cursor:pointer;letter-spacing:.03em;text-decoration:underline;text-underline-offset:3px">← Back to Sign In</button>
           </div>
         </div>
       </div>
     </div>`;
   }
   return `
-  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(145deg, #0a0e14 0%, #0d1117 40%, #101820 100%)">
+  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#cbd5e1">
     <div style="width:100%;max-width:380px">
       <div style="text-align:center;margin-bottom:36px">
-        <div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:14px;background:rgba(88,166,255,.08);border:1px solid rgba(88,166,255,.15);margin-bottom:16px">
-          <span style="font-size:24px;color:var(--blue);opacity:.8">◈</span>
-        </div>
-        <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:var(--text);letter-spacing:.12em;margin-bottom:6px">SDAPCD</div>
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);letter-spacing:.08em">INSTRUMENT MANAGEMENT</div>
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);letter-spacing:.06em;margin-top:2px">San Diego APCD</div>
+        <div style="font-family:var(--font-mono);font-size:24px;font-weight:800;color:#1e293b;letter-spacing:.12em;margin-bottom:6px">SDAPCD</div>
+        <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:#64748b;letter-spacing:.08em">INSTRUMENT MANAGEMENT</div>
+        <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:#64748b;letter-spacing:.06em;margin-top:2px">San Diego APCD</div>
       </div>
-      <div style="background:rgba(22,27,34,.92);border:1px solid var(--border);border-radius:var(--radius-xl);padding:28px 26px;box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 0 1px rgba(48,54,61,.3)">
-        <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--muted);margin-bottom:20px;letter-spacing:.06em">SIGN IN</div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:var(--radius-xl);padding:28px 26px;box-shadow:0 4px 16px rgba(0,0,0,.06),0 1px 3px rgba(0,0,0,.08)">
+        <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:#334155;margin-bottom:20px;letter-spacing:.06em">SIGN IN</div>
         ${err ? `<div class="err-msg" style="margin-bottom:14px">${esc(err)}</div>` : ''}
         <div class="form-group">
-          <label class="form-label" style="color:var(--subtle)">Username</label>
+          <label class="form-label" style="color:#475569;font-weight:600;font-size:12px">Username</label>
           <input id="login-username" class="form-input" placeholder="Enter username"
             autocomplete="username" autocapitalize="none" spellcheck="false"
+            value="${esc(typeof localStorage!=='undefined'&&localStorage.getItem('sdapcd_remember_user')||'')}"
+            style="background:#f8fafc;border-color:#e2e8f0;color:#1e293b;transition:border-color .2s,box-shadow .2s"
+            onfocus="this.style.borderColor='#3b82f6';this.style.boxShadow='0 0 0 3px rgba(59,130,246,.15)'"
+            onblur="this.style.borderColor='#e2e8f0';this.style.boxShadow='none'"
             onkeydown="if(event.key==='Enter')document.getElementById('login-pw').focus()"/>
         </div>
         <div class="form-group" style="margin-top:14px">
-          <label class="form-label" style="color:var(--subtle)">Password</label>
-          <input id="login-pw" class="form-input" type="password" placeholder="Enter password"
-            autocomplete="current-password"
-            onkeydown="if(event.key==='Enter')submitLogin()"/>
+          <label class="form-label" style="color:#475569;font-weight:600;font-size:12px">Password</label>
+          <div style="position:relative">
+            <input id="login-pw" class="form-input" type="password" placeholder="Enter password"
+              autocomplete="current-password"
+              style="background:#f8fafc;border-color:#e2e8f0;color:#1e293b;padding-right:38px;transition:border-color .2s,box-shadow .2s"
+              onfocus="this.style.borderColor='#3b82f6';this.style.boxShadow='0 0 0 3px rgba(59,130,246,.15)'"
+              onblur="this.style.borderColor='#e2e8f0';this.style.boxShadow='none'"
+              onkeydown="if(event.key==='Enter')submitLogin()"/>
+            <button onclick="const i=document.getElementById('login-pw');if(!i)return;const t=i.type==='password'?'text':'password';i.type=t;this.textContent=t==='password'?'◉':'◎'" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#94a3b8;padding:2px 4px;line-height:1" title="Show/hide password">◉</button>
+          </div>
         </div>
-        <button class="btn-save" onclick="submitLogin()" style="width:100%;margin-top:20px;justify-content:center;padding:9px 20px;font-size:12px">
-          Sign In
+        <div style="display:flex;align-items:center;gap:8px;margin-top:14px">
+          <input id="login-remember" type="checkbox" ${typeof localStorage!=='undefined'&&localStorage.getItem('sdapcd_remember_user')?'checked':''} style="accent-color:#3b82f6;width:14px;height:14px;cursor:pointer"/>
+          <label for="login-remember" style="font-family:var(--font-mono);font-size:11px;color:#64748b;cursor:pointer;user-select:none">Remember me</label>
+        </div>
+        <button class="btn-save" onclick="submitLogin()" style="width:100%;margin-top:18px;justify-content:center;padding:12px 20px;font-size:15px;font-weight:700;background:#1e293b;border-color:#1e293b;color:#fff;letter-spacing:.04em">
+          SIGN IN
         </button>
         <div style="text-align:center;margin-top:16px">
-          <button onclick="ui._loginView='changepw';render()" style="background:none;border:none;font-family:var(--font-mono);font-size:10px;color:var(--subtle);cursor:pointer;letter-spacing:.03em;opacity:.6;transition:opacity .15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.6'">Change Password</button>
+          <button onclick="ui._loginView='changepw';render()" style="background:none;border:none;font-family:var(--font-mono);font-size:10px;color:#94a3b8;cursor:pointer;letter-spacing:.03em;opacity:.6;transition:opacity .15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.6'">Change Password</button>
         </div>
       </div>
-      <div style="text-align:center;margin-top:24px;font-family:var(--font-mono);font-size:9px;color:rgba(72,79,88,.6);letter-spacing:.06em">SDAPCD INSTRUMENT TRACKER v2.0</div>
+      <div style="text-align:center;margin-top:24px;font-family:var(--font-mono);font-size:9px;color:#94a3b8;letter-spacing:.06em">SDAPCD INSTRUMENT TRACKER v2.0</div>
     </div>
   </div>`;
 }
@@ -1748,8 +1824,12 @@ function renderLoginScreen() {
 function submitLogin() {
   const username = (document.getElementById('login-username')?.value || '').trim().toLowerCase();
   const pw       = (document.getElementById('login-pw')?.value      || '').trim();
+  const remember = document.getElementById('login-remember')?.checked || false;
   if (!username) { ui._loginErr = 'Please enter your username.'; render(); return; }
   if (!pw)       { ui._loginErr = 'Please enter your password.'; render(); return; }
+  // Remember me — save/clear username in localStorage
+  if (remember) { try { localStorage.setItem('sdapcd_remember_user', username); } catch(e){} }
+  else { try { localStorage.removeItem('sdapcd_remember_user'); } catch(e){} }
 
   // ── BOOTSTRAP ADMIN ACCOUNT ──────────────────────────────
   if (username === 'admin') {
@@ -1856,8 +1936,9 @@ function saveChangeUserPassword() {
 }
 // Admin reset of any user's password back to default
 function resetUserPassword(username) {
-  setStoredPassword(username, 'circuit');
-  toast(`Password reset to 'circuit' for ${username}`);
+  const defaultPw = db.defaultPassword || 'changeme';
+  setStoredPassword(username, defaultPw);
+  toast(`Password reset for ${username}`);
 }
 
 function modalShell(title, body, actions) {
@@ -2149,7 +2230,7 @@ function renderModal() {
             ${images.map(a => `
             <div style="border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--surface)">
               <a href="${esc(driveViewUrl(a.fileUrl||a.directUrl||''))}" target="_blank">
-                <img src="${esc(driveDirectUrl(a.fileUrl||a.directUrl||''))}" style="width:100%;height:120px;object-fit:cover;display:block" onerror="this.style.display='none';this.parentElement.innerHTML='<div style=\'height:120px;display:flex;align-items:center;justify-content:center;color:var(--subtle);font-size:11px\'>🖼 Click to view</div>'" alt="${esc(a.fileName||'')}">
+                <img src="${esc(driveDirectUrl(a.fileUrl||a.directUrl||''))}" style="width:100%;height:120px;object-fit:cover;display:block" onerror="this.style.display='none';var d=document.createElement('div');d.style.cssText='height:120px;display:flex;align-items:center;justify-content:center;color:var(--subtle);font-size:11px';d.textContent='Click to view';this.parentElement.appendChild(d)" alt="${esc(a.fileName||'')}">
               </a>
               <div style="padding:6px 10px">
                 <div style="font-size:10px;font-family:var(--font-mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.fileName||'')}</div>
@@ -2235,8 +2316,8 @@ function renderModal() {
   }
 
   if (ui.modal === 'editinstrument') {
-    const availableStatuses = isField(db.instruments.find(x=>x.id===f.instId)||{}) ? FIELD_STATUSES
-                           : isVendor(db.instruments.find(x=>x.id===f.instId)||{}) ? VENDOR_STATUSES
+    const availableStatuses = isField(db.instruments.find(x=>String(x.id)===String(f.instId))||{}) ? FIELD_STATUSES
+                           : isVendor(db.instruments.find(x=>String(x.id)===String(f.instId))||{}) ? VENDOR_STATUSES
                            : SHOP_STATUSES;
     return modalShell('EDIT INSTRUMENT', `
       <div class="modal-sub">${esc(f.instName)} · ${esc(f.serial)}</div>
@@ -2313,8 +2394,8 @@ function renderModal() {
           </select>
         </div>
       </div>
-      <div class="form-group"><label class="form-label">Reset Temporary Password <span style="color:var(--subtle);font-weight:400">(leave blank to keep current — default is circuit)</span></label>
-        <input id="f-temppw" class="form-input" placeholder="New temp password (default: circuit)"/>
+      <div class="form-group"><label class="form-label">Reset Temporary Password <span style="color:var(--subtle);font-weight:400">(leave blank to keep current)</span></label>
+        <input id="f-temppw" class="form-input" placeholder="New temp password"/>
       </div>`,
       `<button class="btn-cancel" onclick="closeModal()">Cancel</button>
        <button class="btn-save" onclick="saveEditTech(${f.idx})">Save Changes</button>`
@@ -2622,7 +2703,7 @@ function renderWorkOrders() {
     const matchFrom = !dateFrom || woDate >= dateFrom;
     const matchTo   = !dateTo   || woDate <= dateTo;
     return matchStatus && matchSearch && matchType && matchFrom && matchTo;
-  }).sort((a, b) => b.id - a.id);
+  }).sort((a, b) => Number(b.id) - Number(a.id));
 
   const openCount    = db.workOrders.filter(w => w.status !== 'Closed' && w.status !== 'Pending Closure').length;
   const closedCount  = db.workOrders.filter(w => w.status === 'Closed').length;
@@ -3419,8 +3500,8 @@ function renderAdmin() {
         </div>
         <div>
           <div class="form-label" style="margin-bottom:4px">TEMPORARY PASSWORD</div>
-          <input id="new-tech-temppw" class="form-input" placeholder="Default: circuit"
-            value="${esc(ui.newTechTempPw||'circuit')}"
+          <input id="new-tech-temppw" class="form-input" placeholder="Temp password"
+            value="${esc(ui.newTechTempPw||'changeme')}"
             oninput="ui.newTechTempPw=this.value"/>
         </div>
       </div>
@@ -3552,7 +3633,7 @@ function renderAdmin() {
           <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
             <select id="debug-wo-select" style="font-family:var(--font-mono);font-size:11px;padding:5px 8px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text)">
               ${db.workOrders.filter(w=>w.status!=='Closed').map(w => {
-                const i = db.instruments.find(x=>x.id===w.instrumentId);
+                const i = db.instruments.find(x=>String(x.id)===String(w.instrumentId));
                 return `<option value="${w.id}|${w.instrumentId}">WO-${w.id} · ${i?i.name:'?'} · ${w.status}</option>`;
               }).join('') || '<option value="">No open WOs</option>'}
             </select>
@@ -3595,6 +3676,7 @@ async function debugTest1() {
   el.style.display = 'block';
   el.innerHTML = '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">⏳ Sending request…</span>';
   const url = new URL(GAS_URL);
+  url.searchParams.set('apikey', GAS_KEY);
   url.searchParams.set('path', 'db');
   url.searchParams.set('action', 'get');
   const fullUrl = url.toString();
@@ -3624,6 +3706,7 @@ async function debugTest2(method) {
   el.innerHTML = '<span style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">⏳ Sending ' + method.toUpperCase() + ' request…</span>';
 
   const url = new URL(GAS_URL);
+  url.searchParams.set('apikey', GAS_KEY);
   url.searchParams.set('path', 'work-orders');
   url.searchParams.set('action', 'put');
   url.searchParams.set('id', woId);
@@ -3662,6 +3745,7 @@ async function debugTest2(method) {
       const wo = db.workOrders.find(w => String(w.id) === String(woId));
       if (wo) {
         const revertUrl = new URL(GAS_URL);
+        revertUrl.searchParams.set('apikey', GAS_KEY);
         revertUrl.searchParams.set('path', 'work-orders');
         revertUrl.searchParams.set('action', 'put');
         revertUrl.searchParams.set('id', woId);
@@ -3761,6 +3845,7 @@ async function gasTestRead() {
   gasTestLog('Testing READ — calling getFullDB...', null);
   try {
     const url = new URL(GAS_URL);
+    url.searchParams.set('apikey', GAS_KEY);
     url.searchParams.set('path', 'db');
     url.searchParams.set('action', 'get');
     const r = await fetch(url.toString());
@@ -3781,6 +3866,7 @@ async function gasTestAppend() {
   gasTestLog('Testing APPEND — writing test event to wo_events...', null);
   try {
     const url = new URL(GAS_URL);
+    url.searchParams.set('apikey', GAS_KEY);
     url.searchParams.set('path', 'work_events');
     url.searchParams.set('action', 'test');
     url.searchParams.set('wo_id', '0');
@@ -3805,6 +3891,7 @@ async function gasTestWOUpdate() {
   gasTestLog('Testing WO UPDATE — sending status update for WO-' + openWO.id + '...', null);
   try {
     const url = new URL(GAS_URL);
+    url.searchParams.set('apikey', GAS_KEY);
     url.searchParams.set('path', 'work-orders');
     url.searchParams.set('action', 'put');
     url.searchParams.set('id', String(openWO.id));
@@ -3830,6 +3917,7 @@ async function gasTestMigrate() {
   gasTestLog('Running migrateSheets — creating wo_events tab if missing...', null);
   try {
     const url = new URL(GAS_URL);
+    url.searchParams.set('apikey', GAS_KEY);
     url.searchParams.set('path', 'admin');
     url.searchParams.set('action', 'migrate');
     const r = await fetch(url.toString());
@@ -4332,7 +4420,7 @@ function syncTech(t) {
     API.put('/technicians/' + t.id, {
       name: t.name, role: t.role||'', email: t.email||'',
       username: t.username||'', permission: t.permission||'Edit',
-      password: t.password||'circuit'
+      password: t.password||'changeme'
     }).catch(e => console.warn('syncTech failed', e));
   }
 }
@@ -4360,7 +4448,7 @@ function saveEditInstrument(id) {
   const site   = siteEl   ? siteEl.value   : i.site;
   const notes  = getVal('f-notes');
   if (!name || !serial) { ui.form={...ui.form, err:'Type and serial are required.'}; render(); return; }
-  const dupSerial = db.instruments.find(x => x.serial === serial && x.id !== id);
+  const dupSerial = db.instruments.find(x => x.serial === serial && String(x.id) !== String(id));
   if (dupSerial) { ui.form={...ui.form, err:'Serial number already used by another instrument.'}; render(); return; }
   const changes = [];
   if (i.name   !== name)   changes.push(`Type: ${i.name} → ${name}`);
@@ -4624,7 +4712,7 @@ function saveWorkEntry(mode) {
   if (!desc) { ui.form={...ui.form, err:'Description is required.', type, by, desc, priority}; render(); return; }
   const { instId } = ui.form;
   // Prevent duplicate open WO for same instrument + type
-  const dupWO = db.workOrders.find(w => w.instrumentId === instId && w.type === type && w.status !== 'Closed');
+  const dupWO = db.workOrders.find(w => String(w.instrumentId) === String(instId) && w.type === type && w.status !== 'Closed');
   if (dupWO) { ui.form={...ui.form, err:'An open ' + type + ' work order (WO-' + dupWO.id + ') already exists for this instrument.', type, by, desc, priority}; render(); return; }
   const maxId = db.workOrders.reduce((m, w) => Math.max(m, parseInt(w.id)||0), 0);
   const woId = Math.max(maxId + 1, Date.now());
@@ -4766,7 +4854,7 @@ function saveEditWO(wid) {
   const wo = db.workOrders.find(w => String(w.id) === String(wid));
   if (!wo) return;
   // Prevent duplicate open WO for same instrument + type (exclude self)
-  const dupWO = db.workOrders.find(w => w.instrumentId === wo.instrumentId && w.type === type && w.status !== 'Closed' && String(w.id) !== String(wid));
+  const dupWO = db.workOrders.find(w => String(w.instrumentId) === String(wo.instrumentId) && w.type === type && w.status !== 'Closed' && String(w.id) !== String(wid));
   if (dupWO) { ui.form={...ui.form, err:'An open ' + type + ' work order (WO-' + dupWO.id + ') already exists for this instrument.', type, by, desc, priority}; render(); return; }
   wo.type = type; wo.technician = by; wo.description = desc; wo.priority = priority;
   addHistory(wo.instrumentId, 'Work order updated', `WO-${wid} · ${type} · Tech: ${by}${desc ? ' · ' + desc.slice(0, 80) : ''}`);
@@ -5000,7 +5088,7 @@ function permanentlyDeleteInstrument(id) {
       addHistory(id, 'Instrument permanently deleted', `${i.name} S/N ${i.serial} — all data erased`);
       addDeleteLog('Instrument', `${i.name} S/N ${i.serial} permanently deleted`);
       addSecurityLog('Instrument Deleted', `${i.name} S/N ${i.serial} (ID: ${id}) permanently deleted`);
-      db.instruments = db.instruments.filter(x => x.id !== id);
+      db.instruments = db.instruments.filter(x => String(x.id) !== String(id));
       db.workOrders  = db.workOrders.filter(w => w.instrumentId !== id);
       delete db.history[id];
       API.del('/instruments/' + id).catch(e => toast('⚠ Delete failed: ' + e.message, 'warn'));
@@ -5073,7 +5161,7 @@ function generateUsername(fullName) {
 function addTech() {
   const displayName = (ui.newTechName    || getVal('new-tech-name')).trim();
   const email       = (ui.newTechEmail   || getVal('new-tech-email')).trim();
-  const tempPw      = (ui.newTechTempPw  || getVal('new-tech-temppw')).trim() || 'circuit';
+  const tempPw      = (ui.newTechTempPw  || getVal('new-tech-temppw')).trim() || 'changeme';
   const role        = (ui.newTechRole    || getVal('new-tech-role')    || 'Operator').trim();
   const permission  = (ui.newTechPermission || getVal('new-tech-permission') || 'Edit').trim();
 
@@ -5090,13 +5178,13 @@ function addTech() {
   }
 
   // Add to local db first
-  const newTech = { name: displayName, role, email, username, permission, password: tempPw || 'circuit' };
+  const newTech = { name: displayName, role, email, username, permission, password: tempPw || 'changeme' };
   db.techs.push(newTech);
   ui.newTechName = ''; ui.newTechRole = ''; ui.newTechEmail = '';
   ui.newTechUsername = ''; ui.newTechPermission = ''; ui.newTechTempPw = '';
   // POST directly to GAS and store the returned id
   API.post('/technicians', {
-    name: displayName, role, email, username, permission, password: tempPw || 'circuit'
+    name: displayName, role, email, username, permission, password: tempPw || 'changeme'
   }).then(result => {
     if (result && result.id) { newTech.id = result.id; newTech._synced = true; }
   }).catch(e => console.warn('addTech failed', e));
@@ -5113,7 +5201,7 @@ function archiveTech(idx) {
       db.techs.splice(idx, 1);
       if (!db.archivedTechs) db.archivedTechs = [];
       db.archivedTechs.push(t);
-      if (t.id) API.put('/technicians/' + t.id, {name:t.name,role:t.role||'',email:t.email||'',username:t.username||'',permission:t.permission||'Edit',password:t.password||'circuit',archived:true}).catch(e => toast('⚠ Archive failed: ' + e.message, 'warn'));
+      if (t.id) API.put('/technicians/' + t.id, {name:t.name,role:t.role||'',email:t.email||'',username:t.username||'',permission:t.permission||'Edit',password:t.password||'changeme',archived:true}).catch(e => toast('⚠ Archive failed: ' + e.message, 'warn'));
       saveDB('tech'); render(); toast(`${t.name} archived`);
     }
   });
@@ -5122,7 +5210,7 @@ function restoreTech(idx) {
   if (!db.archivedTechs || !db.archivedTechs[idx]) return;
   const t = db.archivedTechs.splice(idx, 1)[0];
   db.techs.push(t);
-  if (t.id) API.put('/technicians/' + t.id, {name:t.name,role:t.role||'',email:t.email||'',username:t.username||'',permission:t.permission||'Edit',password:t.password||'circuit',archived:false}).catch(e => toast('⚠ Restore failed: ' + e.message, 'warn'));
+  if (t.id) API.put('/technicians/' + t.id, {name:t.name,role:t.role||'',email:t.email||'',username:t.username||'',permission:t.permission||'Edit',password:t.password||'changeme',archived:false}).catch(e => toast('⚠ Restore failed: ' + e.message, 'warn'));
   saveDB('tech'); render(); toast(`${t.name} restored`);
 }
 function permanentlyDeleteTech(idx) {
@@ -5184,7 +5272,7 @@ function saveEditTech(idx) {
       name, role, email,
       username:   updated.username   || '',
       permission: updated.permission || 'Edit',
-      password:   updated.password   || 'circuit'
+      password:   updated.password   || 'changeme'
     }).catch(e => console.warn('tech update failed', e));
   }
 
@@ -5274,7 +5362,7 @@ function exportOpenWOPDF() {
     if (!inst) return '';
     const certInfo = (inst.name==='BC1060'&&inst.lastCertDate)
       ? '<div style="padding:6px 16px;font-size:10px;font-family:\'IBM Plex Mono\',monospace;color:#555;border-bottom:1px solid #e5e7eb"><strong>EPA CERT</strong> · Last: '+esc(inst.lastCertDate)+' · Next: '+certDueDate(inst.lastCertDate, inst.certIntervalMonths)+'</div>' : '';
-    const woRows = wos.sort((a,b)=>a.id-b.id).map(wo =>
+    const woRows = wos.sort((a,b)=>Number(a.id)-Number(b.id)).map(wo =>
       '<div class="wo-card"><div class="wo-card-hdr"><span class="wo-num">WO-'+wo.id+'</span><span class="wo-type-lbl">'+esc(wo.type)+'</span><span class="wo-badge">OPEN</span><span class="wo-date">'+esc(wo.created)+'</span></div>'+
       '<div class="wo-body"><div class="wo-row"><span class="wo-row-lbl">Technician:</span><span>'+esc(wo.technician||'—')+'</span></div>'+
       (wo.description?'<div class="wo-row"><span class="wo-row-lbl">Description:</span><span>'+esc(wo.description)+'</span></div>':'')+
@@ -5346,8 +5434,7 @@ function printWO(wid) {
   if (!wo) return;
   const inst = db.instruments.find(i => String(i.id) === String(wo.instrumentId));
   const gen  = new Date().toLocaleString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
-  const qrText = inst ? (inst.name + ' | S/N: ' + inst.serial + ' | WO-' + wo.id) : ('WO-' + wo.id);
-  const qrDataUrl = generateQRDataURL(qrText, 3);
+  const qrDataUrl = inst ? generateQRDataURL(getInstrumentUrl(inst.id), 3) : '';
 
   const statusClass = wo.status==='Closed'?'status-closed':wo.status==='Open'?'status-open':'status-other';
   const epaCert = (inst && inst.name === 'BC1060' && inst.lastCertDate)
@@ -5813,7 +5900,7 @@ function removeSitePhotoById(attId) {
     onConfirm: async () => {
       try {
         await API.del('/attachments/' + attId);
-        db.attachments = (db.attachments||[]).filter(a => a.id !== attId);
+        db.attachments = (db.attachments||[]).filter(a => String(a.id) !== String(attId));
         toast('Photo removed'); render();
       } catch(e) { toast('⚠ Remove failed: ' + e.message); }
     }
@@ -6317,14 +6404,14 @@ async function syncToServer() {
           await API.put('/technicians/' + t.id, {
             name: t.name, role: t.role||'', email: t.email||'',
             username: t.username||'', permission: t.permission||'Edit',
-            password: t.password||'circuit', archived: t.archived||false
+            password: t.password||'changeme', archived: t.archived||false
           }).catch(()=>{});
         } else if (!t._synced) {
           // New tech — create
           const created = await API.post('/technicians', {
             name: t.name, role: t.role||'', email: t.email||'',
             username: t.username||'', permission: t.permission||'Edit',
-            password: t.password||'circuit'
+            password: t.password||'changeme'
           }).catch(()=>null);
           if (created) { t.id = created.id; t._synced = true; }
         }
@@ -6530,7 +6617,7 @@ function startAutoRefresh() {
           db.sitesMeta[a.siteCode].photos.push({ url: a.directUrl || a.fileUrl, attachmentId: a.id, fileName: a.fileName });
         });
       }
-      if (!db.adminPassword) db.adminPassword = 'circuit';
+      if (!db.adminPassword) db.adminPassword = 'changeme';
       markAllSynced();
       // Save to offline cache
       try { localStorage.setItem('sdapcd_db_cache', JSON.stringify(db)); } catch(e) {}
@@ -6707,7 +6794,7 @@ const _origRender = render;
 render = function() {
   _origRender();
   // Add badge to Activity nav button after render
-  const navBtns = document.querySelectorAll('.btn-nav, .btn-dash');
+  const navBtns = document.querySelectorAll('.btn-nav');
   navBtns.forEach(btn => {
     if (btn.textContent.includes('Activity') && _activityBadgeCount > 0) {
       const existing = btn.querySelector('.activity-badge');
@@ -6845,9 +6932,14 @@ renderSites = function() {
 // ══════════════════════════════════════════════════════════════
 // ── BOOTSTRAP ──────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════
-// Show a loading state then fetch real data from server
-render(); // initial paint with empty db
-loadDBFromServer(); // fetch from server, cache offline, start auto-refresh
+// Show cached data instantly if available, then refresh from server in background
+if (loadDBFromCache()) {
+  // Cached data shown — now refresh silently from server
+  loadDBFromServer();
+} else {
+  render(); // initial paint with empty db
+  loadDBFromServer(); // fetch from server, cache offline, start auto-refresh
+}
 </script>
 </body>
 </html>
