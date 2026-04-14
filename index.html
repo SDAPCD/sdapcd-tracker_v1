@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>:root {
   /* ── CORE PALETTE ────────────────────────────────────── */
   --bg:        #0d1117;
@@ -29,13 +30,13 @@
   --red-dim:   rgba(248,81,73,0.10);
   --purple:    #bc8cff;
   --purple-dim:rgba(188,140,255,0.10);
-  --slate:     #8b949e;
-  --slate-dim: rgba(139,148,158,0.10);
+  --slate:     #9eaab6;
+  --slate-dim: rgba(158,170,182,0.10);
 
   /* text */
-  --text:      #c9d1d9;
-  --muted:     #8b949e;
-  --subtle:    #484f58;
+  --text:      #d1d9e0;
+  --muted:     #9eaab6;
+  --subtle:    #636e7b;
 
   /* typography */
   --font-body: 'IBM Plex Sans', system-ui, sans-serif;
@@ -84,8 +85,8 @@
   --slate-dim: rgba(87,96,106,0.09);
 
   --text:      #1f2328;
-  --muted:     #57606a;
-  --subtle:    #8c959f;
+  --muted:     #4d5661;
+  --subtle:    #6e7781;
 
   --shadow-xs: 0 1px 2px rgba(0,0,0,.06);
   --shadow:    0 1px 4px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
@@ -535,6 +536,7 @@ body {
 .s-offline     { background: rgba(148,163,184,.07); color: var(--slate); border-color: rgba(148,163,184,.14)!important; }
 .s-deployed    { background: rgba(34,211,238,.09);  color: var(--blue);  border-color: rgba(34,211,238,.24)!important; }
 .s-at-vendor   { background: rgba(251,146,60,.09);  color: #e55f0c;      border-color: rgba(251,146,60,.26)!important; }
+.s-unknown     { background: rgba(234,179,8,.08);  color: #ca8a04;       border-color: rgba(234,179,8,.22)!important; }
 
 /* ── ACTION BUTTONS ─────────────────────────────────────── */
 .actions { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
@@ -554,7 +556,6 @@ body {
 .btn-logwork  { background: rgba(34,211,238,.09);  color: var(--blue);   border-color: rgba(34,211,238,.26); }
 .btn-logwork:hover  { background: rgba(34,211,238,.17); border-color: var(--blue); box-shadow: var(--glow-sm); }
 .btn-history  { background: var(--surface2); color: var(--slate); border-color: var(--border); position: relative; }
-.hist-badge { display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:var(--purple);color:#fff;font-size:9px;font-weight:700;margin-left:5px;line-height:1;letter-spacing:0; }
 .btn-qr { padding: 4px 7px; font-size: 13px; }
 .more-menu-wrap { position: relative; display: inline-block; }
 .btn-more { padding: 4px 8px; font-size: 15px; font-weight: 700; letter-spacing: 2px; }
@@ -743,17 +744,25 @@ body {
   .stat-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
   .inst-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .inst-table table { min-width: 600px; }
-  .actions { flex-wrap: wrap; gap: 4px; }
-  .btn-act { padding: 5px 8px; font-size: 10px; }
+  .actions { flex-wrap: wrap; gap: 6px; }
+  .btn-act { padding: 10px 14px; font-size: 11px; min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; justify-content: center; }
+  .btn-add, .btn-export { padding: 10px 16px; min-height: 44px; font-size: 12px; }
+  .btn-save, .btn-cancel { padding: 12px 20px; min-height: 44px; font-size: 13px; }
+  .btn-nav { padding: 12px 16px; min-height: 44px; font-size: 13px; }
+  .form-input, .filter-sel, select.form-input { padding: 10px 12px; min-height: 44px; font-size: 13px !important; }
   .form-row { display: flex; flex-direction: column; gap: 0; }
   .wo-tabs { flex-wrap: wrap; width: 100%; }
-  .wo-tab { padding: 5px 12px; font-size: 10px; }
+  .wo-tab { padding: 10px 16px; font-size: 11px; min-height: 44px; }
   .wo-grid { grid-template-columns: 1fr 1fr !important; }
-  .modal { max-width: 95vw !important; max-height: 90vh !important; margin: 10px; }
+  .modal { max-width: 95vw !important; max-height: 85vh !important; margin: 10px; }
   .search-box { min-width: 0 !important; max-width: 100% !important; }
-  .filter-sel { font-size: 10px !important; }
-  .site-pill { padding: 5px 10px; font-size: 10px; }
+  .search-box input { padding: 10px 12px 10px 32px; min-height: 44px; font-size: 13px; }
+  .filter-sel { font-size: 11px !important; min-height: 44px; }
+  .site-pill { padding: 10px 14px; font-size: 11px; min-height: 44px; }
   .btn-qr { display: none; }
+  .btn-cert, .btn-approve-close, .btn-submit-closure { padding: 10px 16px; min-height: 44px; }
+  .more-item { padding: 12px 16px; min-height: 44px; font-size: 13px; }
+  .status-sel, .site-sel { padding: 8px 10px; min-height: 44px; font-size: 12px; }
 }
 
 @media (max-width: 480px) {
@@ -860,18 +869,27 @@ body {
 .site-card-code { font-family:var(--font-mono); font-size:14px; font-weight:700; color:var(--blue); }
 .site-card-meta { font-family:var(--font-mono); font-size:11px; color:var(--muted); line-height:1.6; }
 .site-card-footer { padding:10px 16px; border-top:1px solid var(--border2); display:flex; justify-content:space-between; align-items:center; gap:8px; background:var(--surface2); }
+
+/* ── SYNC INDICATOR ──────────────────────────────────────── */
+#sync-indicator { position:fixed; bottom:16px; right:20px; z-index:9999; display:none; align-items:center; gap:8px; padding:8px 16px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow-md); font-family:var(--font-mono); font-size:11px; color:var(--blue); animation:sync-fade-in .2s ease; }
+#sync-indicator.active { display:flex; }
+#sync-indicator .sync-spinner { width:14px; height:14px; border:2px solid var(--border); border-top-color:var(--blue); border-radius:50%; animation:sync-spin .6s linear infinite; }
+@keyframes sync-spin { to { transform:rotate(360deg); } }
+@keyframes sync-fade-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.btn-saving { opacity:.6; pointer-events:none; position:relative; }
 </style>
 </head>
 <body>
+<div id="sync-indicator"><div class="sync-spinner"></div><span id="sync-text">Syncing...</span></div>
 <nav id="sidebar"></nav>
 <div id="root"></div>
 <script>
 const LS             = 'sdapcd_instr_v9';
 
 const STATUSES       = ['Operational','Maintenance','Repair','Calibration','Offline','Deployed','At Vendor'];
-const SHOP_STATUSES  = ['Operational','Maintenance','Repair','Calibration','Offline'];
-const FIELD_STATUSES = ['Deployed','Maintenance','Repair','Calibration','Offline'];
-const VENDOR_STATUSES= ['At Vendor','Repair','Calibration'];
+const SHOP_STATUSES  = ['Operational','Maintenance','Repair','Calibration','Offline','Needs Inspection'];
+const FIELD_STATUSES = ['Deployed','Maintenance','Repair','Calibration','Offline','Needs Inspection'];
+const VENDOR_STATUSES= ['At Vendor','Repair','Calibration','Needs Inspection'];
 const WO_TYPES       = ['Maintenance','Repair','Calibration','Inspection','Vendor Certification','Other'];
 const WO_PRIORITIES  = ['Low','Medium','High','Critical'];
 const PRIORITY_COLORS = { Critical:{bg:'rgba(248,81,73,.12)',color:'var(--red)',border:'rgba(248,81,73,.3)',icon:'⬤'}, High:{bg:'rgba(210,153,34,.12)',color:'var(--amber)',border:'rgba(210,153,34,.3)',icon:'◉'}, Medium:{bg:'rgba(88,166,255,.1)',color:'var(--blue)',border:'rgba(88,166,255,.25)',icon:'◎'}, Low:{bg:'rgba(139,148,158,.1)',color:'var(--slate)',border:'rgba(139,148,158,.25)',icon:'○'} };
@@ -917,7 +935,7 @@ const SEED = [
 
 // ── API CLIENT ─────────────────────────────────────────────
 // ── GOOGLE APPS SCRIPT API CLIENT ──────────────────────────
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwk7fxGsSTaRNMWWVSz9ISyJLBoSuJDXE7_TMqMJSIOmFX8dLDS0GAehMCrOMbK3As2/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwibwE31sZMzdx88EfsHhrqQ8Q9OpdXeKiIohVNS1s2tAWO_S2uB_HQdIrdyU3B6JJv/exec';
 
 const GAS_KEY = 'sdapcd-8f3k2m9x7q4w1e6r';
 
@@ -927,36 +945,55 @@ async function gasRequest(path, action, params, body) {
   url.searchParams.set('apikey', GAS_KEY);
   url.searchParams.set('path', path);
   url.searchParams.set('action', action);
+  if (ui.currentUsername) url.searchParams.set('username', ui.currentUsername);
 
   // Add explicit params (id, key, etc.)
   if (params) Object.entries(params).forEach(([k,v]) => {
     if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
   });
 
+  // Request timeout — 30s for normal requests, 90s for file uploads
+  const timeoutMs = isFileUpload ? 90000 : 30000;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
   let response;
   try {
+    const fetchOpts = { signal: controller.signal };
     if (isFileUpload) {
       // File uploads: POST with JSON body — base64 too large for URL
-      response = await fetch(url.toString(), { method:'POST', body: JSON.stringify(body) });
+      fetchOpts.method = 'POST';
+      fetchOpts.body = JSON.stringify(body);
+      response = await fetch(url.toString(), fetchOpts);
     } else if (body !== null && body !== undefined) {
       // Mutations: flatten every body field into its own URL param
       // GAS reads e.parameter.status, e.parameter.closed_by, etc. — no JSON parsing
       Object.entries(body).forEach(([k,v]) => {
         if (v !== undefined && v !== null && k !== 'path' && k !== 'action') url.searchParams.set(k, String(v));
       });
-      response = await fetch(url.toString());
+      response = await fetch(url.toString(), fetchOpts);
     } else {
-      response = await fetch(url.toString());
+      response = await fetch(url.toString(), fetchOpts);
     }
   } catch(fetchErr) {
+    clearTimeout(timeoutId);
+    if (fetchErr.name === 'AbortError') throw new Error('Request timed out — server did not respond within ' + (timeoutMs/1000) + 's. Please try again.');
     throw new Error('Network error: ' + fetchErr.message);
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   let j;
   try { j = await response.json(); }
   catch(e) { throw new Error('Bad response from server'); }
 
-  if (!j.ok) throw new Error(j.error || 'Server error');
+  if (!j.ok) {
+    const err = j.error || 'Server error';
+    if (err.startsWith('PERMISSION_DENIED:')) {
+      addSecurityLog('PERMISSION_DENIED', err + ' (user: ' + (ui.currentUser || 'Unknown') + ')');
+    }
+    throw new Error(err);
+  }
   return j.data;
 }
 
@@ -975,12 +1012,17 @@ const API = {
   async get(path) {
     // Map /db, /instruments, etc. to GAS path/action params
     const clean = path.replace(/^\//, '');
-    const parts = clean.split('/');
+    // Parse query string if present (e.g. /db?since=...)
+    const [pathPart, queryStr] = clean.split('?');
+    const parts = pathPart.split('/');
     const resource = parts[0];
     const id = parts[1];
-    if (resource === 'db') return gasRequest('db', 'get', null, null);
-    if (resource === 'settings' && id) return gasRequest('settings', 'get', {key: id}, null);
-    return gasRequest(resource, 'get', id ? {id} : null, null);
+    const extraParams = {};
+    if (queryStr) queryStr.split('&').forEach(p => { const [k,v] = p.split('='); if (k) extraParams[k] = decodeURIComponent(v||''); });
+    if (resource === 'db') return gasRequest('db', 'get', Object.keys(extraParams).length ? extraParams : null, null);
+    if (resource === 'settings' && id) return gasRequest('settings', 'get', {key: id, ...extraParams}, null);
+    if (resource === 'backups') return gasRequest('backups', 'get', extraParams, null);
+    return gasRequest(resource, 'get', id ? {id, ...extraParams} : (Object.keys(extraParams).length ? extraParams : null), null);
   },
   async post(path, body) {
     const clean = path.replace(/^\//, '');
@@ -1039,6 +1081,7 @@ let db = {
 };
 
 async function loadDBFromServer() {
+  if (typeof showSyncIndicator === 'function') showSyncIndicator('Loading data...');
   try {
     const d = await API.get('/db');
     db = d;
@@ -1054,6 +1097,8 @@ async function loadDBFromServer() {
           i.certIntervalMonths = i.cert_interval_months !== undefined && i.cert_interval_months !== '' ? Number(i.cert_interval_months) : null;
         if (i.last_cert_date !== undefined && i.lastCertDate === undefined)
           i.lastCertDate = i.last_cert_date || null;
+        if (i.modified_at !== undefined && i.modifiedAt === undefined)
+          i.modifiedAt = i.modified_at || null;
         if (i.work_attachments !== undefined && i.workAttachments === undefined)
           i.workAttachments = i.work_attachments || [];
       });
@@ -1076,10 +1121,21 @@ async function loadDBFromServer() {
         db.sitesMeta[a.siteCode].photos.push({ url: a.directUrl || a.fileUrl, attachmentId: a.id, fileName: a.fileName });
       });
     }
+    // Normalize legacy "Pending Closure" status to "Submitted for Closure"
+    if (db.workOrders) {
+      db.workOrders.forEach(wo => {
+        if (wo.status === 'Pending Closure') wo.status = 'Submitted for Closure';
+      });
+    }
+    if (typeof hideSyncIndicator === 'function') hideSyncIndicator();
+    // Set initial sync timestamp so auto-refresh uses delta sync
+    _lastSyncTs = new Date().toISOString();
+    _lastDbHash = _dbFingerprint(db);
     render();
     // Check for QR code deep link after data loads
     handleDeepLink();
   } catch(e) {
+    if (typeof hideSyncIndicator === 'function') hideSyncIndicator();
     console.error('SDAPCD: failed to load from server.', e);
     toast('⚠ Could not connect to server — is it running?');
   }
@@ -1124,6 +1180,8 @@ function currentUserPermission() {
 function currentUserHasFullControl() {
   return currentUserPermission() === 'Full Control';
 }
+function canEdit() { return currentUserPermission() !== 'View'; }
+function canFullControl() { return currentUserHasFullControl(); }
 function getSessionUser() {
   try { return sessionStorage.getItem('sdapcd_user') || ''; } catch(e) { return ''; }
 }
@@ -1165,19 +1223,64 @@ let ui = {
 
 // ── HELPERS ────────────────────────────────────────────────
 const today       = () => new Date().toLocaleDateString('en-US', {timeZone:'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit'}).replace(/(\d+)\/(\d+)\/(\d+)/, '$3-$1-$2');
-const nowTs       = () => new Date().toLocaleString('en-US', {timeZone:'America/Los_Angeles',month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'});
+const nowTs       = () => { const d = new Date(); const ds = d.toLocaleDateString('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric',year:'numeric'}); const ts = d.toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'2-digit',minute:'2-digit',hour12:false}); return ds + ', ' + ts + ' PST'; };
 const esc         = s  => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const plural      = (n, w) => `${n} ${w}${n !== 1 ? 's' : ''}`;
 const statusClass = s  => ({
   Operational:'s-operational', Maintenance:'s-maintenance', Repair:'s-repair',
   Calibration:'s-calibration', Offline:'s-offline', Deployed:'s-deployed',
-  'At Vendor':'s-at-vendor',
-  'Open':'s-operational', 'Closed':'s-deployed', 'Pending Closure':'s-calibration'
+  'At Vendor':'s-at-vendor', 'Needs Inspection':'s-unknown',
+  'Open':'s-operational', 'Closed':'s-deployed', 'Submitted for Closure':'s-calibration'
 })[s] || 's-offline';
 
 const isVendor    = i  => i.site === 'VENDOR';
 const isField     = i  => i.site && i.site !== 'HQ/SHOP' && i.site !== 'VENDOR';
 const isShop      = i  => i.site === 'HQ/SHOP';
+
+// ── CHARACTER COUNTER ────────────────────────────────────────
+function updateCharCounter(textareaId, counterId, max) {
+  const ta = document.getElementById(textareaId);
+  const counter = document.getElementById(counterId);
+  if (!ta || !counter) return;
+  const len = ta.value.length;
+  counter.textContent = len.toLocaleString() + ' / ' + max.toLocaleString();
+  if (len >= max) {
+    counter.style.color = 'var(--red)';
+    counter.style.fontWeight = '700';
+  } else if (len > max * 0.9) {
+    counter.style.color = 'var(--amber)';
+    counter.style.fontWeight = '600';
+  } else {
+    counter.style.color = 'var(--subtle)';
+    counter.style.fontWeight = '400';
+  }
+}
+
+// ── DESCRIPTION TRUNCATION ───────────────────────────────────
+function truncDesc(text, id, maxLen) {
+  if (!text) return '<span style="color:var(--subtle)">—</span>';
+  text = String(text);
+  const safe = esc(text);
+  if (text.length <= maxLen) return '<span style="white-space:pre-wrap">' + safe + '</span>';
+  const truncated = esc(text.slice(0, maxLen));
+  return '<span id="desc-short-' + id + '">' +
+    '<span style="white-space:pre-wrap">' + truncated + '...</span> ' +
+    '<span style="color:var(--blue);cursor:pointer;font-family:var(--font-mono);font-size:10px;font-weight:600" onclick="toggleFullDesc(\'' + id + '\')">View Full</span>' +
+    '</span>' +
+    '<span id="desc-full-' + id + '" style="display:none">' +
+    '<span style="white-space:pre-wrap">' + safe + '</span> ' +
+    '<span style="color:var(--blue);cursor:pointer;font-family:var(--font-mono);font-size:10px;font-weight:600" onclick="toggleFullDesc(\'' + id + '\')">Show Less</span>' +
+    '</span>';
+}
+function toggleFullDesc(id) {
+  const s = document.getElementById('desc-short-' + id);
+  const f = document.getElementById('desc-full-' + id);
+  if (s && f) {
+    const showing = f.style.display !== 'none';
+    s.style.display = showing ? '' : 'none';
+    f.style.display = showing ? 'none' : '';
+  }
+}
 
 // ── CERTIFICATION HELPERS ──────────────────────────────────
 // Returns YYYY-MM-DD offset by `months` months after a given date string
@@ -1339,6 +1442,77 @@ function filterDashboard(q) {
 }
 // Track which search input has focus so we can restore it after render
 
+// ── VIRTUAL TABLE UTILITY ──────────────────────────────────
+const VirtualTable = {
+  THRESHOLD: 100,   // only virtualize above this count
+  BUFFER: 15,       // extra rows above/below viewport
+  ROW_HEIGHT: 52,   // estimated row height in px
+  configs: {},       // stores data refs per tableId
+  scrollPositions: {},
+
+  renderVirtual(tableId, items, rowRenderer, rendererArgs) {
+    if (items.length <= this.THRESHOLD) {
+      // Below threshold — render all, no virtualization
+      this.configs[tableId] = null;
+      return items.map(i => rowRenderer(i, rendererArgs)).join('');
+    }
+    // Store config for scroll-based re-rendering
+    this.configs[tableId] = { items, rowRenderer, rendererArgs };
+    // Calculate visible range
+    const scrollTop = this.scrollPositions[tableId] || 0;
+    const viewportHeight = window.innerHeight || 800;
+    const totalHeight = items.length * this.ROW_HEIGHT;
+    const startIdx = Math.max(0, Math.floor(scrollTop / this.ROW_HEIGHT) - this.BUFFER);
+    const endIdx = Math.min(items.length, Math.ceil((scrollTop + viewportHeight) / this.ROW_HEIGHT) + this.BUFFER);
+    const topPad = startIdx * this.ROW_HEIGHT;
+    const bottomPad = Math.max(0, (items.length - endIdx) * this.ROW_HEIGHT);
+    // Render spacers + visible rows
+    return (topPad > 0 ? `<tr class="vt-spacer-top" style="height:${topPad}px"><td colspan="99"></td></tr>` : '') +
+      items.slice(startIdx, endIdx).map(i => rowRenderer(i, rendererArgs)).join('') +
+      (bottomPad > 0 ? `<tr class="vt-spacer-bottom" style="height:${bottomPad}px"><td colspan="99"></td></tr>` : '');
+  },
+
+  // Partial re-render for a specific table during scroll
+  rerender(tableId) {
+    const cfg = this.configs[tableId];
+    if (!cfg) return;
+    const tbody = document.querySelector(`[data-vt="${tableId}"] tbody`);
+    if (!tbody) return;
+    tbody.innerHTML = this.renderVirtual(tableId, cfg.items, cfg.rowRenderer, cfg.rendererArgs);
+  },
+
+  // Calibrate row height from actual DOM after first render
+  calibrate() {
+    const firstRow = document.querySelector('.inst-table tbody tr:not(.vt-spacer-top):not(.vt-spacer-bottom):not(.empty-row)');
+    if (firstRow) {
+      const h = firstRow.getBoundingClientRect().height;
+      if (h > 20 && h < 200) this.ROW_HEIGHT = Math.round(h);
+    }
+  }
+};
+
+// Scroll listener for virtual tables — RAF throttled
+let _vtScrollTicking = false;
+window.addEventListener('scroll', () => {
+  if (_vtScrollTicking) return;
+  _vtScrollTicking = true;
+  requestAnimationFrame(() => {
+    _vtScrollTicking = false;
+    const tables = document.querySelectorAll('[data-vt]');
+    tables.forEach(table => {
+      const id = table.getAttribute('data-vt');
+      if (!VirtualTable.configs[id]) return;
+      const rect = table.getBoundingClientRect();
+      const newScroll = Math.max(0, -rect.top);
+      const prev = VirtualTable.scrollPositions[id] || 0;
+      if (Math.abs(newScroll - prev) > VirtualTable.ROW_HEIGHT * 3) {
+        VirtualTable.scrollPositions[id] = newScroll;
+        VirtualTable.rerender(id);
+      }
+    });
+  });
+}, { passive: true });
+
 function render() {
   // ── LOGIN GATE ─────────────────────────────────────────
   if (!ui.currentUser) {
@@ -1355,8 +1529,8 @@ function render() {
   const shop      = inst.filter(isShop);
   const vendor    = inst.filter(isVendor);
   const opCount   = inst.filter(i => i.status === 'Operational').length;
-  const instWithWO = new Set(db.workOrders.filter(w => w.status !== 'Closed').map(w => String(w.instrumentId)));
-  const openWOCount = db.workOrders.filter(w => w.status !== 'Closed').length;
+  const instWithWO = new Set(db.workOrders.filter(w => w.status !== 'Closed' && w.status !== 'Submitted for Closure').map(w => String(w.instrumentId)));
+  const openWOCount = db.workOrders.filter(w => w.status !== 'Closed' && w.status !== 'Submitted for Closure').length;
 
   const filtered = inst.filter(i => {
     const q  = ui.search.toLowerCase();
@@ -1373,16 +1547,16 @@ function render() {
     const ml = ui.locationF === 'Field & Shop'
             || (ui.locationF === 'In the Field'    && isField(i))
             || (ui.locationF === 'In the Shop'     && isShop(i) && i.status !== 'Operational')
-            || (ui.locationF === 'Storage / Operational' && isShop(i) && i.status === 'Operational')
+            || (ui.locationF === 'Storage / Operational' && isShop(i) && (i.status === 'Operational' || i.status === 'Needs Inspection'))
             || (ui.locationF === 'At Vendor'       && isVendor(i));
     return mq && ms && mt && ml;
   });
 
   const fField      = filtered.filter(isField);
   const fShopAll    = filtered.filter(isShop);
-  const hasOpenWO   = i => db.workOrders.some(w => String(w.instrumentId) === String(i.id) && w.status !== 'Closed');
-  const fStorage    = fShopAll.filter(i => i.status === 'Operational' && !hasOpenWO(i));
-  const fShop       = fShopAll.filter(i => i.status !== 'Operational' || hasOpenWO(i));
+  const hasOpenWO   = i => db.workOrders.some(w => String(w.instrumentId) === String(i.id) && w.status !== 'Closed' && w.status !== 'Submitted for Closure');
+  const fStorage    = fShopAll.filter(i => (i.status === 'Operational' || i.status === 'Needs Inspection') && !hasOpenWO(i));
+  const fShop       = fShopAll.filter(i => (i.status !== 'Operational' && i.status !== 'Needs Inspection') || hasOpenWO(i));
   const fVendor     = filtered.filter(isVendor);
   const fieldSites = db.sites.filter(s => s !== 'HQ/SHOP' && s !== 'VENDOR');
 
@@ -1409,6 +1583,9 @@ function render() {
       <button class="btn-nav ${ui.page==='sites'?'active':''}" onclick="navigateTo('sites')">
         <span class="nav-icon">◈</span>Site Info
       </button>
+      <button class="btn-nav ${ui.page==='kpi'?'active':''}" onclick="navigateTo('kpi')">
+        <span class="nav-icon">▦</span>KPI Overview
+      </button>
       <button class="btn-nav ${ui.page==='activity'?'active':''}" onclick="navigateTo('activity')">
         <span class="nav-icon">◎</span>Activity
       </button>
@@ -1421,6 +1598,7 @@ function render() {
       <div style="padding:8px 12px 6px;border-top:1px solid rgba(34,211,238,.07);margin-bottom:2px">
         <div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);letter-spacing:.06em;margin-bottom:4px">SIGNED IN AS</div>
         <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(ui.currentUser)}</div>
+        <div style="margin-top:4px"><span style="font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.05em;padding:2px 8px;border-radius:10px;${currentUserPermission()==='Full Control'?'background:rgba(34,211,238,.12);color:var(--blue);border:1px solid rgba(34,211,238,.3)':currentUserPermission()==='Edit'?'background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.3)':'background:rgba(251,191,36,.12);color:var(--amber);border:1px solid rgba(251,191,36,.3)'}">${currentUserPermission().toUpperCase()}</span></div>
       </div>
       <button class="btn-nav" onclick="signOut()" style="color:var(--subtle)">
         <span class="nav-icon">⎋</span>Sign Out
@@ -1430,15 +1608,17 @@ function render() {
 
   document.getElementById('root').innerHTML = `
   <button class="mobile-menu-btn" onclick="toggleMobileMenu()" title="Menu">☰</button>
-  <div class="main">
+  ${!canEdit() ? '<div style="position:fixed;top:0;left:0;right:0;z-index:400;background:rgba(251,191,36,.15);border-bottom:2px solid var(--amber);padding:6px 16px;text-align:center;font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--amber);letter-spacing:.06em">READ ONLY \u2014 Contact admin for edit access</div>' : ''}
+  <div class="main" ${!canEdit() ? 'style="padding-top:36px"' : ''}>
   <button onclick="toggleTheme()" title="Toggle theme" style="position:fixed;top:16px;right:20px;z-index:300;background:${ui.theme==='light' ? 'rgba(100,116,139,.12)' : 'var(--surface)'};border:1px solid ${ui.theme==='light' ? 'rgba(100,116,139,.35)' : 'var(--border)'};color:${ui.theme==='light' ? '#64748b' : 'var(--muted)'};border-radius:var(--radius);padding:6px 10px;font-size:15px;cursor:pointer;transition:all .15s;box-shadow:var(--shadow-xs)" onmouseover="this.style.borderColor='rgba(34,211,238,.35)'" onmouseout="this.style.borderColor='${ui.theme==='light' ? 'rgba(100,116,139,.35)' : 'var(--border)'}'">${ui.theme==='light' ? '☀' : '🌙'}</button>
-  ${ui.page === 'admin' ? renderAdmin() : ui.page === 'workorders' ? renderWorkOrders() : ui.page === 'activity' ? renderActivity() : ui.page === 'sites' ? renderSites() : ui.page === 'servicelog' ? renderServiceLog() : `
+  ${ui.page === 'admin' ? renderAdmin() : ui.page === 'workorders' ? renderWorkOrders() : ui.page === 'activity' ? renderActivity() : ui.page === 'sites' ? renderSites() : ui.page === 'servicelog' ? renderServiceLog() : ui.page === 'kpi' ? renderKPI() : `
 
     <div class="section-hdr">
       <div class="section-title">Dashboard</div>
       <div style="display:flex;gap:8px">
-        <button class="btn-add" onclick="openScanner()" style="display:inline-flex;align-items:center;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="7" y1="8" x2="13" y2="8"/><line x1="7" y1="16" x2="15" y2="16"/></svg> SCAN</button>
-        <button class="btn-export" onclick="exportCSV()">↓ EXPORT CSV</button>
+        ${canEdit() ? '<button class="btn-add" onclick="openScanner()" style="display:inline-flex;align-items:center;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="7" y1="8" x2="13" y2="8"/><line x1="7" y1="16" x2="15" y2="16"/></svg> SCAN</button>' : ''}
+        <button class="btn-export" onclick="exportXLSX()" style="background:var(--green);color:#fff">↓ EXCEL</button>
+        <button class="btn-export" onclick="openBatchLabels()" style="display:inline-flex;align-items:center;gap:5px">⎙ QR LABELS</button>
       </div>
     </div>
 
@@ -1495,11 +1675,11 @@ function render() {
       </div>
       ${ui.viewMode==='card'
         ? `<div class="card-grid">${fField.length===0?'<div style="grid-column:1/-1;text-align:center;padding:36px;color:var(--subtle);font-family:var(--font-mono)">No field instruments match your filter</div>':fField.map(i=>renderFieldCard(i,fieldSites)).join('')}</div>`
-        : `<div class="inst-table inst-table--field"><table>
+        : `<div class="inst-table inst-table--field" data-vt="field"><table>
         <thead><tr><th>TYPE / SERIAL</th><th>SITE</th><th>STATUS</th><th>ACTIONS</th></tr></thead>
         <tbody>${fField.length===0
           ? '<tr class="empty-row"><td colspan="4">No field instruments match your filter</td></tr>'
-          : fField.map(i => renderFieldRow(i, fieldSites)).join('')}</tbody>
+          : VirtualTable.renderVirtual('field', fField, renderFieldRow, fieldSites)}</tbody>
       </table></div>`}
     </div>` : ''}
 
@@ -1511,11 +1691,11 @@ function render() {
       </div>
       ${ui.viewMode==='card'
         ? `<div class="card-grid">${fShop.length===0?'<div style="grid-column:1/-1;text-align:center;padding:36px;color:var(--subtle);font-family:var(--font-mono)">No instruments currently in service</div>':fShop.map(renderShopCard).join('')}</div>`
-        : `<div class="inst-table inst-table--shop"><table>
+        : `<div class="inst-table inst-table--shop" data-vt="shop"><table>
         <thead><tr><th>TYPE / SERIAL</th><th>LOCATION</th><th>STATUS</th><th>WORK ORDER</th><th>ACTIONS</th></tr></thead>
         <tbody>${fShop.length===0
           ? '<tr class="empty-row"><td colspan="5">No instruments currently in service</td></tr>'
-          : fShop.map(renderShopRow).join('')}</tbody>
+          : VirtualTable.renderVirtual('shop', fShop, renderShopRow)}</tbody>
       </table></div>`}
     </div>
     <div class="group">
@@ -1525,11 +1705,11 @@ function render() {
       </div>
       ${ui.viewMode==='card'
         ? `<div class="card-grid">${fStorage.length===0?'<div style="grid-column:1/-1;text-align:center;padding:36px;color:var(--subtle);font-family:var(--font-mono)">No operational instruments in storage</div>':fStorage.map(renderShopCard).join('')}</div>`
-        : `<div class="inst-table inst-table--storage"><table>
+        : `<div class="inst-table inst-table--storage" data-vt="storage"><table>
         <thead><tr><th>TYPE / SERIAL</th><th>LOCATION</th><th>STATUS</th><th>WORK ORDER</th><th>ACTIONS</th></tr></thead>
         <tbody>${fStorage.length===0
           ? '<tr class="empty-row"><td colspan="5">No operational instruments in storage</td></tr>'
-          : fStorage.map(renderShopRow).join('')}</tbody>
+          : VirtualTable.renderVirtual('storage', fStorage, renderShopRow)}</tbody>
       </table></div>`}
     </div>` : ''}
 
@@ -1541,17 +1721,19 @@ function render() {
       </div>
       ${ui.viewMode==='card'
         ? `<div class="card-grid">${fVendor.length===0?'<div style="grid-column:1/-1;text-align:center;padding:36px;color:var(--subtle);font-family:var(--font-mono)">No instruments currently at vendor</div>':fVendor.map(renderVendorCard).join('')}</div>`
-        : `<div class="inst-table inst-table--vendor"><table>
+        : `<div class="inst-table inst-table--vendor" data-vt="vendor"><table>
         <thead><tr><th>TYPE / SERIAL</th><th>LOCATION</th><th>STATUS</th><th>WORK ORDER</th><th>ACTIONS</th></tr></thead>
         <tbody>${fVendor.length===0
           ? '<tr class="empty-row"><td colspan="5">No instruments currently at vendor</td></tr>'
-          : fVendor.map(renderVendorRow).join('')}</tbody>
+          : VirtualTable.renderVirtual('vendor', fVendor, renderVendorRow)}</tbody>
       </table></div>`}
     </div>` : ''}
   `}
   </div>
   `;
   if (ui.page === 'admin' && ui.adminUnlocked) setTimeout(setupAdminSections, 0);
+  // Calibrate virtual table row height after render
+  if (ui.page === 'dashboard') setTimeout(() => VirtualTable.calibrate(), 50);
 
   // Inject modal directly into body so position:fixed works correctly
   let _modalEl = document.getElementById('_modal_root');
@@ -1565,10 +1747,11 @@ function render() {
 
 // ── ROW RENDERERS ──────────────────────────────────────────
 function renderFieldRow(i, fieldSites) {
+  const ro = !canEdit();
   return `<tr>
     <td><div class="inst-name">${esc(i.name)}</div><div class="inst-sn">${esc(i.serial)}</div>${i.notes?`<div class="inst-notes" title="${esc(i.notes)}">${esc(i.notes)}</div>`:''}</td>
     <td>
-      <select class="site-sel" onchange="updateSite(${i.id},this.value)">
+      <select class="site-sel" onchange="updateSite(${i.id},this.value)" ${ro?'disabled':''}>
         <option value="HQ/SHOP">↩ Move to HQ/SHOP</option>
         <option value="VENDOR">↗ Send to Vendor</option>
         <option disabled>──────────────</option>
@@ -1576,17 +1759,17 @@ function renderFieldRow(i, fieldSites) {
       </select>
     </td>
     <td>
-      <select class="status-sel ${statusClass(i.status)}" onchange="updateStatus(${i.id},this.value)">
+      <select class="status-sel ${statusClass(i.status)}" onchange="updateStatus(${i.id},this.value)" ${ro?'disabled':''}>
         ${fieldStatuses().map(s=>`<option ${i.status===s?'selected':''}>${s}</option>`).join('')}
       </select>
     </td>
     <td>
       <div class="actions">
-        <button class="btn-act btn-history" onclick="openHistory(${i.id})" title="View History (H)">▤ HISTORY${(() => { const ac = (db.attachments||[]).filter(a=>String(a.instrumentId)===String(i.id)&&a.type!=='site_photo').length; return ac > 0 ? `<span class="hist-badge">${ac}</span>` : ''; })()}</button>
+        <button class="btn-act btn-history" onclick="openHistory(${i.id})" title="View History (H)">▤ HISTORY</button>
         <div class="more-menu-wrap">
           <button class="btn-act btn-more" onclick="toggleMoreMenu(this)" title="More actions">⋯</button>
           <div class="more-menu">
-            <div class="more-item" onclick="openLogWork(${i.id})">▣ Log Work</div>
+            ${ro?'':`<div class="more-item" onclick="openLogWork(${i.id})">▣ Log Work</div>`}
             <div class="more-item" onclick="showQR(${i.id})">⊞ QR Code</div>
           </div>
         </div>
@@ -1596,10 +1779,11 @@ function renderFieldRow(i, fieldSites) {
 }
 
 function renderShopRow(i) {
+  const ro = !canEdit();
   return `<tr>
     <td><div class="inst-name">${esc(i.name)}</div><div class="inst-sn">${esc(i.serial)}</div>${i.notes?`<div class="inst-notes" title="${esc(i.notes)}">${esc(i.notes)}</div>`:''}</td>
     <td>
-      <select class="site-sel" onchange="updateSite(${i.id},this.value)">
+      <select class="site-sel" onchange="updateSite(${i.id},this.value)" ${ro?'disabled':''}>
         ${db.sites.map(s => {
           if (s === 'VENDOR') return `<option ${i.site===s?'selected':''} value="${esc(s)}">${s}</option>`;
           return `<option ${i.site===s?'selected':''}>${s}</option>`;
@@ -1607,14 +1791,14 @@ function renderShopRow(i) {
       </select>
     </td>
     <td>
-      <select class="status-sel ${statusClass(i.status)}" onchange="updateStatus(${i.id},this.value)">
+      <select class="status-sel ${statusClass(i.status)}" onchange="updateStatus(${i.id},this.value)" ${ro?'disabled':''}>
         ${shopStatuses().map(s=>`<option ${i.status===s?'selected':''}>${s}</option>`).join('')}
       </select>
     </td>
     <td>
       ${(() => {
-        const openWOs = db.workOrders.filter(w => String(w.instrumentId)===String(i.id) && w.status!=='Closed');
-        if (!openWOs.length) return `<button class="btn-act btn-createwo" onclick="openCreateWO(${i.id})" title="Create Work Order (C)">+ CREATE WO</button>`;
+        const openWOs = db.workOrders.filter(w => String(w.instrumentId)===String(i.id) && w.status!=='Closed' && w.status!=='Submitted for Closure');
+        if (!openWOs.length) return ro ? '<span style="color:var(--subtle);font-size:11px">\u2014</span>' : `<button class="btn-act btn-createwo" onclick="openCreateWO(${i.id})" title="Create Work Order (C)">+ CREATE WO</button>`;
         const latest = openWOs.sort((a,b)=>Number(b.id)-Number(a.id))[0];
         return '<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">' +
           `<span class="wo-badge" onclick="openWODetail(${latest.id})">WO-${latest.id} · ${esc(latest.type)}</span>` +
@@ -1624,11 +1808,11 @@ function renderShopRow(i) {
     </td>
     <td>
       <div class="actions">
-        <button class="btn-act btn-history" onclick="openHistory(${i.id})" title="View History (H)">▤ HISTORY${(() => { const ac = (db.attachments||[]).filter(a=>String(a.instrumentId)===String(i.id)&&a.type!=='site_photo').length; return ac > 0 ? `<span class="hist-badge">${ac}</span>` : ''; })()}</button>
+        <button class="btn-act btn-history" onclick="openHistory(${i.id})" title="View History (H)">▤ HISTORY</button>
         <div class="more-menu-wrap">
           <button class="btn-act btn-more" onclick="toggleMoreMenu(this)" title="More actions">⋯</button>
           <div class="more-menu">
-            <div class="more-item" onclick="openLogWork(${i.id})">▣ Log Work</div>
+            ${ro?'':`<div class="more-item" onclick="openLogWork(${i.id})">▣ Log Work</div>`}
             <div class="more-item" onclick="showQR(${i.id})">⊞ QR Code</div>
           </div>
         </div>
@@ -1638,24 +1822,25 @@ function renderShopRow(i) {
 }
 
 function renderVendorRow(i) {
+  const ro = !canEdit();
   return `<tr>
     <td><div class="inst-name">${esc(i.name)}</div><div class="inst-sn">${esc(i.serial)}</div>${i.notes?`<div class="inst-notes" title="${esc(i.notes)}">${esc(i.notes)}</div>`:''}</td>
     <td>
-      <select class="site-sel" onchange="updateSite(${i.id},this.value)">
+      <select class="site-sel" onchange="updateSite(${i.id},this.value)" ${ro?'disabled':''}>
         <option value="VENDOR" selected>VENDOR</option>
         <option disabled>──────────────</option>
         <option value="HQ/SHOP">↩ Return to HQ/SHOP</option>
       </select>
     </td>
     <td>
-      <select class="status-sel ${statusClass(i.status)}" onchange="updateStatus(${i.id},this.value)">
+      <select class="status-sel ${statusClass(i.status)}" onchange="updateStatus(${i.id},this.value)" ${ro?'disabled':''}>
         ${vendorStatuses().map(s=>`<option ${i.status===s?'selected':''}>${s}</option>`).join('')}
       </select>
     </td>
     <td>
       ${(() => {
-        const openWOs = db.workOrders.filter(w => String(w.instrumentId)===String(i.id) && w.status!=='Closed');
-        if (!openWOs.length) return `<button class="btn-act btn-createwo" onclick="openCreateWO(${i.id})" title="Create Work Order (C)">+ CREATE WO</button>`;
+        const openWOs = db.workOrders.filter(w => String(w.instrumentId)===String(i.id) && w.status!=='Closed' && w.status!=='Submitted for Closure');
+        if (!openWOs.length) return ro ? '<span style="color:var(--subtle);font-size:11px">\u2014</span>' : `<button class="btn-act btn-createwo" onclick="openCreateWO(${i.id})" title="Create Work Order (C)">+ CREATE WO</button>`;
         const latest = openWOs.sort((a,b)=>Number(b.id)-Number(a.id))[0];
         return '<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">' +
           `<span class="wo-badge" onclick="openWODetail(${latest.id})">WO-${latest.id} · ${esc(latest.type)}</span>` +
@@ -1665,11 +1850,11 @@ function renderVendorRow(i) {
     </td>
     <td>
       <div class="actions">
-        <button class="btn-act btn-history" onclick="openHistory(${i.id})" title="View History (H)">▤ HISTORY${(() => { const ac = (db.attachments||[]).filter(a=>String(a.instrumentId)===String(i.id)&&a.type!=='site_photo').length; return ac > 0 ? `<span class="hist-badge">${ac}</span>` : ''; })()}</button>
+        <button class="btn-act btn-history" onclick="openHistory(${i.id})" title="View History (H)">▤ HISTORY</button>
         <div class="more-menu-wrap">
           <button class="btn-act btn-more" onclick="toggleMoreMenu(this)" title="More actions">⋯</button>
           <div class="more-menu">
-            <div class="more-item" onclick="openLogWork(${i.id})">▣ Log Work</div>
+            ${ro?'':`<div class="more-item" onclick="openLogWork(${i.id})">▣ Log Work</div>`}
             <div class="more-item" onclick="showQR(${i.id})">⊞ QR Code</div>
           </div>
         </div>
@@ -1696,7 +1881,7 @@ function renderFieldCard(i, fieldSites) {
 }
 
 function renderShopCard(i) {
-  const openWOs = db.workOrders.filter(w => String(w.instrumentId)===String(i.id) && w.status!=='Closed');
+  const openWOs = db.workOrders.filter(w => String(w.instrumentId)===String(i.id) && w.status!=='Closed' && w.status!=='Submitted for Closure');
   const latest = openWOs.sort((a,b)=>Number(b.id)-Number(a.id))[0];
   return `<div class="inst-card">
     <div class="inst-card-hdr">
@@ -1716,7 +1901,7 @@ function renderShopCard(i) {
 }
 
 function renderVendorCard(i) {
-  const openWOs = db.workOrders.filter(w => String(w.instrumentId)===String(i.id) && w.status!=='Closed');
+  const openWOs = db.workOrders.filter(w => String(w.instrumentId)===String(i.id) && w.status!=='Closed' && w.status!=='Submitted for Closure');
   const latest = openWOs.sort((a,b)=>Number(b.id)-Number(a.id))[0];
   return `<div class="inst-card">
     <div class="inst-card-hdr">
@@ -1978,7 +2163,8 @@ function woFormBody(f) {
       <div class="form-group"></div>
     </div>
     <div class="form-group"><label class="form-label">Description</label>
-      <textarea id="f-desc" class="form-input" rows="3" placeholder="Describe the work..." oninput="markDirty()">${esc(f.desc||'')}</textarea>
+      <textarea id="f-desc" class="form-input" rows="3" maxlength="1200" placeholder="Describe the work..." oninput="markDirty();updateCharCounter('f-desc','f-desc-counter',1200)">${esc(f.desc||'')}</textarea>
+      <div id="f-desc-counter" style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);text-align:right;margin-top:4px">${(f.desc||'').length.toLocaleString()} / 1,200</div>
     </div>`;
 }
 
@@ -2059,7 +2245,8 @@ function renderModal() {
 
       <div class="form-group">
         <label class="form-label">Description of Work *</label>
-        <textarea id="f-lw-desc" class="form-input" rows="3" placeholder="Describe the work performed, parts replaced, observations...">${esc(f.desc||'')}</textarea>
+        <textarea id="f-lw-desc" class="form-input" rows="3" maxlength="1200" placeholder="Describe the work performed, parts replaced, observations..." oninput="updateCharCounter('f-lw-desc','f-lw-desc-counter',1200)">${esc(f.desc||'')}</textarea>
+        <div id="f-lw-desc-counter" style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);text-align:right;margin-top:4px">${(f.desc||'').length.toLocaleString()} / 1,200</div>
       </div>
 
       <div class="form-group">
@@ -2162,63 +2349,202 @@ function renderModal() {
       </div>`;
     }).join('');
 
-    // Show all attachments for this instrument at the bottom
-    const allAttachSection = attachments.length > 0 ? `
-    <div style="margin-top:16px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg)">
-      <div style="font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--subtle);margin-bottom:10px">ALL ATTACHMENTS (${attachments.length})</div>
-      <div style="display:flex;flex-direction:column;gap:6px">
-        ${attachments.map(a => `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius)">
-          <div style="display:flex;align-items:center;gap:8px;overflow:hidden">
-            <span style="font-size:14px">${a.type==='image'?'🖼':'📄'}</span>
-            <div style="overflow:hidden">
-              <div style="font-family:var(--font-mono);font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.name)}</div>
-              <div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle)">${esc(a.date||'')} · ${esc(a.tech||'')} · ${esc(a.workType||'')}</div>
-            </div>
-          </div>
-          <a href="${a.fileUrl||a.data||'#'}" ${a.fileUrl?'target="_blank"':'download="'+esc(a.name)+'"'} style="flex-shrink:0;margin-left:10px;padding:4px 10px;background:rgba(34,211,238,.09);border:1px solid rgba(34,211,238,.22);border-radius:var(--radius);font-family:var(--font-mono);font-size:10px;color:var(--blue);text-decoration:none">${a.fileUrl?'↗ View in Drive':'↓ Download'}</a>
-        </div>`).join('')}
-      </div>
-    </div>` : '';
-
     // Work orders for this instrument
     const instWOs = db.workOrders.filter(w => String(w.instrumentId) === String(f.instId))
       .sort((a,b) => Number(b.id) - Number(a.id));
-    const woSection = instWOs.length > 0 ? `
-    <div style="margin-top:16px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg)">
-      <div style="font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--subtle);margin-bottom:10px">WORK ORDERS (${instWOs.length})</div>
-      <div style="display:flex;flex-direction:column;gap:6px">
-        ${instWOs.map(w => {
-          const p = typeof PRIORITY_COLORS !== 'undefined' ? (PRIORITY_COLORS[w.priority] || PRIORITY_COLORS.Medium) : {bg:'transparent',color:'var(--muted)',border:'var(--border)',icon:''};
-          return `
-          <div style="padding:8px 10px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);cursor:pointer" onclick="openWO(${w.id})">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
-              <strong style="font-family:var(--font-mono);font-size:12px;color:var(--text)">WO-${esc(String(w.id))}</strong>
-              <span class="${statusClass(w.status)}" style="padding:2px 7px;border-radius:var(--radius);font-size:10px;font-weight:600">${esc(w.status)}</span>
-            </div>
-            <div style="display:flex;flex-wrap:wrap;gap:8px;font-family:var(--font-mono);font-size:10px;color:var(--muted)">
-              <span>${esc(w.type||'—')}</span>
-              <span>·</span>
-              <span style="display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:var(--radius);background:${p.bg};color:${p.color};border:1px solid ${p.border};font-size:10px">${p.icon} ${esc(w.priority||'Medium')}</span>
-              <span>·</span>
-              <span>${esc(w.technician||'Unassigned')}</span>
-              <span>·</span>
-              <span>${esc(w.created||'')}</span>
-            </div>
-            ${w.problem ? `<div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(w.problem)}</div>` : ''}
-          </div>`;
-        }).join('')}
-      </div>
-    </div>` : '';
 
-    return modalShell('INSTRUMENT HISTORY', `
-      <div class="modal-sub">${esc(f.instName)} · ${esc(f.serial)}</div>
+    // Timeline view — merge all events into unified chronological timeline
+    const timelineView = (() => {
+      if ((f.histView||'list') !== 'timeline') return '';
+      // Build unified event list
+      const events = [];
+      hist.forEach(h => events.push({ type:'history', ts:h.ts, epoch:h.epoch||0, action:h.action, detail:h.detail, user:h.user||'' }));
+      instWOs.forEach(w => {
+        events.push({ type:'wo', ts:w.created, epoch:new Date(w.created||0).getTime(), action:'Work Order Created', detail:'WO-'+w.id+' · '+esc(w.type)+' · '+(w.technician||'Unassigned'), woStatus:w.status, woId:w.id });
+        if (w.closedDate) events.push({ type:'wo', ts:w.closedDate, epoch:new Date(w.closedDate||0).getTime(), action:'Work Order Closed', detail:'WO-'+w.id+' closed by '+(w.closedBy||'Unknown'), woStatus:'Closed', woId:w.id });
+      });
+      // Filter
+      const tf = f.timelineFilter || 'all';
+      const tfFrom = f.timelineFrom || '';
+      const tfTo = f.timelineTo || '';
+      let filtered = events;
+      if (tf === 'status') filtered = filtered.filter(e => (e.action||'').toLowerCase().includes('status'));
+      else if (tf === 'wo') filtered = filtered.filter(e => e.type === 'wo');
+      else if (tf === 'cert') filtered = filtered.filter(e => (e.action||'').toLowerCase().includes('cert'));
+      else if (tf === 'site') filtered = filtered.filter(e => (e.action||'').toLowerCase().includes('site'));
+      if (tfFrom) filtered = filtered.filter(e => (e.ts||'') >= tfFrom);
+      if (tfTo) filtered = filtered.filter(e => (e.ts||'') <= tfTo + 'Z');
+      filtered.sort((a,b) => (b.epoch||0) - (a.epoch||0));
+
+      const filterBar = `<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+        <select onchange="ui.form.timelineFilter=this.value;render()" style="padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:var(--font-mono);font-size:11px">
+          <option value="all" ${tf==='all'?'selected':''}>All Events</option>
+          <option value="status" ${tf==='status'?'selected':''}>Status Changes</option>
+          <option value="wo" ${tf==='wo'?'selected':''}>Work Orders</option>
+          <option value="cert" ${tf==='cert'?'selected':''}>Certifications</option>
+          <option value="site" ${tf==='site'?'selected':''}>Site Changes</option>
+        </select>
+        <input type="date" value="${tfFrom}" onchange="ui.form.timelineFrom=this.value;render()" style="padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:var(--font-mono);font-size:11px"/>
+        <input type="date" value="${tfTo}" onchange="ui.form.timelineTo=this.value;render()" style="padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:var(--font-mono);font-size:11px"/>
+        <span style="font-family:var(--font-mono);font-size:10px;color:var(--subtle)">${filtered.length} events</span>
+      </div>`;
+
+      const timelineItems = filtered.map(ev => {
+        const st = entryStyle(ev.action);
+        const woStatusBadge = ev.woStatus ? ` <span class="${statusClass(ev.woStatus)}" style="padding:1px 6px;border-radius:8px;font-size:9px;font-weight:600">${esc(ev.woStatus)}</span>` : '';
+        return `<div style="display:flex;gap:12px;min-height:60px">
+          <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:20px">
+            <div style="width:12px;height:12px;border-radius:50%;background:${st.color};border:2px solid var(--surface);box-shadow:0 0 0 2px ${st.color}40;flex-shrink:0;margin-top:4px"></div>
+            <div style="width:2px;flex:1;background:var(--border2);margin:4px 0"></div>
+          </div>
+          <div style="flex:1;padding-bottom:14px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+              <span style="font-family:var(--font-mono);font-size:10px;color:var(--subtle)">${esc(ev.ts||'')}</span>
+              ${woStatusBadge}
+            </div>
+            <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:${st.color};margin-bottom:2px">${st.icon} ${esc(ev.action)}</div>
+            ${ev.detail ? `<div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);line-height:1.5">${esc(ev.detail)}</div>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+
+      return filterBar + (filtered.length === 0
+        ? '<div style="text-align:center;padding:24px;color:var(--subtle);font-size:12px">No matching events.</div>'
+        : '<div style="padding:8px 4px">' + timelineItems + '</div>');
+    })();
+
+    // Tab bar
+    const hv = f.histView || 'list';
+    const tabStyle = (key) => `padding:8px 16px;font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.04em;border:none;background:transparent;cursor:pointer;border-bottom:2px solid ${hv===key?'var(--blue)':'transparent'};color:${hv===key?'var(--blue)':'var(--muted)'};margin-bottom:-2px`;
+    const histViewTab = `<div style="display:flex;gap:0;margin-bottom:12px;border-bottom:2px solid var(--border)">
+      <button onclick="ui.form.histView='list';render()" style="${tabStyle('list')}">LIST</button>
+      <button onclick="ui.form.histView='timeline';render()" style="${tabStyle('timeline')}">TIMELINE</button>
+      <button onclick="ui.form.histView='attachments';render()" style="${tabStyle('attachments')}">ATTACHMENTS${attachments.length ? ' ('+attachments.length+')' : ''}</button>
+      <button onclick="ui.form.histView='workorders';render()" style="${tabStyle('workorders')}">WORK ORDERS${instWOs.length ? ' ('+instWOs.length+')' : ''}</button>
+    </div>`;
+
+    const listView = hv === 'list' ? `
       ${hist.length === 0
         ? '<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">No history recorded yet.</div>'
-        : `<div style="border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">${entries}</div>`}
-      ${woSection}
-      ${allAttachSection}`,
+        : `<div style="border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">${entries}</div>`}` : '';
+
+    // Attachments tab view
+    const attachView = hv === 'attachments' ? (attachments.length === 0
+      ? '<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">No attachments for this instrument.</div>'
+      : `<div style="display:flex;flex-direction:column;gap:8px">
+          ${attachments.map(a => {
+            const isImg = a.type === 'image';
+            const thumbUrl = a.fileUrl || a.data || '';
+            return `
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg)">
+              ${isImg && thumbUrl ? `<div style="width:48px;height:48px;flex-shrink:0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border2);background:var(--surface)"><img src="${thumbUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='🖼'"/></div>` : `<div style="width:48px;height:48px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);font-size:22px">${isImg?'🖼':'📄'}</div>`}
+              <div style="flex:1;overflow:hidden">
+                <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.name)}</div>
+                <div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);margin-top:3px">${esc(a.date||'')}${a.tech ? ' · '+esc(a.tech) : ''}${a.workType ? ' · '+esc(a.workType) : ''}</div>
+              </div>
+              <a href="${thumbUrl}" ${a.fileUrl?'target="_blank"':'download="'+esc(a.name)+'"'} style="flex-shrink:0;padding:6px 14px;background:rgba(34,211,238,.09);border:1px solid rgba(34,211,238,.22);border-radius:var(--radius);font-family:var(--font-mono);font-size:11px;color:var(--blue);text-decoration:none;white-space:nowrap">${a.fileUrl?'↗ View in Drive':'↓ Download'}</a>
+            </div>`;
+          }).join('')}
+        </div>`) : '';
+
+    // Work Orders tab view — full detail cards for ALL work orders (Open, Pending, Closed)
+    const woTabView = hv === 'workorders' ? (() => {
+      if (instWOs.length === 0) return '<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">No work orders for this instrument.</div>';
+      // Filter controls
+      const woFilter = f.woTabFilter || 'all';
+      let filteredWOs = instWOs;
+      if (woFilter === 'open') filteredWOs = instWOs.filter(w => w.status === 'Open');
+      else if (woFilter === 'pending') filteredWOs = instWOs.filter(w => w.status === 'Submitted for Closure' || w.status === 'Pending Closure');
+      else if (woFilter === 'closed') filteredWOs = instWOs.filter(w => w.status === 'Closed');
+
+      const openCt = instWOs.filter(w=>w.status==='Open').length;
+      const pendCt = instWOs.filter(w=>w.status==='Submitted for Closure'||w.status==='Pending Closure').length;
+      const closedCt = instWOs.filter(w=>w.status==='Closed').length;
+      const fbtn = (key, label, ct) => {
+        const act = woFilter === key;
+        return `<button onclick="ui.form.woTabFilter='${key}';render()" style="padding:5px 12px;border-radius:var(--radius);font-family:var(--font-mono);font-size:10px;font-weight:600;border:1px solid ${act?'var(--blue)':'var(--border)'};background:${act?'var(--blue-dim)':'var(--surface)'};color:${act?'var(--blue)':'var(--muted)'};cursor:pointer">${label} (${ct})</button>`;
+      };
+      const filterBtns = `<div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        ${fbtn('all','All',instWOs.length)}${fbtn('open','Open',openCt)}${fbtn('pending','Pending',pendCt)}${fbtn('closed','Closed',closedCt)}
+      </div>`;
+
+      const expandedId = f.woExpandedId || null;
+      const woCards = filteredWOs.map(w => {
+        const p = typeof PRIORITY_COLORS !== 'undefined' ? (PRIORITY_COLORS[w.priority] || PRIORITY_COLORS.Medium) : {bg:'transparent',color:'var(--muted)',border:'var(--border)',icon:''};
+        const isExpanded = String(expandedId) === String(w.id);
+        const woAtts = (db.attachments||[]).filter(a => String(a.instrumentId) === String(w.instrumentId) && a.type !== 'site_photo' && a.woId && String(a.woId) === String(w.id));
+
+        // Header (always visible, clickable to expand)
+        const header = '<div onclick="ui.form.woExpandedId='+(isExpanded?'null':w.id)+';render()" style="padding:12px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px">' +
+          '<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">' +
+            '<span style="font-size:16px;color:var(--purple);flex-shrink:0">'+(isExpanded?'▾':'▸')+'</span>' +
+            '<div style="min-width:0">' +
+              '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">' +
+                '<strong style="font-family:var(--font-mono);font-size:13px;color:var(--text)">WO-'+esc(String(w.id))+'</strong>' +
+                '<span class="'+statusClass(w.status)+'" style="padding:2px 8px;border-radius:var(--radius);font-size:10px;font-weight:600">'+esc(w.status)+'</span>' +
+                '<span style="display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:var(--radius);background:'+p.bg+';color:'+p.color+';border:1px solid '+p.border+';font-size:10px;font-weight:600">'+p.icon+' '+esc(w.priority||'Medium')+'</span>' +
+              '</div>' +
+              '<div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-top:3px">'+esc(w.type||'')+' · '+esc(w.technician||'Unassigned')+' · '+esc(w.created||'')+'</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+
+        // Expanded detail section
+        let detail = '';
+        if (isExpanded) {
+          detail = '<div style="padding:0 14px 14px;border-top:1px solid var(--border2)">' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 0">' +
+              '<div><div style="font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--subtle);margin-bottom:3px">TYPE</div><div style="font-family:var(--font-mono);font-size:12px;color:var(--text)">'+esc(w.type||'—')+'</div></div>' +
+              '<div><div style="font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--subtle);margin-bottom:3px">TECHNICIAN</div><div style="font-family:var(--font-mono);font-size:12px;color:var(--text)">'+esc(w.technician||'Unassigned')+'</div></div>' +
+              '<div><div style="font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--subtle);margin-bottom:3px">CREATED</div><div style="font-family:var(--font-mono);font-size:12px;color:var(--text)">'+esc(w.created||'—')+'</div></div>' +
+              (w.closedDate ? '<div><div style="font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--subtle);margin-bottom:3px">COMPLETED</div><div style="font-family:var(--font-mono);font-size:12px;color:var(--green)">'+esc(w.closedDate)+'</div></div>' : '') +
+              (w.closedBy ? '<div><div style="font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--subtle);margin-bottom:3px">CLOSED BY</div><div style="font-family:var(--font-mono);font-size:12px;color:var(--text)">'+esc(w.closedBy)+'</div></div>' : '') +
+              (w.restoredBy ? '<div><div style="font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--subtle);margin-bottom:3px">RESTORED BY</div><div style="font-family:var(--font-mono);font-size:12px;color:var(--amber)">'+esc(w.restoredBy)+' · '+esc(w.restoredDate||'')+'</div></div>' : '') +
+            '</div>' +
+            (w.description ? '<div style="margin-bottom:10px"><div style="font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--subtle);margin-bottom:5px">DESCRIPTION</div><div style="font-family:var(--font-mono);font-size:12px;color:var(--muted);line-height:1.6;padding:10px 12px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius)">'+esc(w.description)+'</div></div>' : '') +
+            (w.problem ? '<div style="margin-bottom:10px"><div style="font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--subtle);margin-bottom:5px">PROBLEM</div><div style="font-family:var(--font-mono);font-size:12px;color:var(--muted);line-height:1.6;padding:10px 12px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius)">'+esc(w.problem)+'</div></div>' : '') +
+            (w.restoreReason ? '<div style="margin-bottom:10px"><div style="font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--amber);margin-bottom:5px">RESTORE REASON</div><div style="font-family:var(--font-mono);font-size:12px;color:var(--amber);line-height:1.6;padding:10px 12px;background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.2);border-left:3px solid var(--amber);border-radius:var(--radius)">'+esc(w.restoreReason)+'</div></div>' : '') +
+            // WO-specific events from history
+            (() => {
+              const woEvents = hist.filter(h => (h.action||'').toLowerCase().includes('work order') || (h.detail||'').includes('WO-'+w.id));
+              if (!woEvents.length) return '';
+              return '<div style="margin-bottom:10px"><div style="font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--subtle);margin-bottom:5px">HISTORY EVENTS</div>' +
+                '<div style="border:1px solid var(--border2);border-radius:var(--radius);overflow:hidden">' +
+                woEvents.map(h => {
+                  const hst = entryStyle(h.action);
+                  return '<div style="padding:8px 10px;border-bottom:1px solid var(--border2);background:'+hst.bg+';border-left:3px solid '+hst.color+'20">' +
+                    '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">' +
+                      '<span style="font-family:var(--font-mono);font-size:11px;font-weight:600;color:'+hst.color+'">'+hst.icon+' '+esc(h.action)+'</span>' +
+                      '<span style="font-family:var(--font-mono);font-size:10px;color:var(--subtle)">'+esc(h.ts||'')+'</span>' +
+                    '</div>' +
+                    (h.detail ? '<div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-top:3px;padding-left:14px">'+esc(h.detail)+'</div>' : '') +
+                  '</div>';
+                }).join('') +
+              '</div></div>';
+            })() +
+            // Action buttons
+            '<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:6px">' +
+              '<button onclick="openWODetail('+w.id+')" style="padding:6px 14px;background:var(--blue-dim);border:1px solid rgba(88,166,255,.3);border-radius:var(--radius);font-family:var(--font-mono);font-size:11px;color:var(--blue);cursor:pointer;border:1px solid rgba(88,166,255,.3)">Open Full Detail</button>' +
+              '<button onclick="printWO('+w.id+')" style="padding:6px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-mono);font-size:11px;color:var(--muted);cursor:pointer">⎙ Print</button>' +
+            '</div>' +
+          '</div>';
+        }
+
+        return '<div style="background:var(--surface2);border:1px solid '+(isExpanded?'var(--blue)':'var(--border)')+';border-radius:var(--radius-lg);overflow:hidden;margin-bottom:8px'+(isExpanded?';box-shadow:0 0 0 1px rgba(88,166,255,.15)':'')+'">' + header + detail + '</div>';
+      }).join('');
+
+      return filterBtns + (filteredWOs.length === 0 ? '<div style="text-align:center;padding:20px;color:var(--subtle);font-size:12px">No matching work orders.</div>' : woCards);
+    })() : '';
+
+    const currentView = hv === 'list' ? listView : hv === 'timeline' ? timelineView : hv === 'attachments' ? attachView : woTabView;
+
+    return modalShell('INSTRUMENT HISTORY', `
+      <div class="modal-sub">${esc(f.instName)} \u00B7 ${esc(f.serial)}</div>
+      ${histViewTab}
+      ${currentView}`,
       `<button class="btn-export" onclick="printHistory(${f.instId})">⎙ Print PDF</button>
+       <button class="btn-export" onclick="exportAuditTrailPDF(${f.instId})" style="background:var(--amber);color:#000">⎙ Full Audit PDF</button>
+       <button class="btn-export" onclick="exportAuditTrailXLSX(${f.instId})" style="background:var(--green);color:#fff">↓ Audit Excel</button>
        <button class="btn-save" onclick="closeModal()">Close</button>`
     );
   }
@@ -2326,14 +2652,14 @@ function renderModal() {
           ${woAtts.length > 5 ? `<div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);margin-top:6px">${woAtts.length-5} more — <span style="color:var(--blue);cursor:pointer" onclick="closeModal();openAttachments(${wo.instrumentId})">View all</span></div>` : ''}
         </div>`;
       })()}`,
-      `${wo.status === 'Pending Closure'
+      `${wo.status === 'Submitted for Closure'
           ? (currentUserHasFullControl()
               ? `<button class="btn-approve-close" onclick="openApproveWO(${wo.id})">✓ Approve & Close</button>`
               : `<span style="font-family:var(--font-mono);font-size:11px;color:var(--amber);padding:7px 0">⏳ Awaiting approval from Full Control user</span>`)
-          : wo.status !== 'Closed'
+          : wo.status !== 'Closed' && canEdit()
             ? `<button class="btn-submit-closure" onclick="submitForClosure(${wo.id})">↑ Submit for Closure</button>`
             : ''}
-       <button class="btn-edit-md" onclick="openEditWO(${wo.id})">EDIT</button>
+       ${canEdit() ? `<button class="btn-edit-md" onclick="openEditWO(${wo.id})">EDIT</button>` : ''}
        <button class="btn-edit-md" onclick="printWO(${wo.id})">⎙ PRINT</button>
        <button class="btn-save" onclick="closeModal()">Close</button>`
     );
@@ -2575,6 +2901,84 @@ function renderModal() {
     </div></div>`;
   }
 
+  if (ui.modal === 'conflict') {
+    const diffFields = ['name','serial','status','site','notes'].filter(k => f.local[k] !== f.server[k]);
+    return `<div class="overlay"><div class="modal" style="max-width:560px;border:2px solid var(--red)">
+      <div class="modal-hdr" style="background:rgba(248,81,73,.1)">
+        <div class="modal-title" style="color:var(--red)">\u26A0 CONFLICT DETECTED</div>
+      </div>
+      <div style="padding:16px 20px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">This instrument was modified by another user since you last loaded it. Choose which version to keep:</div>
+        <table style="width:100%;font-size:12px;border-collapse:collapse;font-family:var(--font-mono)">
+          <thead><tr style="border-bottom:2px solid var(--border)">
+            <th style="text-align:left;padding:6px 8px;color:var(--subtle);font-size:10px">FIELD</th>
+            <th style="text-align:left;padding:6px 8px;color:var(--blue);font-size:10px">YOUR VERSION</th>
+            <th style="text-align:left;padding:6px 8px;color:var(--amber);font-size:10px">SERVER VERSION</th>
+          </tr></thead>
+          <tbody>
+            ${diffFields.map(k => `<tr style="border-bottom:1px solid var(--border2)">
+              <td style="padding:6px 8px;font-weight:600;text-transform:uppercase;font-size:10px">${esc(k)}</td>
+              <td style="padding:6px 8px;background:rgba(34,211,238,.06)">${esc(String(f.local[k]||'\u2014'))}</td>
+              <td style="padding:6px 8px;background:rgba(251,191,36,.06)">${esc(String(f.server[k]||'\u2014'))}</td>
+            </tr>`).join('')}
+            ${diffFields.length === 0 ? '<tr><td colspan="3" style="padding:12px 8px;color:var(--subtle);text-align:center">No visible field differences (possible metadata change)</td></tr>' : ''}
+          </tbody>
+        </table>
+        <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end">
+          <button class="btn-cancel" onclick="ui.modal=null;ui.form={};render()">Cancel</button>
+          <button class="btn-export" style="background:var(--amber);color:#000" onclick="resolveConflict('theirs')">Keep Server</button>
+          <button class="btn-export" style="background:var(--blue);color:#fff" onclick="resolveConflict('mine')">Keep Mine</button>
+        </div>
+      </div>
+    </div></div>`;
+  }
+
+  if (ui.modal === 'compress') {
+    const p = f._pendingUploads || [];
+    const idx = f._currentFileIdx || 0;
+    const current = p[idx];
+    const totalFiles = p.length;
+    return `<div class="overlay"><div class="modal" style="max-width:480px">
+      <div class="modal-hdr">
+        <div class="modal-title">Image Compression${totalFiles > 1 ? ' (' + (idx+1) + ' of ' + totalFiles + ')' : ''}</div>
+        <button class="close-btn" onclick="cancelCompression()">×</button>
+      </div>
+      <div style="padding:16px 20px">
+        <div style="display:flex;gap:14px;margin-bottom:14px">
+          <div style="flex:0 0 120px;height:90px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--surface2);display:flex;align-items:center;justify-content:center">
+            <img src="${current ? current.dataUrl : ''}" style="max-width:100%;max-height:100%;object-fit:contain"/>
+          </div>
+          <div style="flex:1;font-family:var(--font-mono);font-size:11px">
+            <div style="color:var(--subtle);margin-bottom:4px">${esc(current ? current.fileName : '')}</div>
+            <div>Original: <strong>${current ? (current.originalSize / 1024).toFixed(0) : 0} KB</strong></div>
+            <div id="compress-size-preview" style="margin-top:4px">Compressed: <strong>calculating...</strong></div>
+          </div>
+        </div>
+        <div style="margin-bottom:12px">
+          <label style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);letter-spacing:.06em;display:block;margin-bottom:4px">QUALITY: <span id="compress-quality-label">${f._compressQuality || 85}%</span></label>
+          <input type="range" id="compress-quality" min="50" max="95" step="5" value="${f._compressQuality || 85}" oninput="ui.form._compressQuality=Number(this.value);document.getElementById('compress-quality-label').textContent=this.value+'%';updateCompressionPreview()" style="width:100%;accent-color:var(--blue)"/>
+        </div>
+        <div style="margin-bottom:14px">
+          <label style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);letter-spacing:.06em;display:block;margin-bottom:4px">MAX DIMENSION</label>
+          <select id="compress-maxdim" onchange="ui.form._compressMaxDim=Number(this.value);updateCompressionPreview()" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:var(--font-mono);font-size:12px">
+            <option value="800" ${(f._compressMaxDim||1400)===800?'selected':''}>800px (small)</option>
+            <option value="1200" ${(f._compressMaxDim||1400)===1200?'selected':''}>1200px (medium)</option>
+            <option value="1400" ${(f._compressMaxDim||1400)===1400?'selected':''}>1400px (default)</option>
+            <option value="1600" ${(f._compressMaxDim||1400)===1600?'selected':''}>1600px (large)</option>
+            <option value="2000" ${(f._compressMaxDim||1400)===2000?'selected':''}>2000px (full)</option>
+          </select>
+        </div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);margin-bottom:14px">\u24D8 EXIF metadata is stripped automatically for privacy</div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+          <button class="btn-cancel" onclick="cancelCompression()">Cancel</button>
+          ${totalFiles > 1 ? '<button class="btn-export" onclick="applyCompressionToAll()">Apply to All (' + (totalFiles - idx) + ')</button>' : ''}
+          <button class="btn-export" onclick="confirmCompression(false)">Upload Original</button>
+          <button class="btn-save" onclick="confirmCompression(true)">Upload Compressed</button>
+        </div>
+      </div>
+    </div></div>`;
+  }
+
   if (ui.modal === 'addsite') {
     const SITE_TYPES = ['Field','HQ/Shop','Vendor','Storage','Mobile'];
     return modalShell('ADD MONITORING SITE', `
@@ -2723,9 +3127,9 @@ function renderWorkOrders() {
     const inst = db.instruments.find(i => String(i.id) === String(wo.instrumentId));
     const matchStatus =
       ui.woFilter === 'All'     ? true :
-      ui.woFilter === 'Open'    ? (wo.status !== 'Closed' && wo.status !== 'Pending Closure') :
+      ui.woFilter === 'Open'    ? (wo.status !== 'Closed' && wo.status !== 'Submitted for Closure') :
       ui.woFilter === 'Closed'  ? wo.status === 'Closed' :
-      ui.woFilter === 'Pending' ? wo.status === 'Pending Closure' : true;
+      ui.woFilter === 'Pending' ? wo.status === 'Submitted for Closure' : true;
     const matchSearch = !q
       || `WO-${wo.id}`.toLowerCase().includes(q)
       || (wo.type||'').toLowerCase().includes(q)
@@ -2741,9 +3145,9 @@ function renderWorkOrders() {
     return matchStatus && matchSearch && matchType && matchFrom && matchTo;
   }).sort((a, b) => Number(b.id) - Number(a.id));
 
-  const openCount    = db.workOrders.filter(w => w.status !== 'Closed' && w.status !== 'Pending Closure').length;
+  const openCount    = db.workOrders.filter(w => w.status !== 'Closed' && w.status !== 'Submitted for Closure').length;
   const closedCount  = db.workOrders.filter(w => w.status === 'Closed').length;
-  const pendingCount = db.workOrders.filter(w => w.status === 'Pending Closure').length;
+  const pendingCount = db.workOrders.filter(w => w.status === 'Submitted for Closure').length;
   const allCount     = db.workOrders.length;
 
   const rows = filtered.length === 0
@@ -2752,11 +3156,11 @@ function renderWorkOrders() {
         const inst = db.instruments.find(i => String(i.id) === String(wo.instrumentId));
         const statusBadge =
           wo.status === 'Closed'          ? `<span class="wo-status-closed">CLOSED</span>` :
-          wo.status === 'Pending Closure' ? `<span class="wo-status-pending">⏳ PENDING CLOSURE</span>` :
+          wo.status === 'Submitted for Closure' ? `<span class="wo-status-pending">⏳ SUBMITTED FOR CLOSURE</span>` :
                                             `<span class="wo-status-open">OPEN</span>`;
         const actionBtn =
           wo.status === 'Closed'          ? '' :
-          wo.status === 'Pending Closure' ? (isFullControl
+          wo.status === 'Submitted for Closure' ? (isFullControl
             ? `<button class="btn-approve-close" onclick="openApproveWO(${wo.id})">✓ Approve & Close</button>
                <button class="btn-act" style="color:var(--amber);border-color:rgba(251,191,36,.25)" onclick="openRestoreWO(${wo.id})">↩ Restore</button>`
             : `<span style="font-family:var(--font-mono);font-size:10px;color:var(--amber)">Awaiting approval</span>`)
@@ -2787,14 +3191,14 @@ function renderWorkOrders() {
   return `
   <div class="print-header">
     <h1>SDAPCD — Open Work Orders</h1>
-    <p>San Diego Air Pollution Control District &nbsp;·&nbsp; Instrument Management &nbsp;·&nbsp; Generated: ${new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles',dateStyle:'long',timeStyle:'short'})}</p>
+    <p>San Diego Air Pollution Control District &nbsp;·&nbsp; Instrument Management &nbsp;·&nbsp; Generated: ${new Date().toLocaleDateString('en-US',{timeZone:'America/Los_Angeles',dateStyle:'long'})} ${new Date().toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'2-digit',minute:'2-digit',hour12:false})} PST</p>
   </div>
 
   <div class="section-hdr print-hide">
     <div class="section-title">Work Orders</div>
     <div style="display:flex;gap:8px">
-      <button class="btn-export" onclick="exportOpenWOPDF()">⎙ EXPORT OPEN WOs PDF</button>
-      <button class="btn-export" onclick="exportWOCSV()">↓ EXPORT CSV</button>
+      <button class="btn-export" onclick="exportOpenWOPDF()">⎙ OPEN WOs PDF</button>
+      <button class="btn-export" onclick="exportWOXLSX()" style="background:var(--green);color:#fff">↓ EXCEL</button>
     </div>
   </div>
 
@@ -2802,7 +3206,7 @@ function renderWorkOrders() {
     <div class="wo-tabs">
       <button class="wo-tab ${ui.woFilter==='Open'?'active':''}"    onclick="ui.woFilter='Open';render()">OPEN (${openCount})</button>
       <button class="wo-tab ${ui.woFilter==='Pending'?'active':''}" onclick="ui.woFilter='Pending';render()" style="${pendingCount>0?'color:var(--amber)':''}">
-        ⏳ PENDING CLOSURE${pendingCount>0?` (${pendingCount})`:''}
+        ⏳ SUBMITTED FOR CLOSURE${pendingCount>0?` (${pendingCount})`:''}
       </button>
       <button class="wo-tab ${ui.woFilter==='Closed'?'active':''}"  onclick="ui.woFilter='Closed';render()">CLOSED (${closedCount})</button>
       <button class="wo-tab ${ui.woFilter==='All'?'active':''}"     onclick="ui.woFilter='All';render()">ALL (${allCount})</button>
@@ -3050,9 +3454,9 @@ function renderActivity() {
 
 // ── CERT TRACKER ───────────────────────────────────────────
 function renderCertSection() {
-  const openCount    = db.workOrders.filter(w => w.status !== 'Closed' && w.status !== 'Pending Closure').length;
+  const openCount    = db.workOrders.filter(w => w.status !== 'Closed' && w.status !== 'Submitted for Closure').length;
   const closedCount  = db.workOrders.filter(w => w.status === 'Closed').length;
-  const pendingCount = db.workOrders.filter(w => w.status === 'Pending Closure').length;
+  const pendingCount = db.workOrders.filter(w => w.status === 'Submitted for Closure').length;
   const allCount     = db.workOrders.length;
 
   const q          = (ui.certSearch   || '').toLowerCase();
@@ -3140,9 +3544,15 @@ function renderCertSection() {
 
     return `
     <div class="group" style="margin-bottom:16px">
-      <div class="group-hdr" onclick="toggleGroup('cert-${type}')" style="cursor:pointer">
-        <div class="group-title">◈ ${esc(type)} <span class="group-count" style="margin-left:8px">${plural(instruments.length,'instrument')}</span></div>
-        <div style="display:flex;align-items:center;gap:10px">${statusDot}<span class="group-chevron">▾</span></div>
+      <div class="group-hdr" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+        <div onclick="toggleGroup('cert-${type}')" style="flex:1;display:flex;align-items:center;gap:8px">
+          <div class="group-title">◈ ${esc(type)} <span class="group-count" style="margin-left:8px">${plural(instruments.length,'instrument')}</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          ${statusDot}
+          <button class="btn-act" onclick="event.stopPropagation();exportCertTypePDF('${esc(type).replace(/'/g,"\\'")}')" style="font-size:10px;padding:3px 10px" title="Export ${esc(type)} cert report as PDF">⎙ PDF</button>
+          <span class="group-chevron" onclick="toggleGroup('cert-${type}')">▾</span>
+        </div>
       </div>
       <div class="group-body" id="cert-group-${type.replace(/\s/g,'_')}">
         <div class="inst-table">
@@ -3375,7 +3785,7 @@ function renderAdmin() {
     <div class="section-title">Administration</div>
     <div style="display:flex;gap:8px;align-items:center">
       <button class="btn-export" onclick="openChangePassword()">🔑 Change Password</button>
-      <button class="btn-export" onclick="exportCSV()">↓ EXPORT CSV</button>
+      <button class="btn-export" onclick="exportXLSX()" style="background:var(--green);color:#fff">↓ EXCEL</button>
       <button class="btn-del-sm" style="padding:6px 12px" onclick="lockAdmin()">🔒 LOCK</button>
     </div>
   </div>
@@ -3589,14 +3999,52 @@ function renderAdmin() {
 
   <div class="group">
     <div class="group-hdr" onclick="toggleAdminSection(this)">
-      <div class="group-title">🗑 Delete Log<span class="group-chevron">▼</span></div>
+      <div class="group-title">\uD83D\uDCBE Backups<span class="group-chevron">▼</span></div>
+      <div class="group-count">${(db._backups||[]).length} backups</div>
+    </div>
+    <div style="padding:14px;background:var(--surface2);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius-lg) var(--radius-lg)">
+      <div style="display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-bottom:12px">
+        <span style="color:var(--blue)">\u24D8</span> Weekly automatic backups to Google Drive. Retains last 8 copies.
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button class="btn-add" onclick="createBackupNow()" style="font-size:11px;padding:6px 14px">\uD83D\uDCBE Backup Now</button>
+        <button class="btn-export" onclick="setupBackupTriggerUI()" style="font-size:11px;padding:6px 14px">\u23F0 Setup Weekly Trigger</button>
+        <button class="btn-export" onclick="loadBackups()" style="font-size:11px;padding:6px 14px">\u21BB Refresh</button>
+      </div>
+      <div id="backup-list">
+        ${(db._backups||[]).length === 0
+          ? '<div style="padding:16px;text-align:center;color:var(--subtle);font-size:12px">No backups loaded. Click Refresh to check.</div>'
+          : `<table style="width:100%;font-size:11px;font-family:var(--font-mono);border-collapse:collapse">
+              <thead><tr style="border-bottom:2px solid var(--border)">
+                <th style="text-align:left;padding:6px 8px;color:var(--subtle);font-size:10px">NAME</th>
+                <th style="text-align:left;padding:6px 8px;color:var(--subtle);font-size:10px">DATE</th>
+                <th style="text-align:left;padding:6px 8px;color:var(--subtle);font-size:10px">SIZE</th>
+                <th style="text-align:left;padding:6px 8px;color:var(--subtle);font-size:10px">LINK</th>
+              </tr></thead>
+              <tbody>
+              ${(db._backups||[]).map(b => `<tr style="border-bottom:1px solid var(--border2)">
+                <td style="padding:6px 8px">${esc(b.name)}</td>
+                <td style="padding:6px 8px">${esc(b.date)}</td>
+                <td style="padding:6px 8px">${(b.size/1024).toFixed(0)} KB</td>
+                <td style="padding:6px 8px"><a href="${esc(b.url)}" target="_blank" style="color:var(--blue)">Open</a></td>
+              </tr>`).join('')}
+              </tbody>
+            </table>`
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-hdr" onclick="toggleAdminSection(this)">
+      <div class="group-title">\uD83D\uDDD1 Delete Log<span class="group-chevron">▼</span></div>
       <div class="group-count">${plural((db.deleteLog||[]).length,'record')}</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-bottom:none;border-radius:var(--radius-lg) var(--radius-lg) 0 0">
       <div style="display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;color:var(--muted)">
         <span style="color:var(--blue)">ⓘ</span> Records all permanent deletions. Visible to administrators only.
       </div>
-      <button class="btn-export" onclick="exportDeleteLogCSV()">↓ Export CSV</button>
+      <button class="btn-export" onclick="exportDeleteLogXLSX()">↓ Export Excel</button>
     </div>
     ${(db.deleteLog||[]).length === 0
       ? `<div style="text-align:center;padding:32px;color:var(--subtle);font-family:var(--font-mono);font-size:12px;background:var(--surface);border:1px solid var(--border);border-radius:0 0 var(--radius-lg) var(--radius-lg)">No deletions recorded yet.</div>`
@@ -3624,7 +4072,7 @@ function renderAdmin() {
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <span style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:var(--red);font-family:var(--font-mono);font-size:10px;font-weight:600;padding:3px 10px;border-radius:var(--radius)">Read Only — Cannot Be Edited</span>
-        <button class="btn-export" onclick="exportSecurityLogCSV()">↓ Export CSV</button>
+        <button class="btn-export" onclick="exportSecurityLogXLSX()">↓ Export Excel</button>
       </div>
     </div>
     ${(db.securityLog||[]).length === 0
@@ -3798,23 +4246,27 @@ async function debugTest2(method) {
   }
 }
 
-function exportDeleteLogCSV() {
+function exportDeleteLogXLSX() {
+  if (typeof XLSX === 'undefined') { toast('Excel library not loaded','error'); return; }
   const rows = [['Timestamp','User','Type','Detail']];
   (db.deleteLog||[]).forEach(e => rows.push([e.ts, e.user, e.what||'DELETE', e.detail]));
-  const csv = rows.map(r => r.map(c => '"'+String(c||'').replace(/"/g,'""')+'"').join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-  a.download = 'sdapcd_delete_log_' + today() + '.csv';
-  a.click();
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:22},{wch:18},{wch:14},{wch:60}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Delete Log');
+  XLSX.writeFile(wb, 'sdapcd_delete_log_' + today() + '.xlsx');
+  toast('Delete log exported');
 }
-function exportSecurityLogCSV() {
+function exportSecurityLogXLSX() {
+  if (typeof XLSX === 'undefined') { toast('Excel library not loaded','error'); return; }
   const rows = [['Timestamp','User','Event Type','Detail']];
   (db.securityLog||[]).forEach(e => rows.push([e.ts, e.user, e.type, e.detail]));
-  const csv = rows.map(r => r.map(c => '"'+String(c||'').replace(/"/g,'""')+'"').join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-  a.download = 'sdapcd_security_log_' + today() + '.csv';
-  a.click();
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:22},{wch:18},{wch:18},{wch:60}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Security Log');
+  XLSX.writeFile(wb, 'sdapcd_security_log_' + today() + '.xlsx');
+  toast('Security log exported');
 }
 
 // ── INSTRUMENT ACTIONS ─────────────────────────────────────
@@ -3871,7 +4323,7 @@ function submitAdminPassword() {
 function gasTestLog(msg, ok) {
   const el = document.getElementById('gas-test-result');
   if (!el) return;
-  const ts = new Date().toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles'});
+  const ts = new Date().toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'2-digit',minute:'2-digit',hour12:false}) + ' PST';
   const icon = ok === true ? '✅' : ok === false ? '❌' : '⏳';
   el.textContent = icon + ' [' + ts + '] ' + msg;
   el.style.color = ok === true ? 'var(--green)' : ok === false ? 'var(--red)' : 'var(--amber)';
@@ -3922,7 +4374,7 @@ async function gasTestAppend() {
 }
 
 async function gasTestWOUpdate() {
-  const openWO = db.workOrders.find(w => w.status === 'Open' || w.status === 'Pending Closure');
+  const openWO = db.workOrders.find(w => w.status === 'Open' || w.status === 'Submitted for Closure');
   if (!openWO) { gasTestLog('No open WOs found to test with — create one first', false); return; }
   gasTestLog('Testing WO UPDATE — sending status update for WO-' + openWO.id + '...', null);
   try {
@@ -3970,6 +4422,31 @@ async function gasTestMigrate() {
 // ─────────────────────────────────────────────────────────────
 
 function lockAdmin() { navigateTo('dashboard'); }
+
+// ── BACKUP FUNCTIONS ────────────────────────────────────────
+async function loadBackups() {
+  try {
+    toast('Loading backups...');
+    const backups = await API.get('/backups');
+    db._backups = backups || [];
+    render();
+    toast('Backups loaded');
+  } catch(e) { toast('\u26A0 Failed to load backups: ' + e.message, 'error'); }
+}
+async function createBackupNow() {
+  try {
+    toast('Creating backup...');
+    const result = await gasRequest('backups', 'create', null, {});
+    toast('\u2705 Backup created: ' + (result.name || 'success'));
+    loadBackups();
+  } catch(e) { toast('\u26A0 Backup failed: ' + e.message, 'error'); }
+}
+async function setupBackupTriggerUI() {
+  try {
+    await gasRequest('backups', 'setup', null, {});
+    toast('\u2705 Weekly backup trigger created (Sunday 2 AM)');
+  } catch(e) { toast('\u26A0 Trigger setup failed: ' + e.message, 'error'); }
+}
 function openChangePassword() { ui.modal = 'changepw'; ui.form = {}; render(); }
 function saveAdminPassword() {
   const current = document.getElementById('pw-current')?.value || '';
@@ -4108,39 +4585,58 @@ function openBatchLabels() {
   const active = db.instruments.filter(i => !i.archived);
   if (!active.length) { toast('⚠ No instruments to print'); return; }
 
+  // Build groups by site and by type
   const siteGroups = {};
+  const typeGroups = {};
   active.forEach(i => {
     if (!siteGroups[i.site]) siteGroups[i.site] = [];
     siteGroups[i.site].push(i);
+    if (!typeGroups[i.name]) typeGroups[i.name] = [];
+    typeGroups[i.name].push(i);
   });
 
-  const siteCheckboxes = Object.keys(siteGroups).sort().map(site => {
-    const count = siteGroups[site].length;
+  const buildCheckboxes = (groups, cls) => Object.keys(groups).sort().map(key => {
+    const count = groups[key].length;
     return '<label style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;color:var(--text);cursor:pointer">' +
-      '<input type="checkbox" class="batch-site-cb" value="' + esc(site) + '" checked style="accent-color:var(--blue)"/>' +
-      '<span style="flex:1">' + esc(site) + '</span>' +
+      '<input type="checkbox" class="' + cls + '" value="' + esc(key) + '" checked style="accent-color:var(--blue)"/>' +
+      '<span style="flex:1">' + esc(key) + '</span>' +
       '<span style="font-size:10px;color:var(--muted);font-family:var(--font-mono)">' + count + '</span></label>';
   }).join('');
+
+  const siteCheckboxes = buildCheckboxes(siteGroups, 'batch-site-cb');
+  const typeCheckboxes = buildCheckboxes(typeGroups, 'batch-type-cb');
 
   const overlay = document.createElement('div');
   overlay.id = 'batch-qr-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:20px';
   overlay.innerHTML = `
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:24px;max-width:400px;width:100%;box-shadow:var(--shadow-lg)">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:24px;max-width:420px;width:100%;box-shadow:var(--shadow-lg)">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--text)">⎙ Print QR Labels</div>
-        <button onclick="document.getElementById('batch-qr-overlay').remove()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer">×</button>
+        <button onclick="document.getElementById('batch-qr-overlay').remove()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer">\u00d7</button>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;font-family:var(--font-mono)">Select sites (${active.length} instruments total):</div>
-      <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;margin-bottom:10px">
+      <div style="display:flex;gap:4px;margin-bottom:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:3px;width:fit-content">
+        <button id="batch-tab-site" onclick="document.getElementById('batch-list-site').style.display='';document.getElementById('batch-list-type').style.display='none';this.style.background='var(--surface)';this.style.color='var(--blue)';document.getElementById('batch-tab-type').style.background='transparent';document.getElementById('batch-tab-type').style.color='var(--subtle)';document.getElementById('batch-group-mode').value='site'" style="padding:5px 14px;border-radius:var(--radius);font-size:11px;font-family:var(--font-mono);font-weight:600;cursor:pointer;border:none;background:var(--surface);color:var(--blue)">By Site</button>
+        <button id="batch-tab-type" onclick="document.getElementById('batch-list-type').style.display='';document.getElementById('batch-list-site').style.display='none';this.style.background='var(--surface)';this.style.color='var(--blue)';document.getElementById('batch-tab-site').style.background='transparent';document.getElementById('batch-tab-site').style.color='var(--subtle)';document.getElementById('batch-group-mode').value='type'" style="padding:5px 14px;border-radius:var(--radius);font-size:11px;font-family:var(--font-mono);font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--subtle)">By Type</button>
+      </div>
+      <input type="hidden" id="batch-group-mode" value="site"/>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-family:var(--font-mono)">${active.length} instruments total</div>
+      <div id="batch-list-site" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;margin-bottom:10px">
         <label style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;color:var(--blue);font-weight:600;cursor:pointer;border-bottom:1px solid var(--border2);margin-bottom:4px">
-          <input type="checkbox" id="batch-all-cb" checked onchange="document.querySelectorAll('.batch-site-cb').forEach(c=>c.checked=this.checked)" style="accent-color:var(--blue)"/>
-          Select All
+          <input type="checkbox" checked onchange="document.querySelectorAll('.batch-site-cb').forEach(c=>c.checked=this.checked)" style="accent-color:var(--blue)"/>
+          Select All Sites
         </label>
         ${siteCheckboxes}
       </div>
+      <div id="batch-list-type" style="display:none;max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;margin-bottom:10px">
+        <label style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;color:var(--blue);font-weight:600;cursor:pointer;border-bottom:1px solid var(--border2);margin-bottom:4px">
+          <input type="checkbox" checked onchange="document.querySelectorAll('.batch-type-cb').forEach(c=>c.checked=this.checked)" style="accent-color:var(--blue)"/>
+          Select All Types
+        </label>
+        ${typeCheckboxes}
+      </div>
       <div style="font-size:9px;color:var(--subtle);font-family:var(--font-mono);margin-bottom:14px">
-        Avery 5160 compatible · 1″ × 2⅝″ · 30 labels per sheet
+        Avery 5160 compatible \u00b7 1\u2033 \u00d7 2\u2158\u2033 \u00b7 30 labels per sheet
       </div>
       <div style="display:flex;gap:8px;justify-content:flex-end">
         <button onclick="document.getElementById('batch-qr-overlay').remove()" style="padding:6px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-mono);font-size:11px;color:var(--muted);cursor:pointer">Cancel</button>
@@ -4152,9 +4648,13 @@ function openBatchLabels() {
 }
 
 function doPrintBatch() {
-  const checked = [...document.querySelectorAll('.batch-site-cb:checked')].map(c => c.value);
-  if (!checked.length) { toast('⚠ Select at least one site'); return; }
-  const instruments = db.instruments.filter(i => !i.archived && checked.includes(i.site));
+  const mode = (document.getElementById('batch-group-mode') || {}).value || 'site';
+  const cbClass = mode === 'type' ? '.batch-type-cb:checked' : '.batch-site-cb:checked';
+  const checked = [...document.querySelectorAll(cbClass)].map(c => c.value);
+  if (!checked.length) { toast('⚠ Select at least one ' + (mode === 'type' ? 'type' : 'site')); return; }
+  const instruments = mode === 'type'
+    ? db.instruments.filter(i => !i.archived && checked.includes(i.name))
+    : db.instruments.filter(i => !i.archived && checked.includes(i.site));
   if (!instruments.length) { toast('⚠ No instruments in selected sites'); return; }
   const labels = instruments.map(inst => ({
     inst,
@@ -4184,7 +4684,6 @@ function labelPrintPage(labels, title) {
     '.label-org { font-size:5.5pt; color:#666; letter-spacing:0.3pt; margin-bottom:1pt; }' +
     '.label-type { font-size:9pt; font-weight:700; color:#111; }' +
     '.label-serial { font-size:7.5pt; font-weight:600; color:#333; margin-top:0.5pt; }' +
-    '.label-site { font-size:6pt; color:#888; margin-top:1pt; }' +
     '.label-id { font-size:5pt; color:#aaa; margin-top:1.5pt; font-family:monospace; }' +
     '.print-hdr { text-align:center; padding:8px 0 12px; font-size:10px; color:#999; }' +
     '@media print { .print-hdr { display:none; } }' +
@@ -4203,7 +4702,6 @@ function labelPrintPage(labels, title) {
         '<div class="label-org">SDAPCD</div>' +
         '<div class="label-type">' + esc(l.inst.name) + '</div>' +
         '<div class="label-serial">S/N ' + esc(l.inst.serial) + '</div>' +
-        '<div class="label-site">' + esc(l.inst.site) + '</div>' +
         '<div class="label-id">ID-' + l.inst.id + '</div>' +
       '</div></div>';
   }).join('') +
@@ -4352,6 +4850,7 @@ function showConfirm({ title, icon, msg, detail, onConfirm }) {
 }
 
 function updateStatus(id, val) {
+  if (!canEdit()) { toast('\u26A0 You do not have permission to edit', 'warn'); render(); return; }
   const i = db.instruments.find(x => String(x.id) === String(id));
   if (!i) return;
   const prev = i.status;
@@ -4370,6 +4869,7 @@ function updateStatus(id, val) {
 }
 
 function updateSite(id, val) {
+  if (!canEdit()) { toast('\u26A0 You do not have permission to edit', 'warn'); render(); return; }
   const i = db.instruments.find(x => String(x.id) === String(id));
   if (!i) return;
   const prev = i.site;
@@ -4404,9 +4904,9 @@ function updateSite(id, val) {
 // ── DIRECT SYNC HELPERS ────────────────────────────────────
 // Call these after every mutation to ensure Google Sheets stays in sync
 
-function syncInstrument(i) {
+function syncInstrument(i, force) {
   if (!i || !i.id) return;
-  API.put('/instruments/' + i.id, {
+  const body = {
     name:                i.name,
     serial:              i.serial,
     status:              i.status,
@@ -4414,8 +4914,55 @@ function syncInstrument(i) {
     notes:               i.notes || '',
     archived:            i.archived ? 1 : 0,
     last_cert_date:      i.lastCertDate || '',
-    cert_interval_months:i.certIntervalMonths || ''
-  }).catch(e => { toast('⚠ Instrument sync failed: ' + e.message, 'error'); console.error('syncInstrument failed', e); });
+    cert_interval_months:i.certIntervalMonths || '',
+    expected_modified_at:i.modifiedAt || ''
+  };
+  if (force) body.force = 'true';
+  API.put('/instruments/' + i.id, body).then(result => {
+    if (result && result.modified_at) i.modifiedAt = result.modified_at;
+  }).catch(e => {
+    const msg = e.message || '';
+    if (msg.startsWith('CONFLICT:')) {
+      try {
+        const serverData = JSON.parse(msg.substring(9));
+        handleConflict(i, serverData);
+      } catch(ex) {
+        toast('\u26A0 Conflict detected but could not parse server data', 'error');
+      }
+    } else {
+      toast('\u26A0 Instrument sync failed: ' + msg, 'error');
+      console.error('syncInstrument failed', e);
+    }
+  });
+}
+
+function handleConflict(localInst, serverData) {
+  ui.modal = 'conflict';
+  ui.form = {
+    instId: localInst.id,
+    local: { name: localInst.name, serial: localInst.serial, status: localInst.status, site: localInst.site, notes: localInst.notes || '' },
+    server: { name: serverData.name, serial: serverData.serial, status: serverData.status, site: serverData.site, notes: serverData.notes || '' },
+    serverModifiedAt: serverData.modified_at || ''
+  };
+  render();
+}
+function resolveConflict(choice) {
+  const f = ui.form;
+  const i = db.instruments.find(x => String(x.id) === String(f.instId));
+  if (!i) { ui.modal = null; render(); return; }
+  if (choice === 'mine') {
+    // Force overwrite server with local data
+    syncInstrument(i, true);
+    toast('Your changes saved (forced)');
+  } else {
+    // Accept server version
+    i.name = f.server.name; i.serial = f.server.serial; i.status = f.server.status;
+    i.site = f.server.site; i.notes = f.server.notes;
+    i.modifiedAt = f.serverModifiedAt;
+    toast('Server version accepted');
+  }
+  ui.modal = null; ui.form = {};
+  saveDB('instrument'); render();
 }
 
 function syncWorkOrder(wo) {
@@ -4499,6 +5046,7 @@ function saveEditInstrument(id) {
   try{saveDB('instrument');}catch(e){console.warn('saveDB',e);} closeModal(); toast('Instrument updated');
 }
 function openLogWork(id) {
+  if (!canEdit()) { toast('\u26A0 You do not have permission to edit', 'warn'); return; }
   const i = db.instruments.find(x => String(x.id) === String(id));
   if (!i) return;
   ui.modal = 'logwork';
@@ -4541,50 +5089,69 @@ function attachLogWorkFiles(input) {
       });
       render();
 
-      // Compress images before upload
-      let uploadData = e.target.result;
-      if (!isPDF && file.type.startsWith('image/')) {
-        try { uploadData = await compressImage(e.target.result, 1400, 0.85); }
-        catch(ce) { uploadData = e.target.result; }
-      }
+      // Compression-aware upload
+      const rawData = e.target.result;
+      const rawSizeBytes = Math.round(rawData.length * 3 / 4);
 
-      // Upload to Google Drive
-      try {
-        const result = await API.uploadFile(
-          uploadData,
-          file.name,
-          isPDF ? 'application/pdf' : (file.type || 'image/jpeg'),
-          inst ? inst.name   : '',
-          inst ? inst.serial : '',
-          ui.form.workType || 'Work'
-        );
-        // Replace placeholder with Drive link
-        ui.form.attachments[placeholderIdx] = {
-          name:      file.name,
-          type:      isPDF ? 'pdf' : 'image',
-          fileId:    result.fileId,
-          fileUrl:   result.fileUrl,
-          directUrl: result.directUrl,
-          data:      e.target.result
-        };
-        toast('📎 ' + file.name + ' uploaded to Drive');
-      } catch(err) {
-        const msg = err && err.message ? err.message : String(err);
-        console.warn('Drive upload failed:', err);
-        ui.form.attachments[placeholderIdx] = {
-          name: file.name,
-          type: isPDF ? 'pdf' : 'image',
-          data: e.target.result,
-          localOnly: true
-        };
-        toast('⚠ Upload failed: ' + msg.slice(0, 60));
+      const doUpload = async (uploadData) => {
+        try {
+          const result = await API.uploadFile(
+            uploadData,
+            file.name,
+            isPDF ? 'application/pdf' : (file.type || 'image/jpeg'),
+            inst ? inst.name   : '',
+            inst ? inst.serial : '',
+            ui.form.workType || 'Work'
+          );
+          ui.form.attachments[placeholderIdx] = {
+            name: file.name, type: isPDF ? 'pdf' : 'image',
+            fileId: result.fileId, fileUrl: result.fileUrl,
+            directUrl: result.directUrl, data: rawData
+          };
+          toast('\uD83D\uDCCE ' + file.name + ' uploaded to Drive');
+        } catch(err) {
+          const msg = err && err.message ? err.message : String(err);
+          console.warn('Drive upload failed:', err);
+          ui.form.attachments[placeholderIdx] = {
+            name: file.name, type: isPDF ? 'pdf' : 'image',
+            data: rawData, localOnly: true
+          };
+          toast('\u26A0 Upload failed: ' + msg.slice(0, 60));
+        }
+        render();
+      };
+
+      // Show compression modal for large images (>200KB), skip for PDFs and small images
+      if (!isPDF && file.type.startsWith('image/') && rawSizeBytes > 200 * 1024) {
+        if (!ui.form._pendingUploads) ui.form._pendingUploads = [];
+        ui.form._pendingUploads.push({
+          dataUrl: rawData, fileName: file.name,
+          originalSize: rawSizeBytes, onUpload: doUpload
+        });
+        // Only open modal for the first file; subsequent files queue up
+        if (ui.form._pendingUploads.length === 1) {
+          ui.form._returnModal = ui.modal;
+          ui.form._currentFileIdx = 0;
+          ui.form._compressQuality = 85;
+          ui.form._compressMaxDim = 1400;
+          ui.modal = 'compress';
+          render();
+          setTimeout(updateCompressionPreview, 100);
+        }
+      } else if (!isPDF && file.type.startsWith('image/')) {
+        // Small image — compress silently with defaults
+        let uploadData = rawData;
+        try { uploadData = await compressImage(rawData, 1400, 0.85); } catch(ce) {}
+        doUpload(uploadData);
+      } else {
+        // PDF or non-image — upload as-is
+        doUpload(rawData);
       }
-      render();
     };
     reader.readAsDataURL(file);
   });
 }
-function openCreateWO(id) { const i=db.instruments.find(x=>String(x.id)===String(id)); if (!i) return; ui.modal='createwo'; ui.form={instId:id,instName:i.name,serial:i.serial}; render(); }
+function openCreateWO(id) { if (!canEdit()) { toast('\u26A0 You do not have permission to edit', 'warn'); return; } const i=db.instruments.find(x=>String(x.id)===String(id)); if (!i) return; ui.modal='createwo'; ui.form={instId:id,instName:i.name,serial:i.serial}; render(); }
 function openHistory(id)  { const i=db.instruments.find(x=>String(x.id)===String(id)); if (!i) return; ui.modal='history';  ui.form={instId:id,instName:i.name,serial:i.serial}; render(); }
 function openLogCert(id)  {
   const i = db.instruments.find(x => String(x.id) === String(id));
@@ -4613,6 +5180,7 @@ function openSetCertInterval(id) {
   render();
 }
 function saveSetCertInterval() {
+  if (!canEdit()) { toast('\u26A0 You do not have permission to edit', 'warn'); return; }
   // Read from input field first, fall back to preset selection
   const inputVal = getVal('f-interval-months');
   const months = parseInt(inputVal || ui.form.certIntervalMonths || '0', 10);
@@ -4632,6 +5200,7 @@ function saveSetCertInterval() {
   toast(`Cert interval set to ${months} month(s)`);
 }
 function saveLogCert() {
+  if (!canEdit()) { toast('\u26A0 You do not have permission to edit', 'warn'); return; }
   const mo = document.getElementById('f-cert-month');
   const dy = document.getElementById('f-cert-day');
   const yr = document.getElementById('f-cert-year');
@@ -4677,6 +5246,7 @@ function openAttachments(instId) {
   render();
 }
 function openEditWO(wid) {
+  if (!canEdit()) { toast('\u26A0 You do not have permission to edit', 'warn'); return; }
   const wo = db.workOrders.find(w => String(w.id) === String(wid));
   if (!wo) return;
   ui.modal='editwo'; ui.form={woId:wo.id, type:wo.type, by:wo.technician||'', desc:wo.description||'', priority:wo.priority||'Medium'};
@@ -4696,6 +5266,7 @@ function checkDuplicateSerial(val) {
 }
 
 function saveAdd() {
+  if (!canEdit()) { toast('\u26A0 You do not have permission to add instruments', 'warn'); return; }
   const nameEl   = document.getElementById('f-name');
   const customEl = document.getElementById('f-custom-name');
   const name     = nameEl && nameEl.value === 'custom'
@@ -4739,6 +5310,7 @@ function saveAdd() {
 // Shared save for logwork and createwo
 let _savingWO = false; // prevent double-submit
 function saveWorkEntry(mode) {
+  if (!canEdit()) { toast('\u26A0 You do not have permission to edit', 'warn'); return; }
   if (_savingWO) return; // block double click
   const type = document.getElementById('f-type') ? document.getElementById('f-type').value : '';
   const by   = getVal('f-by');
@@ -4746,6 +5318,7 @@ function saveWorkEntry(mode) {
   const priority = document.getElementById('f-priority') ? document.getElementById('f-priority').value : 'Medium';
   if (!by)   { ui.form={...ui.form, err:'Technician is required.', type, by, desc, priority}; render(); return; }
   if (!desc) { ui.form={...ui.form, err:'Description is required.', type, by, desc, priority}; render(); return; }
+  if (desc.length > 1200) { ui.form={...ui.form, err:'Description exceeds the 1,200 character limit.', type, by, desc, priority}; render(); return; }
   const { instId } = ui.form;
   // Prevent duplicate open WO for same instrument + type
   const dupWO = db.workOrders.find(w => String(w.instrumentId) === String(instId) && w.type === type && w.status !== 'Closed');
@@ -4802,6 +5375,7 @@ function saveWorkEntry(mode) {
 }
 
 function saveLogWork() {
+  if (!canEdit()) { toast('\u26A0 You do not have permission to edit', 'warn'); return; }
   const byEl    = document.getElementById('f-lw-by');
   const descEl  = document.getElementById('f-lw-desc');
   const otherEl = document.getElementById('f-lw-other');
@@ -4813,6 +5387,7 @@ function saveLogWork() {
 
   if (!by)   { ui.form={...ui.form, err:'Please select the technician who performed the work.'}; render(); return; }
   if (!desc) { ui.form={...ui.form, err:'Please describe the work that was performed.'}; render(); return; }
+  if (desc.length > 1200) { ui.form={...ui.form, err:'Description exceeds the 1,200 character limit.'}; render(); return; }
   if (workType === 'Other' && !otherReason) { ui.form={...ui.form, err:'Please specify the reason for "Other".'}; render(); return; }
 
   const { instId } = ui.form;
@@ -4881,6 +5456,7 @@ function saveLogWork() {
 }
 
 function saveEditWO(wid) {
+  if (!canEdit()) { toast('\u26A0 You do not have permission to edit', 'warn'); return; }
   const typeEl = document.getElementById('f-type');
   const type = typeEl ? typeEl.value : '';
   const by   = getVal('f-by');
@@ -4888,6 +5464,7 @@ function saveEditWO(wid) {
   const priority = document.getElementById('f-priority') ? document.getElementById('f-priority').value : 'Medium';
   if (!by)   { ui.form={...ui.form, err:'Technician is required.', type, by, desc, priority}; render(); return; }
   if (!desc) { ui.form={...ui.form, err:'Description is required.', type, by, desc, priority}; render(); return; }
+  if (desc.length > 1200) { ui.form={...ui.form, err:'Description exceeds the 1,200 character limit.', type, by, desc, priority}; render(); return; }
   const wo = db.workOrders.find(w => String(w.id) === String(wid));
   if (!wo) return;
   // Prevent duplicate open WO for same instrument + type (exclude self)
@@ -4900,6 +5477,7 @@ function saveEditWO(wid) {
 }
 
 function submitForClosure(wid) {
+  if (!canEdit()) { toast('\u26A0 You do not have permission to edit', 'warn'); return; }
   const wo = db.workOrders.find(w => String(w.id) === String(wid));
   if (!wo) return;
   showConfirm({
@@ -4910,7 +5488,7 @@ function submitForClosure(wid) {
     onConfirm: () => {
       const prevStatus = wo.status;
       wo.previousStatus = prevStatus;
-      wo.status = 'Pending Closure';
+      wo.status = 'Submitted for Closure';
       wo.submittedBy = ui.currentUser;
       wo.submittedDate = today();
       addHistory(wo.instrumentId, 'Submitted for closure', `WO-${wo.id} · ${wo.type} · Previous status: ${prevStatus} · Submitted by: ${ui.currentUser}`);
@@ -4918,7 +5496,7 @@ function submitForClosure(wid) {
       // Direct API call — rollback local state on failure
       API.put('/work-orders/' + wo.id, {
         instrument_id:  wo.instrumentId,
-        status:         'Pending Closure',
+        status:         'Submitted for Closure',
         previous_status: prevStatus,
         type:           wo.type        || '',
         description:    wo.description || '',
@@ -5043,6 +5621,7 @@ function addSite() {
   saveDB('site'); render(); toast(`Site "${val}" added`);
 }
 function archiveSite(idx) {
+  if (!canFullControl()) { toast('\u26A0 Full Control permission required', 'warn'); return; }
   const s = db.sites[idx];
   if (PROTECTED_SITES.includes(s)) { toast(`⚠ "${s}" is a protected site and cannot be archived`); return; }
   const n = db.instruments.filter(i => i.site === s && !i.archived).length;
@@ -5074,6 +5653,7 @@ function restoreSite(name) {
   saveDB('site'); render(); toast(`Site "${name}" restored`);
 }
 function permanentlyDeleteSite(name) {
+  if (!canFullControl()) { toast('\u26A0 Full Control permission required', 'warn'); return; }
   showConfirm({
     title: 'PERMANENTLY DELETE SITE', icon: '⚠',
     msg: `<strong style="color:var(--red)">Permanently delete site "${esc(name)}"?</strong> This cannot be undone.`,
@@ -5088,6 +5668,7 @@ function permanentlyDeleteSite(name) {
   });
 }
 function archiveInstrument(id) {
+  if (!canFullControl()) { toast('\u26A0 Full Control permission required', 'warn'); return; }
   const i = db.instruments.find(x => String(x.id) === String(id));
   if (!i) return;
   showConfirm({
@@ -5105,6 +5686,7 @@ function archiveInstrument(id) {
   });
 }
 function restoreInstrument(id) {
+  if (!canFullControl()) { toast('\u26A0 Full Control permission required', 'warn'); return; }
   const i = db.instruments.find(x => String(x.id) === String(id));
   if (!i) return;
   i.archived = false;
@@ -5114,6 +5696,7 @@ function restoreInstrument(id) {
   saveDB('instrument'); render(); toast(`${i.serial} restored`);
 }
 function permanentlyDeleteInstrument(id) {
+  if (!canFullControl()) { toast('\u26A0 Full Control permission required', 'warn'); return; }
   const i = db.instruments.find(x => String(x.id) === String(id));
   if (!i || !i.archived) return;
   showConfirm({
@@ -5172,6 +5755,7 @@ function restoreInstType(name) {
   saveDB('type'); render(); toast(`Type "${name}" restored`);
 }
 function permanentlyDeleteType(name) {
+  if (!canFullControl()) { toast('\u26A0 Full Control permission required', 'warn'); return; }
   showConfirm({
     title: 'PERMANENTLY DELETE TYPE',
     icon: '⚠',
@@ -5251,6 +5835,7 @@ function restoreTech(idx) {
   saveDB('tech'); render(); toast(`${t.name} restored`);
 }
 function permanentlyDeleteTech(idx) {
+  if (!canFullControl()) { toast('\u26A0 Full Control permission required', 'warn'); return; }
   const t = (db.archivedTechs||[])[idx];
   if (!t) return;
   showConfirm({
@@ -5354,37 +5939,71 @@ function confirmClearWorkOrders() {
 // ── RESET DB ───────────────────────────────────────────────
 
 // ── EXPORT ─────────────────────────────────────────────────
-function exportCSV() {
-  const rows = [['Serial Number','Type','Status','Site','Notes','Created']];
-  db.instruments.forEach(i => rows.push([i.serial, i.name, i.status, i.site, i.notes||'', i.created]));
-  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-  a.download = 'sdapcd_instruments_' + today() + '.csv';
-  a.click();
-  toast('CSV exported');
+
+function exportXLSX() {
+  if (typeof XLSX === 'undefined') { toast('⚠ Excel library not loaded — check your internet connection'); return; }
+  const wb = XLSX.utils.book_new();
+  // Sheet 1: Instruments
+  const instRows = db.instruments.map(i => ({
+    'Serial Number': i.serial, 'Type': i.name, 'Status': i.status,
+    'Site': i.site, 'Notes': i.notes || '', 'Created': i.created,
+    'Last Cert Date': i.lastCertDate || '', 'Cert Interval (Months)': i.certIntervalMonths || ''
+  }));
+  const ws1 = XLSX.utils.json_to_sheet(instRows);
+  // Auto-size columns
+  ws1['!cols'] = Object.keys(instRows[0]||{}).map(k => ({ wch: Math.max(k.length, 14) }));
+  XLSX.utils.book_append_sheet(wb, ws1, 'Instruments');
+  // Sheet 2: Work Orders
+  const woRows = db.workOrders.map(wo => {
+    const inst = db.instruments.find(i => String(i.id) === String(wo.instrumentId));
+    return {
+      'WO #': 'WO-' + wo.id, 'Instrument Type': inst ? inst.name : '\u2014',
+      'Serial Number': inst ? inst.serial : '\u2014', 'WO Type': wo.type,
+      'Status': wo.status, 'Technician': wo.technician || '\u2014',
+      'Description': wo.description || '', 'Created': wo.created
+    };
+  });
+  const ws2 = XLSX.utils.json_to_sheet(woRows);
+  ws2['!cols'] = Object.keys(woRows[0]||{}).map(k => ({ wch: Math.max(k.length, 14) }));
+  XLSX.utils.book_append_sheet(wb, ws2, 'Work Orders');
+  // Sheet 3: Certification Tracker
+  const certRows = db.instruments.filter(i => i.lastCertDate).map(i => {
+    const due = certDueDate(i.lastCertDate, i.certIntervalMonths);
+    const daysUntil = due && due !== '\u2014' ? Math.ceil((new Date(due) - new Date()) / 86400000) : null;
+    let certStatus = '\u2014';
+    if (daysUntil !== null) certStatus = daysUntil < 0 ? 'OVERDUE' : daysUntil <= 30 ? 'DUE SOON' : 'OK';
+    return {
+      'Serial Number': i.serial, 'Type': i.name, 'Site': i.site,
+      'Last Cert Date': i.lastCertDate, 'Cert Interval (Months)': i.certIntervalMonths || '',
+      'Next Due': due, 'Status': certStatus
+    };
+  });
+  if (certRows.length) {
+    const ws3 = XLSX.utils.json_to_sheet(certRows);
+    ws3['!cols'] = Object.keys(certRows[0]).map(k => ({ wch: Math.max(k.length, 14) }));
+    XLSX.utils.book_append_sheet(wb, ws3, 'Certifications');
+  }
+  XLSX.writeFile(wb, 'sdapcd_export_' + today() + '.xlsx');
+  toast('Excel file exported');
 }
 
-function exportWOCSV() {
-  const rows = [['WO #','Instrument Type','Serial Number','WO Type','Status','Technician','Description','Created']];
-  db.workOrders.forEach(wo => {
+function exportWOXLSX() {
+  if (typeof XLSX === 'undefined') { toast('⚠ Excel library not loaded — check your internet connection'); return; }
+  const wb = XLSX.utils.book_new();
+  const woRows = db.workOrders.map(wo => {
     const inst = db.instruments.find(i => String(i.id) === String(wo.instrumentId));
-    rows.push([
-      `WO-${wo.id}`,
-      inst ? inst.name  : '—',
-      inst ? inst.serial : '—',
-      wo.type, wo.status,
-      wo.technician || '—',
-      wo.description || '',
-      wo.created
-    ]);
+    return {
+      'WO #': 'WO-' + wo.id, 'Instrument Type': inst ? inst.name : '\u2014',
+      'Serial Number': inst ? inst.serial : '\u2014', 'WO Type': wo.type,
+      'Status': wo.status, 'Technician': wo.technician || '\u2014',
+      'Description': wo.description || '', 'Created': wo.created
+    };
   });
-  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-  a.download = 'sdapcd_workorders_' + today() + '.csv';
-  a.click();
-  toast('Work orders exported');
+  const ws = XLSX.utils.json_to_sheet(woRows);
+  ws['!cols'] = Object.keys(woRows[0]||{}).map(k => ({ wch: Math.max(k.length, 14) }));
+  XLSX.utils.book_append_sheet(wb, ws, 'Work Orders');
+  XLSX.writeFile(wb, 'sdapcd_workorders_' + today() + '.xlsx');
+  toast('Work orders Excel file exported');
 }
 
 function exportOpenWOPDF() {
@@ -5392,7 +6011,7 @@ function exportOpenWOPDF() {
   if (openWOs.length === 0) { toast('⚠ No open work orders to export'); return; }
   const byInst = {};
   openWOs.forEach(wo => { if (!byInst[wo.instrumentId]) byInst[wo.instrumentId]=[]; byInst[wo.instrumentId].push(wo); });
-  const generatedDate = new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles',weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  const generatedDate = new Date().toLocaleDateString('en-US',{timeZone:'America/Los_Angeles',weekday:'long',year:'numeric',month:'long',day:'numeric'}) + ' ' + new Date().toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'2-digit',minute:'2-digit',hour12:false}) + ' PST';
 
   const instSections = Object.entries(byInst).map(([instId, wos]) => {
     const inst = db.instruments.find(i => String(i.id) === String(instId));
@@ -5466,11 +6085,101 @@ body{font-family:'IBM Plex Sans',sans-serif;font-size:12px;color:#1e293b;backgro
   toast('✓ Work orders PDF opened in new tab');
 }
 
+function exportCertTypePDF(typeName) {
+  const instruments = db.instruments
+    .filter(i => !i.archived && i.name === typeName)
+    .sort((a, b) => {
+      const order = { overdue: 0, 'due-soon': 1, none: 2, ok: 3 };
+      return (order[certStatus(a)] ?? 4) - (order[certStatus(b)] ?? 4);
+    });
+  if (instruments.length === 0) { toast('No instruments found for ' + typeName); return; }
+
+  const generatedDate = new Date().toLocaleDateString('en-US', {
+    timeZone: 'America/Los_Angeles', weekday: 'long', year: 'numeric',
+    month: 'long', day: 'numeric'
+  }) + ' ' + new Date().toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'2-digit',minute:'2-digit',hour12:false}) + ' PST';
+
+  const tracked = instruments.filter(i => i.certIntervalMonths);
+  const overdueCount = tracked.filter(i => certStatus(i) === 'overdue').length;
+  const dueSoonCount = tracked.filter(i => certStatus(i) === 'due-soon').length;
+  const okCount = tracked.filter(i => certStatus(i) === 'ok').length;
+
+  const tableRows = instruments.map(i => {
+    const due = certDueDate(i.lastCertDate, i.certIntervalMonths);
+    const intLabel = i.certIntervalMonths
+      ? (i.certIntervalMonths % 12 === 0 ? (i.certIntervalMonths/12) + ' yr' : i.certIntervalMonths + ' mo')
+      : '—';
+    const st = certStatus(i);
+    const stLabel = st === 'overdue' ? 'OVERDUE'
+                  : st === 'due-soon' ? 'DUE SOON'
+                  : st === 'ok' ? 'OK'
+                  : 'NOT SET';
+    const stColor = st === 'overdue' ? '#dc2626'
+                  : st === 'due-soon' ? '#d97706'
+                  : st === 'ok' ? '#16a34a' : '#94a3b8';
+    return '<tr>' +
+      '<td>' + esc(i.serial) + '</td>' +
+      '<td>' + esc(i.site || '—') + '</td>' +
+      '<td>' + (i.lastCertDate ? esc(String(i.lastCertDate).slice(0,10)) : '—') + '</td>' +
+      '<td>' + (due ? esc(String(due).slice(0,10)) : '—') + '</td>' +
+      '<td style="text-align:center">' + intLabel + '</td>' +
+      '<td style="color:' + stColor + ';font-weight:700">' + stLabel + '</td>' +
+      '</tr>';
+  }).join('');
+
+  const css = `@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',sans-serif;font-size:12px;color:#1e293b;background:#fff}
+@media print{*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.no-print{display:none!important}@page{margin:12mm 14mm;size:letter}}
+.page{max-width:800px;margin:0 auto}
+.header{padding:24px 32px 20px;border-bottom:2px solid #334155;display:flex;justify-content:space-between;align-items:flex-start;background:linear-gradient(135deg,#f0f5fa 0%,#e8eef6 100%)}
+.header-left{display:flex;align-items:center;gap:16px}
+.logo-mark{width:40px;height:40px;border:2px solid #3b82f6;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#1e40af;background:#dbeafe}
+.org-name{font-size:16px;font-weight:700;letter-spacing:.04em;font-family:'IBM Plex Mono',monospace;color:#1e293b}
+.org-sub{font-size:9px;color:#64748b;letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+.org-type{font-size:10px;font-weight:600;margin-top:4px;color:#3b82f6}
+.header-right{text-align:right;font-size:10px;color:#64748b;line-height:1.8;font-family:'IBM Plex Mono',monospace}
+.header-right strong{color:#1e293b}
+.sum-bar{padding:14px 32px;border-bottom:1px solid #cbd5e1;display:flex;gap:24px;align-items:center;flex-wrap:wrap;background:#f1f5f9}
+.sum-item{display:flex;flex-direction:column;align-items:center;min-width:70px}
+.sum-lbl{font-size:8px;font-weight:700;color:#3b82f6;letter-spacing:.1em;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;text-align:center}
+.sum-val{font-size:22px;font-weight:700;color:#1e293b;font-family:'IBM Plex Mono',monospace;line-height:1.3}
+.sum-div{width:1px;height:36px;background:#cbd5e1}
+table{width:100%;border-collapse:collapse;margin:16px 32px}
+th{text-align:left;font-size:9px;font-weight:700;color:#3b82f6;letter-spacing:.1em;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;padding:8px 10px;border-bottom:2px solid #cbd5e1}
+td{font-size:11px;padding:7px 10px;border-bottom:1px solid #e2e8f0;font-family:'IBM Plex Mono',monospace;color:#1e293b}
+tr:nth-child(even) td{background:#f8fafc}
+.footer{margin-top:16px;padding:10px 32px;border-top:2px solid #334155;display:flex;justify-content:space-between;font-size:8px;color:#64748b;font-family:'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;background:#f8fafc}
+.print-bar{text-align:center;padding:16px;border-top:1px solid #e2e8f0;margin-top:8px}
+.print-btn{background:#3b82f6;color:#fff;border:none;padding:10px 28px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif}`;
+
+  const html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>SDAPCD — ' + esc(typeName) + ' Certification Report</title><style>' + css + '</style></head><body><div class="page">' +
+    '<div class="header"><div class="header-left"><div class="logo-mark">SD</div><div><div class="org-name">SDAPCD</div><div class="org-sub">San Diego Air Pollution Control District</div><div class="org-type">' + esc(typeName) + ' — Certification Report</div></div></div>' +
+    '<div class="header-right"><div>Generated</div><strong>' + generatedDate + '</strong><br><div>Instruments: <strong>' + instruments.length + '</strong></div><div>Tracked: <strong>' + tracked.length + '</strong></div></div></div>' +
+    '<div class="sum-bar">' +
+      '<div class="sum-item"><span class="sum-lbl">Total</span><span class="sum-val">' + instruments.length + '</span></div><div class="sum-div"></div>' +
+      '<div class="sum-item"><span class="sum-lbl">Overdue</span><span class="sum-val" style="color:#dc2626">' + overdueCount + '</span></div><div class="sum-div"></div>' +
+      '<div class="sum-item"><span class="sum-lbl">Due Soon</span><span class="sum-val" style="color:#d97706">' + dueSoonCount + '</span></div><div class="sum-div"></div>' +
+      '<div class="sum-item"><span class="sum-lbl">OK</span><span class="sum-val" style="color:#16a34a">' + okCount + '</span></div>' +
+    '</div>' +
+    '<div style="padding:10px 0"><table style="width:calc(100% - 64px)"><thead><tr>' +
+      '<th>SERIAL</th><th>SITE</th><th>LAST CERT</th><th>NEXT DUE</th><th style="text-align:center">INTERVAL</th><th>STATUS</th>' +
+    '</tr></thead><tbody>' + tableRows + '</tbody></table></div>' +
+    '<div class="footer"><span>SDAPCD Instrument Management</span><span>Confidential — Internal Use Only</span><span>Generated: ' + generatedDate + '</span></div></div>' +
+    '<div class="no-print print-bar"><button class="print-btn" onclick="window.print()">Print / Save as PDF</button></div>' +
+    '</body></html>';
+
+  const win = window.open('', '_blank');
+  if (!win) { toast('Popup blocked — please allow popups and try again'); return; }
+  win.document.write(html); win.document.close();
+  toast('Cert report for ' + typeName + ' opened in new tab');
+}
+
 function printWO(wid) {
   const wo   = db.workOrders.find(w => String(w.id) === String(wid));
   if (!wo) return;
   const inst = db.instruments.find(i => String(i.id) === String(wo.instrumentId));
-  const gen  = new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles',weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  const gen  = new Date().toLocaleDateString('en-US',{timeZone:'America/Los_Angeles',weekday:'long',year:'numeric',month:'long',day:'numeric'}) + ' ' + new Date().toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'2-digit',minute:'2-digit',hour12:false}) + ' PST';
   const qrDataUrl = inst ? generateQRDataURL(getInstrumentUrl(inst.id), 3) : '';
 
   const statusClass = wo.status==='Closed'?'status-closed':wo.status==='Open'?'status-open':'status-other';
@@ -5593,7 +6302,7 @@ function printHistory(id) {
   const inst = db.instruments.find(x => String(x.id) === String(id));
   if (!inst) return;
   const hist = db.history[id] || [];
-  const generated = new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles',weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  const generated = new Date().toLocaleDateString('en-US',{timeZone:'America/Los_Angeles',weekday:'long',year:'numeric',month:'long',day:'numeric'}) + ' ' + new Date().toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'2-digit',minute:'2-digit',hour12:false}) + ' PST';
 
   const rows = hist.map(h =>
     '<tr><td class="ts">' + esc(h.ts||'') + '</td><td class="act">' + esc(h.action||'') + '</td><td>' + esc(h.detail||'') + '</td></tr>'
@@ -5651,6 +6360,135 @@ tr:last-child td{border-bottom:none}
   toast('✓ History report opened in new tab');
 }
 
+
+// ── AUDIT TRAIL EXPORT FUNCTIONS ─────────────────────────────
+function exportAuditTrailPDF(instId) {
+  const inst = db.instruments.find(x => String(x.id) === String(instId));
+  if (!inst) return;
+  const hist = db.history[instId] || [];
+  const wos = db.workOrders.filter(w => String(w.instrumentId) === String(instId));
+  const atts = (db.attachments||[]).filter(a => String(a.instrumentId) === String(instId) && a.type !== 'site_photo');
+  const certHist = hist.filter(h => (h.action||'').toLowerCase().includes('cert'));
+  const serial = inst.serial || '';
+  const secLogs = (db.securityLog||[]).filter(e => (e.detail||'').includes(serial));
+  const delLogs = (db.deleteLog||[]).filter(e => (e.detail||'').includes(serial));
+  const generated = new Date().toLocaleDateString('en-US',{timeZone:'America/Los_Angeles',weekday:'long',year:'numeric',month:'long',day:'numeric'}) + ' ' + new Date().toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'2-digit',minute:'2-digit',hour12:false}) + ' PST';
+
+  const css = `@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:'IBM Plex Sans',sans-serif;font-size:12px;color:#1a1a1a;background:#fff}
+@media print{*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.no-print{display:none!important}@page{margin:12mm 14mm;size:letter}}
+.page{max-width:800px;margin:0 auto}.header{padding:24px 32px 20px;border-bottom:2px solid #1a1a1a;display:flex;justify-content:space-between;align-items:flex-start}
+.header-left{display:flex;align-items:center;gap:16px}.logo-mark{width:40px;height:40px;border:2px solid #1a1a1a;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;font-family:'IBM Plex Mono',monospace}
+.org-name{font-size:16px;font-weight:700;letter-spacing:.04em;font-family:'IBM Plex Mono',monospace}.org-sub{font-size:9px;color:#555;letter-spacing:.06em;text-transform:uppercase;margin-top:2px}.org-type{font-size:10px;font-weight:600;margin-top:4px}
+.header-right{text-align:right;font-size:10px;color:#555;line-height:1.8;font-family:'IBM Plex Mono',monospace}.header-right strong{color:#1a1a1a}
+.info-bar{padding:14px 32px;border-bottom:1px solid #d1d5db;display:flex;gap:32px;flex-wrap:wrap;background:#fafafa}
+.info-item .lbl{font-size:8px;font-weight:700;color:#555;letter-spacing:.1em;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;display:block;margin-bottom:3px}
+.info-item .val{font-size:13px;font-weight:600;color:#1a1a1a;font-family:'IBM Plex Mono',monospace}
+.content{padding:20px 32px}.sec-title{font-size:9px;font-weight:700;color:#555;letter-spacing:.1em;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid #d1d5db}
+table{width:100%;border-collapse:collapse}th{padding:6px 10px;font-size:9px;font-weight:700;color:#555;letter-spacing:.08em;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;border-bottom:1px solid #d1d5db;text-align:left;background:#fafafa}
+td{padding:5px 10px;border-bottom:1px solid #f0f0f0;vertical-align:top;font-size:10px;color:#1a1a1a}tr:last-child td{border-bottom:none}
+.ts{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#555;white-space:nowrap}.act{font-weight:600}
+.footer{margin-top:16px;padding:10px 32px;border-top:2px solid #1a1a1a;display:flex;justify-content:space-between;font-size:8px;color:#555;font-family:'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase}
+.print-bar{text-align:center;padding:16px;border-top:1px solid #e5e7eb;margin-top:8px}.print-btn{background:#1a1a1a;color:#fff;border:none;padding:10px 28px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;font-family:'IBM Plex Mono',monospace;letter-spacing:.04em}
+.b-open{background:#dcfce7;color:#166534}.b-closed{background:#e5e7eb;color:#374151}.b-submitted{background:#fef3c7;color:#92400e}`;
+
+  // Build sections
+  const histRows = hist.map(h => '<tr><td class="ts">' + esc(h.ts||'') + '</td><td class="act">' + esc(h.action||'') + '</td><td>' + esc(h.detail||'') + '</td></tr>').join('');
+  const woRows = wos.map(wo => {
+    const sc = wo.status === 'Open' ? 'b-open' : wo.status === 'Closed' ? 'b-closed' : 'b-submitted';
+    return '<tr><td class="ts">WO-' + wo.id + '</td><td>' + esc(wo.type||'') + '</td><td><span class="badge ' + sc + '">' + esc(wo.status) + '</span></td><td>' + esc(wo.technician||'\u2014') + '</td><td class="ts">' + esc(wo.created||'') + '</td><td>' + esc((wo.description||'').substring(0,100)) + '</td></tr>';
+  }).join('');
+  const certRows = certHist.map(h => '<tr><td class="ts">' + esc(h.ts||'') + '</td><td>' + esc(h.action||'') + '</td><td>' + esc(h.detail||'') + '</td></tr>').join('');
+  const attRows = atts.map(a => '<tr><td>' + esc(a.fileName||'\u2014') + '</td><td class="ts">' + esc(a.date||'') + '</td><td>' + esc(a.tech||'\u2014') + '</td><td>' + esc(a.workType||'\u2014') + '</td></tr>').join('');
+  const logRows = secLogs.concat(delLogs).sort((a,b) => (b.ts||'').localeCompare(a.ts||'')).map(e => '<tr><td class="ts">' + esc(e.ts||'') + '</td><td>' + esc(e.type||e.what||'') + '</td><td>' + esc(e.user||'') + '</td><td>' + esc(e.detail||'') + '</td></tr>').join('');
+
+  const html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Audit Trail \u2014 ' + esc(inst.name) + ' ' + esc(inst.serial) + '</title><style>' + css + '</style></head><body><div class="page">' +
+    '<div class="header"><div class="header-left"><div class="logo-mark">SD</div><div><div class="org-name">SDAPCD</div><div class="org-sub">San Diego Air Pollution Control District</div><div class="org-type">Full Audit Trail Report</div></div></div>' +
+    '<div class="header-right"><div>Generated</div><strong>' + generated + '</strong></div></div>' +
+    '<div class="info-bar">' +
+    '<div class="info-item"><span class="lbl">Instrument</span><span class="val">' + esc(inst.name) + '</span></div>' +
+    '<div class="info-item"><span class="lbl">Serial</span><span class="val">' + esc(inst.serial) + '</span></div>' +
+    '<div class="info-item"><span class="lbl">Status</span><span class="val">' + esc(inst.status) + '</span></div>' +
+    '<div class="info-item"><span class="lbl">Site</span><span class="val">' + esc(inst.site||'\u2014') + '</span></div>' +
+    '<div class="info-item"><span class="lbl">Created</span><span class="val">' + esc(inst.created||'\u2014') + '</span></div>' +
+    (inst.lastCertDate ? '<div class="info-item"><span class="lbl">Last Cert</span><span class="val">' + esc(inst.lastCertDate) + '</span></div>' : '') +
+    '<div class="info-item"><span class="lbl">History Events</span><span class="val">' + hist.length + '</span></div>' +
+    '<div class="info-item"><span class="lbl">Work Orders</span><span class="val">' + wos.length + '</span></div>' +
+    '</div>' +
+    '<div class="content">' +
+    '<div class="sec-title">Complete History (' + hist.length + ' events)</div>' +
+    '<table><thead><tr><th style="width:140px">Date/Time</th><th style="width:120px">Action</th><th>Details</th></tr></thead><tbody>' +
+    (histRows || '<tr><td colspan="3" style="text-align:center;padding:20px;color:#999">No history recorded.</td></tr>') + '</tbody></table>' +
+    (wos.length ? '<div class="sec-title">Work Orders (' + wos.length + ')</div><table><thead><tr><th>WO #</th><th>Type</th><th>Status</th><th>Technician</th><th>Created</th><th>Description</th></tr></thead><tbody>' + woRows + '</tbody></table>' : '') +
+    (certHist.length ? '<div class="sec-title">Certification History (' + certHist.length + ')</div><table><thead><tr><th style="width:140px">Date</th><th style="width:120px">Action</th><th>Details</th></tr></thead><tbody>' + certRows + '</tbody></table>' : '') +
+    (atts.length ? '<div class="sec-title">Attachments (' + atts.length + ')</div><table><thead><tr><th>Filename</th><th>Date</th><th>Technician</th><th>Type</th></tr></thead><tbody>' + attRows + '</tbody></table>' : '') +
+    (logRows ? '<div class="sec-title">Security / Delete Log</div><table><thead><tr><th style="width:140px">Date</th><th>Type</th><th>User</th><th>Detail</th></tr></thead><tbody>' + logRows + '</tbody></table>' : '') +
+    '</div>' +
+    '<div class="footer"><span>SDAPCD Instrument Management</span><span>Confidential \u2014 Internal Use Only</span><span>' + esc(inst.name) + ' \u00B7 ' + esc(inst.serial) + '</span></div></div>' +
+    '<div class="no-print print-bar"><button class="print-btn" onclick="window.print()">Print / Save as PDF</button></div></body></html>';
+
+  const win = window.open('', '_blank');
+  if (!win) { toast('\u26A0 Popup blocked \u2014 please allow popups'); return; }
+  win.document.write(html); win.document.close();
+  toast('\u2713 Full audit trail opened in new tab');
+}
+
+function exportAuditTrailXLSX(instId) {
+  if (typeof XLSX === 'undefined') { toast('\u26A0 Excel library not loaded', 'warn'); return; }
+  const inst = db.instruments.find(x => String(x.id) === String(instId));
+  if (!inst) return;
+  const wb = XLSX.utils.book_new();
+
+  // Sheet 1: History
+  const hist = (db.history[instId] || []).map(h => ({ Date: h.ts||'', Action: h.action||'', Detail: h.detail||'', User: h.user||'' }));
+  const ws1 = XLSX.utils.json_to_sheet(hist.length ? hist : [{ Date:'', Action:'No history', Detail:'', User:'' }]);
+  ws1['!cols'] = [{ wch:20 },{ wch:20 },{ wch:50 },{ wch:16 }];
+  XLSX.utils.book_append_sheet(wb, ws1, 'Event History');
+
+  // Sheet 2: Work Orders
+  const wos = db.workOrders.filter(w => String(w.instrumentId) === String(instId)).map(wo => ({
+    'WO #': 'WO-' + wo.id, Type: wo.type, Status: wo.status, Priority: wo.priority||'',
+    Technician: wo.technician||'\u2014', Created: wo.created||'', Description: wo.description||''
+  }));
+  if (wos.length) {
+    const ws2 = XLSX.utils.json_to_sheet(wos);
+    ws2['!cols'] = [{ wch:10 },{ wch:16 },{ wch:18 },{ wch:10 },{ wch:16 },{ wch:12 },{ wch:40 }];
+    XLSX.utils.book_append_sheet(wb, ws2, 'Work Orders');
+  }
+
+  // Sheet 3: Certifications
+  const certHist = (db.history[instId] || []).filter(h => (h.action||'').toLowerCase().includes('cert'))
+    .map(h => ({ Date: h.ts||'', Action: h.action||'', Detail: h.detail||'' }));
+  if (certHist.length) {
+    const ws3 = XLSX.utils.json_to_sheet(certHist);
+    ws3['!cols'] = [{ wch:20 },{ wch:20 },{ wch:50 }];
+    XLSX.utils.book_append_sheet(wb, ws3, 'Certifications');
+  }
+
+  // Sheet 4: Attachments
+  const atts = (db.attachments||[]).filter(a => String(a.instrumentId) === String(instId) && a.type !== 'site_photo')
+    .map(a => ({ Filename: a.fileName||'', Date: a.date||'', Technician: a.tech||'', Type: a.workType||'', URL: a.fileUrl||'' }));
+  if (atts.length) {
+    const ws4 = XLSX.utils.json_to_sheet(atts);
+    ws4['!cols'] = [{ wch:30 },{ wch:12 },{ wch:16 },{ wch:16 },{ wch:40 }];
+    XLSX.utils.book_append_sheet(wb, ws4, 'Attachments');
+  }
+
+  // Sheet 5: Security Log
+  const serial = inst.serial || '';
+  const secLogs = (db.securityLog||[]).filter(e => (e.detail||'').includes(serial))
+    .concat((db.deleteLog||[]).filter(e => (e.detail||'').includes(serial)))
+    .map(e => ({ Date: e.ts||'', Type: e.type||e.what||'', User: e.user||'', Detail: e.detail||'' }));
+  if (secLogs.length) {
+    const ws5 = XLSX.utils.json_to_sheet(secLogs);
+    ws5['!cols'] = [{ wch:20 },{ wch:20 },{ wch:16 },{ wch:50 }];
+    XLSX.utils.book_append_sheet(wb, ws5, 'Security Log');
+  }
+
+  XLSX.writeFile(wb, 'sdapcd_audit_' + inst.serial + '_' + today() + '.xlsx');
+  toast('\u2713 Audit trail Excel exported');
+}
 
 // ── SITE EDIT FUNCTIONS ─────────────────────────────────────
 function openEditSite(siteCode) {
@@ -5711,9 +6549,9 @@ function techSelect(elId, selectedVal, placeholder) {
 // ── STATUS HELPERS ────────────────────────────────────────────────────
 const PROTECTED_STATUSES = ['Operational','Maintenance','Repair','Calibration','Offline','Deployed','At Vendor'];
 function allStatuses()    { return [...PROTECTED_STATUSES, ...(db.customStatuses||[])]; }
-function shopStatuses()   { return ['Operational','Maintenance','Repair','Calibration','Offline',  ...(db.customStatuses||[])]; }
-function fieldStatuses()  { return ['Deployed','Maintenance','Repair','Calibration','Offline',     ...(db.customStatuses||[])]; }
-function vendorStatuses() { return ['At Vendor','Repair','Calibration',                            ...(db.customStatuses||[])]; }
+function shopStatuses()   { return ['Operational','Maintenance','Repair','Calibration','Offline','Needs Inspection',  ...(db.customStatuses||[])]; }
+function fieldStatuses()  { return ['Deployed','Maintenance','Repair','Calibration','Offline','Needs Inspection',     ...(db.customStatuses||[])]; }
+function vendorStatuses() { return ['At Vendor','Repair','Calibration','Needs Inspection',                            ...(db.customStatuses||[])]; }
 function addCustomStatus() {
   const input = document.getElementById('new-status');
   const val   = (input ? input.value : '').trim();
@@ -5762,6 +6600,91 @@ function compressImage(dataUrl, maxWidth, quality) {
     img.onerror = reject;
     img.src = dataUrl;
   });
+}
+
+// ── COMPRESSION MODAL FUNCTIONS ──────────────────────────────
+let _compressPreviewTimer = null;
+function updateCompressionPreview() {
+  clearTimeout(_compressPreviewTimer);
+  _compressPreviewTimer = setTimeout(async () => {
+    const p = ui.form._pendingUploads;
+    const idx = ui.form._currentFileIdx || 0;
+    if (!p || !p[idx]) return;
+    const quality = (ui.form._compressQuality || 85) / 100;
+    const maxDim = ui.form._compressMaxDim || 1400;
+    try {
+      const compressed = await compressImage(p[idx].dataUrl, maxDim, quality);
+      const sizeKB = Math.round((compressed.length * 3 / 4) / 1024); // base64 → bytes estimate
+      const el = document.getElementById('compress-size-preview');
+      if (el) el.innerHTML = 'Compressed: <strong>' + sizeKB + ' KB</strong>';
+    } catch(e) {
+      const el = document.getElementById('compress-size-preview');
+      if (el) el.innerHTML = 'Compressed: <strong>error</strong>';
+    }
+  }, 200);
+}
+
+async function confirmCompression(useCompressed) {
+  const p = ui.form._pendingUploads;
+  const idx = ui.form._currentFileIdx || 0;
+  if (!p || !p[idx]) { ui.modal = null; render(); return; }
+  const current = p[idx];
+  let uploadData = current.dataUrl;
+  if (useCompressed) {
+    const quality = (ui.form._compressQuality || 85) / 100;
+    const maxDim = ui.form._compressMaxDim || 1400;
+    try { uploadData = await compressImage(current.dataUrl, maxDim, quality); }
+    catch(e) { /* fallback to original */ }
+  }
+  // Resume the upload callback
+  if (current.onUpload) current.onUpload(uploadData);
+  // Move to next file or close
+  if (idx + 1 < p.length) {
+    ui.form._currentFileIdx = idx + 1;
+    render();
+    setTimeout(updateCompressionPreview, 100);
+  } else {
+    ui.modal = ui.form._returnModal || null;
+    delete ui.form._pendingUploads;
+    delete ui.form._currentFileIdx;
+    delete ui.form._compressQuality;
+    delete ui.form._compressMaxDim;
+    delete ui.form._returnModal;
+    render();
+  }
+}
+
+async function applyCompressionToAll() {
+  const p = ui.form._pendingUploads;
+  let idx = ui.form._currentFileIdx || 0;
+  const quality = (ui.form._compressQuality || 85) / 100;
+  const maxDim = ui.form._compressMaxDim || 1400;
+  toast('Compressing ' + (p.length - idx) + ' images...');
+  for (let i = idx; i < p.length; i++) {
+    const current = p[i];
+    let uploadData = current.dataUrl;
+    try { uploadData = await compressImage(current.dataUrl, maxDim, quality); }
+    catch(e) { /* fallback */ }
+    if (current.onUpload) current.onUpload(uploadData);
+  }
+  ui.modal = ui.form._returnModal || null;
+  delete ui.form._pendingUploads;
+  delete ui.form._currentFileIdx;
+  delete ui.form._compressQuality;
+  delete ui.form._compressMaxDim;
+  delete ui.form._returnModal;
+  render();
+  toast('\u2713 All images compressed and uploaded');
+}
+
+function cancelCompression() {
+  ui.modal = ui.form._returnModal || null;
+  delete ui.form._pendingUploads;
+  delete ui.form._currentFileIdx;
+  delete ui.form._compressQuality;
+  delete ui.form._compressMaxDim;
+  delete ui.form._returnModal;
+  render();
 }
 
 // ── SITE PHOTO LINK SYSTEM ─────────────────────────────────
@@ -5832,20 +6755,20 @@ function uploadSitePhotos(input, siteCode) {
     }
     const reader = new FileReader();
     reader.onload = async e => {
-      toast('📷 Uploading ' + file.name + '...');
-      let uploadData = e.target.result;
-      try { uploadData = await compressImage(e.target.result, 1400, 0.85); }
-      catch(ce) { uploadData = e.target.result; }
+      toast('\uD83D\uDCF7 Uploading ' + file.name + '...');
+      const rawData = e.target.result;
+      const rawSizeBytes = Math.round(rawData.length * 3 / 4);
 
-      try {
-        const result = await API.uploadFile(
-          uploadData,
-          file.name,
-          file.type || 'image/jpeg',
-          siteCode,
-          siteCode,
-          'Site Photo'
-        );
+      const doSiteUpload = async (uploadData) => {
+        try {
+          const result = await API.uploadFile(
+            uploadData,
+            file.name,
+            file.type || 'image/jpeg',
+            siteCode,
+            siteCode,
+            'Site Photo'
+          );
         if (!result || !result.fileId) { toast('⚠ Upload failed for ' + file.name, 'error'); return; }
         const saved = await API.post('/attachments', {
           instrument_id: '',
@@ -5877,7 +6800,31 @@ function uploadSitePhotos(input, siteCode) {
         render();
       } catch(err) {
         console.warn('Site photo upload failed:', err);
-        toast('⚠ Upload failed: ' + (err.message || String(err)).slice(0, 60));
+        toast('\u26A0 Upload failed: ' + (err.message || String(err)).slice(0, 60));
+      }
+      };
+
+      // Show compression modal for large site photos
+      if (rawSizeBytes > 200 * 1024) {
+        if (!ui.form._pendingUploads) ui.form._pendingUploads = [];
+        ui.form._pendingUploads.push({
+          dataUrl: rawData, fileName: file.name,
+          originalSize: rawSizeBytes, onUpload: doSiteUpload
+        });
+        if (ui.form._pendingUploads.length === 1) {
+          ui.form._returnModal = ui.modal;
+          ui.form._currentFileIdx = 0;
+          ui.form._compressQuality = 85;
+          ui.form._compressMaxDim = 1400;
+          ui.modal = 'compress';
+          render();
+          setTimeout(updateCompressionPreview, 100);
+        }
+      } else {
+        // Small image — compress silently
+        let uploadData = rawData;
+        try { uploadData = await compressImage(rawData, 1400, 0.85); } catch(ce) {}
+        doSiteUpload(uploadData);
       }
     };
     reader.readAsDataURL(file);
@@ -5945,6 +6892,7 @@ function removeSitePhotoById(attId) {
 }
 
 function saveAddSite() {
+  if (!canEdit()) { toast('\u26A0 You do not have permission to edit', 'warn'); return; }
   const code     = getVal('f-site-code').toUpperCase().trim();
   const siteName = getVal('f-site-name').trim();
   const typeEl   = document.getElementById('f-site-type');
@@ -5963,131 +6911,320 @@ function saveAddSite() {
   try{saveDB('site');}catch(e){console.warn('saveDB',e);} closeModal(); render(); toast('✓ Site "' + code + '" added');
 }
 // ── SERVICE LOG ────────────────────────────────────────────
+// ── KPI OVERVIEW PAGE ──────────────────────────────────────
+function renderKPI() {
+  const inst = db.instruments.filter(i => !i.archived);
+  const allWOs = db.workOrders;
+  const openWOs = allWOs.filter(w => w.status === 'Open');
+  const pendingWOs = allWOs.filter(w => w.status === 'Submitted for Closure' || w.status === 'Pending Closure');
+  const closedWOs = allWOs.filter(w => w.status === 'Closed');
+
+  // Status breakdown
+  const statusCounts = {};
+  inst.forEach(i => { statusCounts[i.status] = (statusCounts[i.status]||0) + 1; });
+
+  // Site breakdown
+  const siteCounts = {};
+  inst.forEach(i => { siteCounts[i.site] = (siteCounts[i.site]||0) + 1; });
+
+  // Type breakdown
+  const typeCounts = {};
+  inst.forEach(i => { typeCounts[i.name] = (typeCounts[i.name]||0) + 1; });
+
+  // Cert stats
+  const tracked = inst.filter(i => i.certIntervalMonths && i.lastCertDate);
+  const overdueInst = tracked.filter(i => certStatus(i) === 'overdue');
+  const dueSoonInst = tracked.filter(i => certStatus(i) === 'due-soon');
+  const certOK = tracked.filter(i => certStatus(i) === 'ok');
+  const notTracked = inst.length - tracked.length;
+
+  // WO by type
+  const woTypeCounts = {};
+  allWOs.forEach(w => { woTypeCounts[w.type||'Other'] = (woTypeCounts[w.type||'Other']||0) + 1; });
+
+  // WO by technician (open only)
+  const woTechCounts = {};
+  openWOs.forEach(w => { woTechCounts[w.technician||'Unassigned'] = (woTechCounts[w.technician||'Unassigned']||0) + 1; });
+
+  // Needs Inspection count
+  const needsInspection = inst.filter(i => i.status === 'Needs Inspection').length;
+
+  // Avg WO close time (for closed WOs with dates)
+  let avgCloseDays = '—';
+  const closedWithDates = closedWOs.filter(w => w.created && w.closedDate);
+  if (closedWithDates.length > 0) {
+    const totalDays = closedWithDates.reduce((sum, w) => {
+      const c = new Date(w.created); const d = new Date(w.closedDate);
+      return sum + Math.max(0, Math.round((d - c) / 86400000));
+    }, 0);
+    avgCloseDays = Math.round(totalDays / closedWithDates.length) + 'd';
+  }
+
+  const kpiCard = (label, value, color, sub) =>
+    `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;min-width:140px;flex:1">
+      <div style="font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--subtle);margin-bottom:8px">${label}</div>
+      <div style="font-family:var(--font-mono);font-size:28px;font-weight:800;color:${color};line-height:1">${value}</div>
+      ${sub ? `<div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-top:6px">${sub}</div>` : ''}
+    </div>`;
+
+  const barChart = (title, data, colorFn) => {
+    const sorted = Object.entries(data).sort((a,b) => b[1] - a[1]);
+    const max = sorted.length ? sorted[0][1] : 1;
+    return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px">
+      <div style="font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--subtle);margin-bottom:14px">${title}</div>
+      ${sorted.length === 0 ? '<div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);padding:8px 0">No data</div>' :
+        sorted.map(([k,v]) => {
+          const pct = Math.max(4, (v / max) * 100);
+          const c = typeof colorFn === 'function' ? colorFn(k) : 'var(--blue)';
+          return `<div style="margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+              <span style="font-family:var(--font-mono);font-size:11px;color:var(--text);font-weight:600">${esc(k)}</span>
+              <span style="font-family:var(--font-mono);font-size:11px;color:var(--muted);font-weight:700">${v}</span>
+            </div>
+            <div style="height:6px;background:var(--surface);border-radius:3px;overflow:hidden">
+              <div style="height:100%;width:${pct}%;background:${c};border-radius:3px;transition:width .3s"></div>
+            </div>
+          </div>`;
+        }).join('')}
+    </div>`;
+  };
+
+  const statusColor = (s) => {
+    const m = {'Operational':'var(--green)','Deployed':'var(--blue)','Maintenance':'var(--amber)','Repair':'var(--red)','Calibration':'var(--purple)','Offline':'var(--slate)','Needs Inspection':'#ca8a04','At Vendor':'#e55f0c'};
+    return m[s] || 'var(--muted)';
+  };
+
+  return `
+  <div class="section-hdr">
+    <div class="section-title">KPI Overview</div>
+    <div style="font-family:var(--font-mono);font-size:10px;color:var(--subtle)">Last updated: ${nowTs()}</div>
+  </div>
+
+  <!-- Row 1: Key Metrics -->
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+    ${kpiCard('TOTAL INSTRUMENTS', inst.length, 'var(--text)', inst.filter(isField).length + ' field · ' + inst.filter(isShop).length + ' shop · ' + inst.filter(isVendor).length + ' vendor')}
+    ${kpiCard('OPEN WORK ORDERS', openWOs.length, openWOs.length > 0 ? 'var(--amber)' : 'var(--green)', pendingWOs.length + ' pending closure · ' + closedWOs.length + ' closed total')}
+    ${kpiCard('CERTS OVERDUE', overdueInst.length, overdueInst.length > 0 ? 'var(--red)' : 'var(--green)', dueSoonInst.length + ' due soon · ' + certOK.length + ' OK · ' + notTracked + ' not tracked')}
+    ${kpiCard('NEEDS INSPECTION', needsInspection, needsInspection > 0 ? '#ca8a04' : 'var(--green)', 'Instruments awaiting evaluation')}
+    ${kpiCard('AVG CLOSE TIME', avgCloseDays, 'var(--blue)', closedWithDates.length + ' closed WOs measured')}
+  </div>
+
+  <!-- Row 2: Charts -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+    ${barChart('INSTRUMENTS BY STATUS', statusCounts, statusColor)}
+    ${barChart('INSTRUMENTS BY TYPE', typeCounts, () => 'var(--blue)')}
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+    ${barChart('INSTRUMENTS BY SITE', siteCounts, () => 'var(--cyan, var(--blue))')}
+    ${barChart('WORK ORDERS BY TYPE', woTypeCounts, () => 'var(--purple)')}
+  </div>
+
+  <!-- Row 3: Open WO by Tech + Overdue Certs List -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+    ${barChart('OPEN WOs BY TECHNICIAN', woTechCounts, () => 'var(--amber)')}
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px">
+      <div style="font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--subtle);margin-bottom:14px">OVERDUE CERTIFICATIONS (${overdueInst.length})</div>
+      ${overdueInst.length === 0
+        ? '<div style="font-family:var(--font-mono);font-size:11px;color:var(--green);padding:8px 0">All certifications are current</div>'
+        : `<div style="max-height:280px;overflow-y:auto">${overdueInst.map(i => {
+            const days = certDaysLeft(i);
+            return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--border2);cursor:pointer" onclick="openHistory(${i.id})">
+              <div style="min-width:0">
+                <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--text)">${esc(i.name)}</div>
+                <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">${esc(i.serial)} · ${esc(i.site)}</div>
+              </div>
+              <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--red);flex-shrink:0;margin-left:8px">${Math.abs(days)}d overdue</span>
+            </div>`;
+          }).join('')}</div>`}
+    </div>
+  </div>
+
+  <!-- Row 4: Due Soon Certs -->
+  ${dueSoonInst.length > 0 ? `
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;margin-bottom:20px">
+    <div style="font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--subtle);margin-bottom:14px">CERTIFICATIONS DUE SOON (${dueSoonInst.length})</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px">
+      ${dueSoonInst.sort((a,b) => certDaysLeft(a) - certDaysLeft(b)).map(i => {
+        const days = certDaysLeft(i);
+        const due = certDueDate(i.lastCertDate, i.certIntervalMonths);
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);cursor:pointer" onclick="openHistory(${i.id})">
+          <div style="min-width:0">
+            <div style="font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--text)">${esc(i.name)} · ${esc(i.serial)}</div>
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">${esc(i.site)} · Due: ${esc(due||'')}</div>
+          </div>
+          <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--amber);flex-shrink:0;margin-left:8px">${days}d</span>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>` : ''}
+  `;
+}
+
 function renderServiceLog() {
-  const WORK_TYPES = ['Maintenance','Calibration','Repair','Inspection','Other'];
+  const WORK_TYPES = ['Maintenance','Calibration','Repair','Inspection','Vendor Certification','Other'];
   const q        = (ui.slSearch   || '').toLowerCase();
   const typeF    =  ui.slTypeF    || 'All Types';
   const techF    =  ui.slTechF    || 'All Techs';
+  const entryF   =  ui.slEntryF   || 'All Entries';
   const dateFrom =  ui.slDateFrom || '';
   const dateTo   =  ui.slDateTo   || '';
-
-  // Collect all log work entries from every instrument's history
-  const entries = [];
-  Object.entries(db.history || {}).forEach(([instId, hist]) => {
-    const inst = db.instruments.find(i => String(i.id) === String(instId));
-    if (!inst) return;
-    (hist || []).forEach(h => {
-      if (!(h.action || '').toLowerCase().includes('work performed')) return;
-      // Parse work type from action string "Work performed — Calibration"
-      const typePart = (h.action || '').split('—')[1]?.trim() || 'Work';
-      const baseType = WORK_TYPES.find(t => typePart.toLowerCase().startsWith(t.toLowerCase())) || 'Other';
-      // Parse tech from detail "Tech: jsmith · ..."
-      const techMatch = (h.detail || '').match(/Tech:\s*([^·\n]+)/i);
-      const tech = techMatch ? techMatch[1].trim() : '—';
-      // Parse attachments count
-      const attachMatch = (h.detail || '').match(/(\d+) attachment/i);
-      const attachCount = attachMatch ? parseInt(attachMatch[1]) : 0;
-      // Get actual attachment objects
-      // Always pull from db.attachments — reliable single source of truth
-      const attachments = (db.attachments||[]).filter(a =>
-        String(a.instrumentId) === String(instId) &&
-        a.type !== 'site_photo' &&
-        a.date === (h.ts||'').slice(0,10) &&
-        (tech === '—' || a.tech === tech)
-      );
-      entries.push({ instId, inst, h, typePart, baseType, tech, attachCount, attachments,
-                     dateStr: (h.ts||'').slice(0,10) });
-    });
-  });
-
-  // Sort newest first
-  entries.sort((a, b) => (b.h.epoch||0) - (a.h.epoch||0));
-
-  // Apply filters
-  const filtered = entries.filter(e => {
-    const matchQ = !q
-      || e.inst.name.toLowerCase().includes(q)
-      || e.inst.serial.toLowerCase().includes(q)
-      || e.tech.toLowerCase().includes(q)
-      || (e.h.detail||'').toLowerCase().includes(q)
-      || e.typePart.toLowerCase().includes(q);
-    const matchType = typeF === 'All Types' || e.baseType === typeF;
-    const matchTech = techF === 'All Techs' || e.tech === techF;
-    const matchFrom = !dateFrom || e.dateStr >= dateFrom;
-    const matchTo   = !dateTo   || e.dateStr <= dateTo;
-    return matchQ && matchType && matchTech && matchFrom && matchTo;
-  });
-
-  // All unique techs for filter dropdown
-  const allTechs = [...new Set(entries.map(e => e.tech).filter(t => t && t !== '—'))].sort();
 
   // Type color map
   const typeColor = t => ({
     Maintenance: 'var(--blue)',   Calibration: 'var(--green)',
     Repair:      'var(--red)',    Inspection:  'var(--purple)',
-    Other:       'var(--slate)'
+    'Vendor Certification': 'var(--amber)', Other: 'var(--slate)'
   }[t] || 'var(--slate)');
   const typeBg = t => ({
     Maintenance: 'rgba(34,211,238,.09)',  Calibration: 'rgba(52,211,153,.09)',
     Repair:      'rgba(248,113,113,.09)', Inspection:  'rgba(167,139,250,.09)',
-    Other:       'rgba(148,163,184,.09)'
+    'Vendor Certification': 'rgba(251,191,36,.09)', Other: 'rgba(148,163,184,.09)'
   }[t] || 'rgba(148,163,184,.09)');
   const typeBorder = t => ({
     Maintenance: 'rgba(34,211,238,.25)',  Calibration: 'rgba(52,211,153,.25)',
     Repair:      'rgba(248,113,113,.25)', Inspection:  'rgba(167,139,250,.25)',
-    Other:       'rgba(148,163,184,.25)'
+    'Vendor Certification': 'rgba(251,191,36,.25)', Other: 'rgba(148,163,184,.25)'
   }[t] || 'rgba(148,163,184,.25)');
 
-  const hasFilters = q || typeF !== 'All Types' || techF !== 'All Techs' || dateFrom || dateTo;
+  // ── Build unified entries from WOs and WPs ──
+  const entries = [];
+
+  // Work Orders (WO)
+  (db.workOrders || []).forEach(wo => {
+    const inst = db.instruments.find(i => String(i.id) === String(wo.instrumentId));
+    entries.push({
+      kind: 'WO',
+      id: wo.id,
+      label: 'WO-' + wo.id,
+      instId: wo.instrumentId,
+      inst: inst,
+      type: wo.type || '',
+      tech: wo.technician || '',
+      desc: wo.description || '',
+      date: (wo.created || '').slice(0,10),
+      epoch: new Date((wo.created || '').slice(0,10) + 'T00:00:00').getTime() || 0,
+      status: wo.status || 'Open',
+      woId: wo.id
+    });
+  });
+
+  // Work Performed (WP) — from instrument history "Work performed" entries
+  let wpCounter = 0;
+  const wpEntries = [];
+  Object.entries(db.history || {}).forEach(([instId, hist]) => {
+    const inst = db.instruments.find(i => String(i.id) === String(instId));
+    if (!inst) return;
+    (hist || []).forEach(h => {
+      if (!(h.action || '').toLowerCase().includes('work performed')) return;
+      wpCounter++;
+      const typePart = (h.action || '').split('\u2014')[1]?.trim() || 'Work';
+      const baseType = WORK_TYPES.find(t => typePart.toLowerCase().startsWith(t.toLowerCase())) || 'Other';
+      const techMatch = (h.detail || '').match(/Tech:\s*([^\u00b7\n]+)/i);
+      const tech = techMatch ? techMatch[1].trim() : '';
+      const detail = (h.detail || '').replace(/^Tech:[^\u00b7]+\u00b7\s*/i, '').replace(/\u00b7\s*\d+ attachments?/i,'').trim();
+      wpEntries.push({
+        kind: 'WP',
+        id: wpCounter,
+        label: 'WP-' + wpCounter,
+        instId: instId,
+        inst: inst,
+        type: typePart,
+        baseType: baseType,
+        tech: tech,
+        desc: detail,
+        date: (h.ts||'').slice(0,10),
+        epoch: h.epoch || 0,
+        status: 'Completed'
+      });
+    });
+  });
+  // Sort WP entries by epoch descending and re-number sequentially
+  wpEntries.sort((a, b) => b.epoch - a.epoch);
+  wpEntries.forEach((e, idx) => { e.id = wpEntries.length - idx; e.label = 'WP-' + e.id; });
+  entries.push(...wpEntries);
+
+  // Sort all entries by date descending (newest first)
+  entries.sort((a, b) => b.epoch - a.epoch);
+
+  // All unique techs for filter dropdown
+  const allTechs = [...new Set(entries.map(e => e.tech).filter(Boolean))].sort();
+
+  // Apply filters
+  const filtered = entries.filter(e => {
+    const matchQ = !q
+      || e.label.toLowerCase().includes(q)
+      || (e.type||'').toLowerCase().includes(q)
+      || (e.tech||'').toLowerCase().includes(q)
+      || (e.desc||'').toLowerCase().includes(q)
+      || (e.inst ? e.inst.name.toLowerCase().includes(q) : false)
+      || (e.inst ? e.inst.serial.toLowerCase().includes(q) : false)
+      || (e.inst ? (e.inst.site||'').toLowerCase().includes(q) : false);
+    const matchType = typeF === 'All Types' || e.type === typeF || (e.baseType && e.baseType === typeF);
+    const matchTech = techF === 'All Techs' || e.tech === techF;
+    const matchEntry = entryF === 'All Entries' || e.kind === entryF;
+    const matchFrom = !dateFrom || e.date >= dateFrom;
+    const matchTo   = !dateTo   || e.date <= dateTo;
+    return matchQ && matchType && matchTech && matchEntry && matchFrom && matchTo;
+  });
+
+  const woCount = filtered.filter(e => e.kind === 'WO').length;
+  const wpCount = filtered.filter(e => e.kind === 'WP').length;
 
   const rows = filtered.length === 0
-    ? `<tr class="empty-row"><td colspan="6" style="text-align:center;padding:28px;color:var(--subtle)">No service log entries match your filters</td></tr>`
+    ? `<tr class="empty-row"><td colspan="7" style="text-align:center;padding:28px;color:var(--subtle)">No entries match your filters</td></tr>`
     : filtered.map(e => {
-        // Strip "Tech: X · " prefix from detail for cleaner display
-        const detail = (e.h.detail || '').replace(/^Tech:[^·]+·\s*/i, '').replace(/·\s*\d+ attachments?/i,'').trim();
-        const attachHtml = e.attachments.length > 0
-          ? e.attachments.map(a => {
-              const isPDF = (a.mimeType||'').includes('pdf') || a.type === 'pdf' || (a.fileName||'').endsWith('.pdf');
-              const url   = a.fileUrl || a.directUrl || '';
-              const icon  = isPDF ? '📄' : '🖼';
-              const label = a.fileName || a.name || 'File';
-              return url
-                ? `<a href="${esc(url)}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-mono);font-size:10px;color:var(--blue);text-decoration:none;margin-right:5px;margin-top:3px;font-weight:600">${icon} ${esc(label)} ↗</a>`
-                : `<span style="font-family:var(--font-mono);font-size:10px;color:var(--subtle);margin-right:5px">${icon} ${esc(label)} (no link)</span>`;
-            }).join('')
-          : e.attachCount > 0
-            ? `<span style="font-family:var(--font-mono);font-size:10px;color:var(--subtle)">${e.attachCount} file${e.attachCount>1?'s':''} — <span style="color:var(--blue);cursor:pointer" onclick="openAttachments(${e.instId})">view</span></span>`
-            : '';
+        // ID badge: blue for WO, green for WP
+        const idBadge = e.kind === 'WO'
+          ? `<span class="wo-id" onclick="openWODetail(${e.woId})" style="cursor:pointer">${esc(e.label)}</span>`
+          : `<span style="display:inline-block;font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--green);cursor:pointer;padding:2px 0" onclick="openHistory(${e.instId})">${esc(e.label)}</span>`;
+
+        // Status badge
+        const statusBadge = e.kind === 'WO'
+          ? (e.status === 'Closed'                ? `<span class="wo-status-closed">CLOSED</span>`
+           : e.status === 'Submitted for Closure' ? `<span class="wo-status-pending">SUBMITTED</span>`
+           :                                        `<span class="wo-status-open">OPEN</span>`)
+          : `<span style="font-family:var(--font-mono);font-size:10px;font-weight:600;padding:3px 8px;border-radius:var(--radius);background:rgba(52,211,153,.09);color:var(--green);border:1px solid rgba(52,211,153,.2);letter-spacing:.04em">COMPLETED</span>`;
+
+        const displayType = e.type || '';
+        const colorType = e.baseType || e.type || '';
+
         return `<tr>
-          <td style="font-family:var(--font-mono);font-size:11px;color:var(--subtle);white-space:nowrap">${esc(e.dateStr)}</td>
           <td>
-            <div class="inst-name">${esc(e.inst.name)}</div>
-            <div class="inst-sn">${esc(e.inst.serial)}</div>
-          </td>
-          <td><span style="font-family:var(--font-mono);font-size:10px;font-weight:600;padding:2px 9px;border-radius:var(--radius);background:${typeBg(e.baseType)};color:${typeColor(e.baseType)};border:1px solid ${typeBorder(e.baseType)}">${esc(e.typePart)}</span></td>
-          <td style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">${esc(e.tech)}</td>
-          <td style="font-size:12px;color:var(--muted);max-width:260px;line-height:1.45">
-            ${esc(detail)}
-            ${attachHtml ? `<div style="margin-top:4px">${attachHtml}</div>` : ''}
+            ${idBadge}
+            <div style="font-family:var(--font-mono);font-size:9px;color:var(--subtle);margin-top:2px">${e.kind === 'WO' ? 'Work Order' : 'Work Performed'}</div>
           </td>
           <td>
-            <button class="btn-act btn-history" onclick="openHistory(${e.instId})" style="font-size:10px">▤ History</button>
+            <div class="inst-name">${e.inst ? esc(e.inst.name) : '\u2014'}</div>
+            <div class="inst-sn">${e.inst ? esc(e.inst.serial) : ''}</div>
           </td>
+          <td><span style="font-family:var(--font-mono);font-size:10px;font-weight:600;padding:2px 9px;border-radius:var(--radius);background:${typeBg(colorType)};color:${typeColor(colorType)};border:1px solid ${typeBorder(colorType)}">${esc(displayType)}</span></td>
+          <td>${statusBadge}</td>
+          <td style="font-family:var(--font-mono);font-size:12px;color:var(--muted)">${esc(e.tech||'\u2014')}</td>
+          <td style="font-size:12px;color:var(--muted);line-height:1.45">
+            <div style="max-width:260px;overflow:hidden;word-break:break-word">${truncDesc(e.desc, 'sl-' + e.kind + e.id, 100)}</div>
+          </td>
+          <td style="font-family:var(--font-mono);font-size:11px;color:var(--subtle);white-space:nowrap">${esc(e.date)}</td>
         </tr>`;
       }).join('');
 
   return `
   <div class="section-hdr">
-    <div class="section-title">▣ Service Log</div>
-    <div style="font-family:var(--font-mono);font-size:11px;color:var(--subtle)">${filtered.length} entr${filtered.length===1?'y':'ies'}</div>
+    <div class="section-title">&#9635; Service Log</div>
+    <div style="font-family:var(--font-mono);font-size:11px;color:var(--subtle)">${filtered.length} entr${filtered.length===1?'y':'ies'} &nbsp;·&nbsp; ${woCount} WO &nbsp;·&nbsp; ${wpCount} WP</div>
   </div>
 
   <div style="display:flex;gap:8px;align-items:center;margin-bottom:18px;flex-wrap:wrap">
     <div class="search-box" style="min-width:220px;flex:1;max-width:320px">
-      <span class="search-icon">⌕</span>
-      <input placeholder="Search instrument, serial, tech..." value="${esc(ui.slSearch||'')}" id="sl-search" oninput="ui.slSearch=this.value;filterTable('sl-table',this.value)"/>
-      ${ui.slSearch ? `<button onclick="ui.slSearch='';document.getElementById('sl-search').value='';filterTable('sl-table','')" style="background:none;border:none;color:var(--subtle);cursor:pointer;padding:0 6px;font-size:13px" title="Clear">✕</button>` : ''}
+      <span class="search-icon">&#8981;</span>
+      <input placeholder="Search WO/WP ID, instrument, tech..." value="${esc(ui.slSearch||'')}" id="sl-search" oninput="ui.slSearch=this.value;filterTable('sl-table',this.value)"/>
+      ${ui.slSearch ? `<button onclick="ui.slSearch='';document.getElementById('sl-search').value='';filterTable('sl-table','')" style="background:none;border:none;color:var(--subtle);cursor:pointer;padding:0 6px;font-size:13px" title="Clear">&#10005;</button>` : ''}
     </div>
+    <select class="filter-sel" onchange="ui.slEntryF=this.value;render()">
+      <option value="All Entries" ${entryF==='All Entries'?'selected':''}>All Entries</option>
+      <option value="WO" ${entryF==='WO'?'selected':''}>Work Orders (WO)</option>
+      <option value="WP" ${entryF==='WP'?'selected':''}>Work Performed (WP)</option>
+    </select>
     <select class="filter-sel" onchange="ui.slTypeF=this.value;render()">
       <option value="All Types" ${typeF==='All Types'?'selected':''}>All Types</option>
       ${WORK_TYPES.map(t => `<option value="${esc(t)}" ${typeF===t?'selected':''}>${esc(t)}</option>`).join('')}
@@ -6100,18 +7237,19 @@ function renderServiceLog() {
       value="${esc(dateFrom)}" title="From date" onchange="ui.slDateFrom=this.value;render()"/>
     <input type="date" class="filter-sel" style="font-family:var(--font-mono);font-size:11px;cursor:pointer"
       value="${esc(dateTo)}" title="To date" onchange="ui.slDateTo=this.value;render()"/>
-    <button class="btn-act" onclick="ui.slSearch='';ui.slTypeF='All Types';ui.slTechF='All Techs';ui.slDateFrom='';ui.slDateTo='';filterTable('sl-table','');render()" style="white-space:nowrap">✕ Clear</button>
+    <button class="btn-act" onclick="ui.slSearch='';ui.slTypeF='All Types';ui.slTechF='All Techs';ui.slEntryF='All Entries';ui.slDateFrom='';ui.slDateTo='';filterTable('sl-table','');render()" style="white-space:nowrap">&#10005; Clear</button>
   </div>
 
   <div class="inst-table">
     <table id="sl-table">
       <thead><tr>
-        <th>DATE</th>
+        <th>ID</th>
         <th>INSTRUMENT / SERIAL</th>
         <th>TYPE</th>
+        <th>STATUS</th>
         <th>TECHNICIAN</th>
-        <th>DESCRIPTION / FILES</th>
-        <th></th>
+        <th>DESCRIPTION</th>
+        <th>DATE</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>
@@ -6396,7 +7534,18 @@ function markDirty(type, id) {
   else _dirty[type] = true;
 }
 
+function showSyncIndicator(msg) {
+  const el = document.getElementById('sync-indicator');
+  const txt = document.getElementById('sync-text');
+  if (el) { el.classList.add('active'); if (txt) txt.textContent = msg || 'Syncing...'; }
+}
+function hideSyncIndicator() {
+  const el = document.getElementById('sync-indicator');
+  if (el) el.classList.remove('active');
+}
+
 async function syncToServer() {
+  showSyncIndicator('Syncing...');
   try {
     // ── INSTRUMENTS ─────────────────────────────────────────
     for (const instId of _dirty.instruments) {
@@ -6464,7 +7613,9 @@ async function syncToServer() {
       _dirty.statuses = false;
     }
 
+    hideSyncIndicator();
   } catch(e) {
+    hideSyncIndicator();
     console.error('SDAPCD: sync to server failed', e);
     toast('⚠ Server sync failed — check that the server is running');
   }
@@ -6596,6 +7747,8 @@ let _lastSessionReset = 0;
 // ══════════════════════════════════════════════════════════════
 let _autoRefreshInterval = null;
 let _lastDbHash = '';
+let _lastSyncTs = null; // timestamp of last successful sync for delta queries
+
 function _dbFingerprint(d) {
   // Lightweight fingerprint: counts + most recent timestamps
   const ic = (d.instruments||[]).length;
@@ -6606,67 +7759,178 @@ function _dbFingerprint(d) {
   const lastWO = (d.workOrders||[]).reduce((m,w) => Math.max(m, w.id||0), 0);
   return `${ic}:${wc}:${ac}:${sc}:${lastInst}:${lastWO}`;
 }
+
+// Merge delta response into existing db — upsert changed records only
+function _mergeDelta(delta) {
+  let changed = false;
+  // Merge instruments
+  if (delta.instruments && delta.instruments.length) {
+    delta.instruments.forEach(newInst => {
+      // Normalize snake_case
+      if (newInst.cert_interval_months !== undefined && newInst.certIntervalMonths === undefined)
+        newInst.certIntervalMonths = newInst.cert_interval_months !== undefined && newInst.cert_interval_months !== '' ? Number(newInst.cert_interval_months) : null;
+      if (newInst.last_cert_date !== undefined && newInst.lastCertDate === undefined)
+        newInst.lastCertDate = newInst.last_cert_date || null;
+      if (newInst.modified_at !== undefined && newInst.modifiedAt === undefined)
+        newInst.modifiedAt = newInst.modified_at || null;
+      const idx = db.instruments.findIndex(i => String(i.id) === String(newInst.id));
+      if (idx >= 0) db.instruments[idx] = Object.assign(db.instruments[idx], newInst);
+      else db.instruments.push(newInst);
+    });
+    changed = true;
+  }
+  // Merge work orders
+  if (delta.workOrders && delta.workOrders.length) {
+    delta.workOrders.forEach(newWO => {
+      if (newWO.status === 'Pending Closure') newWO.status = 'Submitted for Closure';
+      const idx = db.workOrders.findIndex(w => String(w.id) === String(newWO.id));
+      if (idx >= 0) db.workOrders[idx] = Object.assign(db.workOrders[idx], newWO);
+      else db.workOrders.push(newWO);
+    });
+    changed = true;
+  }
+  // Merge attachments
+  if (delta.attachments && delta.attachments.length) {
+    delta.attachments.forEach(newAtt => {
+      const idx = db.attachments.findIndex(a => String(a.id) === String(newAtt.id));
+      if (idx >= 0) db.attachments[idx] = Object.assign(db.attachments[idx], newAtt);
+      else db.attachments.push(newAtt);
+    });
+    // Re-map attachments to instruments and sitesMeta
+    db.instruments.forEach(inst => {
+      const instAtt = db.attachments.filter(a => String(a.instrumentId) === String(inst.id) && a.type === 'work');
+      if (instAtt.length > 0) inst.workAttachments = instAtt;
+    });
+    db.attachments.filter(a => a.type === 'site_photo' && a.siteCode).forEach(a => {
+      if (!db.sitesMeta[a.siteCode]) db.sitesMeta[a.siteCode] = {};
+      if (!db.sitesMeta[a.siteCode].photos) db.sitesMeta[a.siteCode].photos = [];
+      if (!db.sitesMeta[a.siteCode].photos.find(p => String(p.attachmentId) === String(a.id))) {
+        db.sitesMeta[a.siteCode].photos.push({ url: a.directUrl || a.fileUrl, attachmentId: a.id, fileName: a.fileName });
+      }
+    });
+    changed = true;
+  }
+  // Merge history (object keyed by instrumentId)
+  if (delta.history && typeof delta.history === 'object') {
+    Object.keys(delta.history).forEach(instId => {
+      if (!db.history[instId]) db.history[instId] = [];
+      const existing = db.history[instId];
+      delta.history[instId].forEach(entry => {
+        // Deduplicate by timestamp+action
+        const dup = existing.find(e => e.timestamp === entry.timestamp && e.action === entry.action);
+        if (!dup) existing.push(entry);
+      });
+    });
+    changed = true;
+  }
+  // Merge security log
+  if (delta.securityLog && delta.securityLog.length) {
+    delta.securityLog.forEach(entry => {
+      if (!db.securityLog.find(e => e.timestamp === entry.timestamp && e.action === entry.action))
+        db.securityLog.push(entry);
+    });
+    changed = true;
+  }
+  return changed;
+}
+
 function startAutoRefresh() {
   if (_autoRefreshInterval) clearInterval(_autoRefreshInterval);
   _autoRefreshInterval = setInterval(async () => {
-    if (!ui.currentUser) return; // don't refresh if not logged in
-    if (ui.modal) return; // don't refresh while a modal is open
-    if (ui.dirty) return; // don't refresh while user has unsaved changes
+    if (!ui.currentUser) return;
+    if (ui.modal) return;
+    if (ui.dirty) return;
     try {
-      const d = await API.get('/db');
-      // Check if data actually changed — skip render if identical
-      const newHash = _dbFingerprint(d);
-      if (newHash === _lastDbHash) return; // no changes, skip render
-      _lastDbHash = newHash;
+      let d, isDelta = false;
+      // Use delta sync if we have a previous sync timestamp
+      if (_lastSyncTs) {
+        try {
+          if (typeof showSyncIndicator === 'function') showSyncIndicator('Syncing...');
+          d = await API.get('/db?since=' + encodeURIComponent(_lastSyncTs));
+          isDelta = d && d._delta === true;
+        } catch(e) {
+          // Delta failed — fall back to full load
+          isDelta = false;
+          d = null;
+        }
+      }
+      // Full load if no delta or delta failed
+      if (!isDelta) {
+        if (typeof showSyncIndicator === 'function') showSyncIndicator('Full sync...');
+        d = await API.get('/db');
+      }
+      if (typeof hideSyncIndicator === 'function') hideSyncIndicator();
+
+      if (isDelta) {
+        // Delta response — merge only changed records
+        _lastSyncTs = new Date().toISOString();
+        const hasChanges = _mergeDelta(d);
+        if (!hasChanges) return; // nothing changed, skip render
+      } else {
+        // Full response — replace db entirely (existing behavior)
+        const newHash = _dbFingerprint(d);
+        if (newHash === _lastDbHash) { _lastSyncTs = new Date().toISOString(); return; }
+        _lastDbHash = newHash;
+        // Preserve local-only items not yet synced
+        const localOnlyInst = db.instruments ? db.instruments.filter(i => !i._synced && i._local) : [];
+        const localOnlyWO = db.workOrders ? db.workOrders.filter(w => !w._synced && w._local) : [];
+        db = d;
+        if (localOnlyInst.length) localOnlyInst.forEach(i => { if (!db.instruments.find(x => String(x.id) === String(i.id))) db.instruments.push(i); });
+        if (localOnlyWO.length) localOnlyWO.forEach(w => { if (!db.workOrders.find(x => String(x.id) === String(w.id))) db.workOrders.push(w); });
+        if (!db.customStatuses) db.customStatuses = [];
+        if (!db.sitesMeta) db.sitesMeta = {};
+        if (!db.securityLog) db.securityLog = [];
+        if (!db.deleteLog) db.deleteLog = [];
+        if (!db.history) db.history = {};
+        if (!db.attachments) db.attachments = [];
+        if (db.instruments) {
+          db.instruments.forEach(i => {
+            if (i.cert_interval_months !== undefined && i.certIntervalMonths === undefined)
+              i.certIntervalMonths = i.cert_interval_months !== undefined && i.cert_interval_months !== '' ? Number(i.cert_interval_months) : null;
+            if (i.last_cert_date !== undefined && i.lastCertDate === undefined)
+              i.lastCertDate = i.last_cert_date || null;
+            if (i.modified_at !== undefined && i.modifiedAt === undefined)
+              i.modifiedAt = i.modified_at || null;
+          });
+        }
+        if (db.attachments.length > 0) {
+          db.instruments.forEach(inst => {
+            const instAtt = db.attachments.filter(a => String(a.instrumentId) === String(inst.id) && a.type === 'work');
+            if (instAtt.length > 0) inst.workAttachments = instAtt;
+          });
+          db.attachments.filter(a => a.type === 'site_photo' && a.siteCode).forEach(a => {
+            if (!db.sitesMeta[a.siteCode]) db.sitesMeta[a.siteCode] = {};
+            if (!db.sitesMeta[a.siteCode].photos) db.sitesMeta[a.siteCode].photos = [];
+            db.sitesMeta[a.siteCode].photos.push({ url: a.directUrl || a.fileUrl, attachmentId: a.id, fileName: a.fileName });
+          });
+        }
+        if (!db.adminPassword) db.adminPassword = 'changeme';
+        // Normalize legacy status
+        if (db.workOrders) {
+          db.workOrders.forEach(wo => {
+            if (wo.status === 'Pending Closure') wo.status = 'Submitted for Closure';
+          });
+        }
+        _lastSyncTs = new Date().toISOString();
+      }
+
+      markAllSynced();
+      // Save to offline cache
+      try { localStorage.setItem('sdapcd_db_cache', JSON.stringify(db)); } catch(e) {}
       // Preserve scroll position
       const mainEl = document.getElementById('main') || document.scrollingElement || document.documentElement;
       const scrollTop = mainEl.scrollTop;
       const scrollLeft = mainEl.scrollLeft;
-      // Merge server data — preserve any local-only items not yet synced
-      const localOnlyInst = db.instruments ? db.instruments.filter(i => !i._synced && i._local) : [];
-      const localOnlyWO = db.workOrders ? db.workOrders.filter(w => !w._synced && w._local) : [];
-      db = d;
-      // Re-add local-only items that haven't synced yet
-      if (localOnlyInst.length) localOnlyInst.forEach(i => { if (!db.instruments.find(x => String(x.id) === String(i.id))) db.instruments.push(i); });
-      if (localOnlyWO.length) localOnlyWO.forEach(w => { if (!db.workOrders.find(x => String(x.id) === String(w.id))) db.workOrders.push(w); });
-      if (!db.customStatuses) db.customStatuses = [];
-      if (!db.sitesMeta) db.sitesMeta = {};
-      if (!db.securityLog) db.securityLog = [];
-      if (!db.deleteLog) db.deleteLog = [];
-      if (!db.history) db.history = {};
-      if (!db.attachments) db.attachments = [];
-      if (db.instruments) {
-        db.instruments.forEach(i => {
-          if (i.cert_interval_months !== undefined && i.certIntervalMonths === undefined)
-            i.certIntervalMonths = i.cert_interval_months !== undefined && i.cert_interval_months !== '' ? Number(i.cert_interval_months) : null;
-          if (i.last_cert_date !== undefined && i.lastCertDate === undefined)
-            i.lastCertDate = i.last_cert_date || null;
-        });
-      }
-      if (db.attachments.length > 0) {
-        db.instruments.forEach(inst => {
-          const instAtt = db.attachments.filter(a => String(a.instrumentId) === String(inst.id) && a.type === 'work');
-          if (instAtt.length > 0) inst.workAttachments = instAtt;
-        });
-        db.attachments.filter(a => a.type === 'site_photo' && a.siteCode).forEach(a => {
-          if (!db.sitesMeta[a.siteCode]) db.sitesMeta[a.siteCode] = {};
-          if (!db.sitesMeta[a.siteCode].photos) db.sitesMeta[a.siteCode].photos = [];
-          db.sitesMeta[a.siteCode].photos.push({ url: a.directUrl || a.fileUrl, attachmentId: a.id, fileName: a.fileName });
-        });
-      }
-      if (!db.adminPassword) db.adminPassword = 'changeme';
-      markAllSynced();
-      // Save to offline cache
-      try { localStorage.setItem('sdapcd_db_cache', JSON.stringify(db)); } catch(e) {}
-      // Update activity badge
       updateActivityBadge();
       render();
-      // Restore scroll position after render
       requestAnimationFrame(() => {
         mainEl.scrollTop = scrollTop;
         mainEl.scrollLeft = scrollLeft;
       });
-    } catch(e) { /* silent fail on background refresh */ }
+    } catch(e) {
+      if (typeof hideSyncIndicator === 'function') hideSyncIndicator();
+      /* silent fail on background refresh */
+    }
   }, 120000); // 2 minutes
 }
 
@@ -6856,7 +8120,7 @@ window.printSiteReport = function(siteCode) {
     return inst && inst.site === siteCode;
   });
   const openWOs = siteWOs.filter(w => w.status !== 'Closed');
-  const now = new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' });
+  const now = new Date().toLocaleDateString('en-US', {timeZone:'America/Los_Angeles', dateStyle: 'long'}) + ' ' + new Date().toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'2-digit',minute:'2-digit',hour12:false}) + ' PST';
 
   const instRows = siteInstruments.map(i => {
     const certInfo = (i.lastCertDate && i.certIntervalMonths)
