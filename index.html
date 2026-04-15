@@ -1144,7 +1144,21 @@ async function loadDBFromServer() {
 // Kick off load after page is ready (called at bottom of script)
 
 // ── SESSION USER ───────────────────────────────────────────
-// ── PASSWORD HELPERS ────────────────────────────────────────
+// ── PASSWORD HELPERS (SHA-256 HASHED) ──────────────────────
+
+const PW_MIN_LENGTH = 4;
+const PW_HASH_PREFIX = 'sha256:';
+const _loginAttempts = {};  // { username: { count, lockedUntil } }
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_MS = 60000;  // 1 minute lockout
+
+async function hashPassword(pw) {
+  const data = new TextEncoder().encode(pw);
+  const buf  = await crypto.subtle.digest('SHA-256', data);
+  return PW_HASH_PREFIX + Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function isHashed(pw) { return typeof pw === 'string' && pw.startsWith(PW_HASH_PREFIX); }
 
 function getStoredPassword(username) {
   if (!username) return null;
@@ -1156,19 +1170,56 @@ function getStoredPassword(username) {
   return tech ? (tech.password || null) : null;
 }
 
-function setStoredPassword(username, newPw) {
+// Compares input pw against stored (handles both legacy plaintext & hashed)
+async function verifyPassword(username, inputPw) {
+  const stored = getStoredPassword(username);
+  if (!stored) return { ok: false };
+  if (isHashed(stored)) {
+    const hashed = await hashPassword(inputPw);
+    return { ok: hashed === stored, needsMigration: false };
+  }
+  // Legacy plaintext — compare directly, flag for migration
+  return { ok: inputPw === stored, needsMigration: true };
+}
+
+async function setStoredPassword(username, newPw) {
   if (!username || !newPw) return;
+  const hashed = await hashPassword(newPw);
   if (username.toLowerCase() === 'admin') {
-    db.adminPassword = newPw;
-    API.post('/settings', {key: 'admin_password', value: newPw}).catch(e => toast('⚠ Password save failed: ' + e.message, 'warn'));
+    db.adminPassword = hashed;
+    API.post('/settings', {key: 'admin_password', value: hashed}).catch(e => toast('⚠ Password save failed: ' + e.message, 'warn'));
     return;
   }
   const tech = (db.techs||[]).find(t => (t.username||'').toLowerCase() === username.toLowerCase());
   if (tech) {
-    tech.password = newPw;
-    API.post('/technicians/password', {username, password: newPw}).catch(e => toast('⚠ Password save failed: ' + e.message, 'warn'));
+    tech.password = hashed;
+    API.post('/technicians/password', {username, password: hashed}).catch(e => toast('⚠ Password save failed: ' + e.message, 'warn'));
   }
 }
+
+function isDefaultPassword(pw) {
+  const defaults = ['changeme', 'password', '1234', 'admin'];
+  return defaults.includes((pw||'').toLowerCase().trim());
+}
+
+function checkLoginLock(username) {
+  const rec = _loginAttempts[username];
+  if (!rec) return false;
+  if (rec.lockedUntil && Date.now() < rec.lockedUntil) return true;
+  if (rec.lockedUntil && Date.now() >= rec.lockedUntil) { delete _loginAttempts[username]; }
+  return false;
+}
+
+function recordFailedLogin(username) {
+  if (!_loginAttempts[username]) _loginAttempts[username] = { count: 0 };
+  _loginAttempts[username].count++;
+  if (_loginAttempts[username].count >= MAX_LOGIN_ATTEMPTS) {
+    _loginAttempts[username].lockedUntil = Date.now() + LOCKOUT_MS;
+    addSecurityLog('LOCKOUT', `Account "${username}" locked for 60s after ${MAX_LOGIN_ATTEMPTS} failed attempts.`);
+  }
+}
+
+function clearLoginAttempts(username) { delete _loginAttempts[username]; }
 
 // Returns permission level for current user: 'Full Control' | 'Edit' | 'View'
 function currentUserPermission() {
@@ -1923,6 +1974,36 @@ function renderVendorCard(i) {
 function renderLoginScreen() {
   const err = ui._loginErr || '';
 
+  // Force password change view (after login with default password)
+  if (ui._loginView === 'forcepw') {
+    const cpErr = ui._cpErr || '';
+    return `
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#cbd5e1">
+      <div style="width:100%;max-width:380px">
+        <div style="text-align:center;margin-bottom:36px">
+          <div style="font-family:var(--font-mono);font-size:24px;font-weight:800;color:#1e293b;letter-spacing:.12em;margin-bottom:6px">SDAPCD</div>
+          <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:#64748b;letter-spacing:.06em">INSTRUMENT MANAGEMENT · San Diego APCD</div>
+        </div>
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:var(--radius-xl);padding:28px 26px;box-shadow:0 4px 16px rgba(0,0,0,.06),0 1px 3px rgba(0,0,0,.08)">
+          <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:#334155;margin-bottom:6px;letter-spacing:.06em">SET NEW PASSWORD</div>
+          <div style="font-family:var(--font-mono);font-size:11px;color:#64748b;margin-bottom:16px">Welcome, ${esc(ui._forceChangePwDisplay||'User')}</div>
+          ${cpErr ? `<div class="err-msg" style="margin-bottom:14px">${esc(cpErr)}</div>` : ''}
+          <div class="form-group">
+            <label class="form-label">New Password <span style="color:#94a3b8;font-weight:400">(min ${PW_MIN_LENGTH} characters)</span></label>
+            <input id="fcp-new" class="form-input" type="password" placeholder="Enter new password" onkeydown="if(event.key==='Enter')document.getElementById('fcp-confirm').focus()"/>
+          </div>
+          <div class="form-group" style="margin-top:12px">
+            <label class="form-label">Confirm New Password</label>
+            <input id="fcp-confirm" class="form-input" type="password" placeholder="Confirm new password" onkeydown="if(event.key==='Enter')submitForceChangePassword()"/>
+          </div>
+          <button class="btn-save" onclick="submitForceChangePassword()" style="width:100%;margin-top:18px;justify-content:center">
+            Set Password & Sign In
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }
+
   // Change password view
   if (ui._loginView === 'changepw') {
     const cpErr = ui._cpErr || '';
@@ -1946,7 +2027,7 @@ function renderLoginScreen() {
           </div>
           <div class="form-group" style="margin-top:12px">
             <label class="form-label">New Password</label>
-            <input id="cp-new" class="form-input" type="password" placeholder="New password" onkeydown="if(event.key==='Enter')submitChangePassword()"/>
+            <input id="cp-new" class="form-input" type="password" placeholder="Min ${PW_MIN_LENGTH} characters" onkeydown="if(event.key==='Enter')submitChangePassword()"/>
           </div>
           <div class="form-group" style="margin-top:12px">
             <label class="form-label">Confirm New Password</label>
@@ -2011,24 +2092,45 @@ function renderLoginScreen() {
   </div>`;
 }
 
-function submitLogin() {
+async function submitLogin() {
   const username = (document.getElementById('login-username')?.value || '').trim().toLowerCase();
   const pw       = (document.getElementById('login-pw')?.value      || '').trim();
   const remember = document.getElementById('login-remember')?.checked || false;
   if (!username) { ui._loginErr = 'Please enter your username.'; render(); return; }
   if (!pw)       { ui._loginErr = 'Please enter your password.'; render(); return; }
+
+  // Rate-limit check
+  if (checkLoginLock(username)) {
+    ui._loginErr = 'Too many failed attempts. Account temporarily locked (60s).';
+    render(); return;
+  }
+
   // Remember me — save/clear username in localStorage
   if (remember) { try { localStorage.setItem('sdapcd_remember_user', username); } catch(e){} }
   else { try { localStorage.removeItem('sdapcd_remember_user'); } catch(e){} }
 
-  // ── BOOTSTRAP ADMIN ACCOUNT ──────────────────────────────
+  // ── ADMIN LOGIN ──────────────────────────────────────────
   if (username === 'admin') {
-    const stored = getStoredPassword('admin');
-    if (pw !== stored) {
+    const result = await verifyPassword('admin', pw);
+    if (!result.ok) {
+      recordFailedLogin(username);
+      addSecurityLog('LOGIN_FAILED', `Failed login attempt for "admin".`);
       ui._loginErr = 'Incorrect password. Try again.';
       render();
       setTimeout(() => { const el = document.getElementById('login-pw'); if (el) { el.value = ''; el.focus(); } }, 50);
       return;
+    }
+    // Migrate legacy plaintext → hash
+    if (result.needsMigration) await setStoredPassword('admin', pw);
+    clearLoginAttempts(username);
+    // Force password change if default password
+    if (isDefaultPassword(pw)) {
+      ui._loginErr = '';
+      ui._forceChangePwUser = 'admin';
+      ui._forceChangePwDisplay = 'Admin';
+      ui._loginView = 'forcepw';
+      ui._cpErr = 'You are using the default password. Please set a new password.';
+      render(); return;
     }
     ui._loginErr = '';
     ui.currentUser = 'Admin';
@@ -2050,12 +2152,26 @@ function submitLogin() {
     setTimeout(() => { const el = document.getElementById('login-username'); if (el) { el.value = ''; el.focus(); } }, 50);
     return;
   }
-  const stored = getStoredPassword(username);
-  if (pw !== stored) {
+  const result = await verifyPassword(username, pw);
+  if (!result.ok) {
+    recordFailedLogin(username);
+    addSecurityLog('LOGIN_FAILED', `Failed login attempt for "${username}".`);
     ui._loginErr = 'Incorrect password. Try again.';
     render();
     setTimeout(() => { const el = document.getElementById('login-pw'); if (el) { el.value = ''; el.focus(); } }, 50);
     return;
+  }
+  // Migrate legacy plaintext → hash
+  if (result.needsMigration) await setStoredPassword(username, pw);
+  clearLoginAttempts(username);
+  // Force password change if default password
+  if (isDefaultPassword(pw)) {
+    ui._loginErr = '';
+    ui._forceChangePwUser = username;
+    ui._forceChangePwDisplay = tech.name;
+    ui._loginView = 'forcepw';
+    ui._cpErr = 'You are using the default password. Please set a new password.';
+    render(); return;
   }
   ui._loginErr = '';
   ui.currentUser = tech.name;
@@ -2068,7 +2184,7 @@ function submitLogin() {
   render();
 }
 
-function submitChangePassword() {
+async function submitChangePassword() {
   const username = (document.getElementById('cp-username')?.value || '').trim().toLowerCase();
   const cur      = (document.getElementById('cp-current')?.value  || '').trim();
   const newPw    = (document.getElementById('cp-new')?.value      || '').trim();
@@ -2077,14 +2193,41 @@ function submitChangePassword() {
   const isAdmin = username === 'admin';
   const tech = !isAdmin && [...db.techs, ...(db.archivedTechs||[])].find(t => (t.username||'').toLowerCase() === username);
   if (!isAdmin && !tech) { ui._cpErr = 'Username not found.'; render(); return; }
-  const stored = getStoredPassword(username);
-  if (cur !== stored) { ui._cpErr = 'Current password is incorrect.'; render(); return; }
-  if (newPw.length < 1) { ui._cpErr = 'New password cannot be empty.'; render(); return; }
-  if (newPw !== conf)   { ui._cpErr = 'Passwords do not match.'; render(); return; }
-  setStoredPassword(username, newPw);
+  const result = await verifyPassword(username, cur);
+  if (!result.ok) { ui._cpErr = 'Current password is incorrect.'; render(); return; }
+  if (newPw.length < PW_MIN_LENGTH) { ui._cpErr = `Password must be at least ${PW_MIN_LENGTH} characters.`; render(); return; }
+  if (isDefaultPassword(newPw)) { ui._cpErr = 'Please choose a stronger password (not a default).'; render(); return; }
+  if (newPw !== conf) { ui._cpErr = 'Passwords do not match.'; render(); return; }
+  await setStoredPassword(username, newPw);
   ui._cpErr = ''; ui._loginView = '';
   ui._loginErr = '✓ Password updated — please sign in.';
   render();
+}
+
+// Force password change screen (after login with default password)
+async function submitForceChangePassword() {
+  const newPw = (document.getElementById('fcp-new')?.value || '').trim();
+  const conf  = (document.getElementById('fcp-confirm')?.value || '').trim();
+  const username = ui._forceChangePwUser;
+  const displayName = ui._forceChangePwDisplay;
+  if (!newPw) { ui._cpErr = 'Please enter a new password.'; render(); return; }
+  if (newPw.length < PW_MIN_LENGTH) { ui._cpErr = `Password must be at least ${PW_MIN_LENGTH} characters.`; render(); return; }
+  if (isDefaultPassword(newPw)) { ui._cpErr = 'Please choose a stronger password (not a default).'; render(); return; }
+  if (newPw !== conf) { ui._cpErr = 'Passwords do not match.'; render(); return; }
+  await setStoredPassword(username, newPw);
+  // Complete login
+  ui._loginErr = ''; ui._loginView = ''; ui._cpErr = '';
+  ui._forceChangePwUser = ''; ui._forceChangePwDisplay = '';
+  ui.currentUser = displayName;
+  ui.currentUsername = username;
+  setSessionUser(displayName);
+  sessionStorage.setItem('sdapcd_username', username);
+  addSecurityLog('LOGIN', 'User logged in (password changed on first login).');
+  addSecurityLog('PASSWORD_CHANGE', `User "${username}" changed from default password.`);
+  ui.page = 'dashboard';
+  resetSessionTimer();
+  render();
+  toast('Password updated successfully');
 }
 
 function signOut() {
@@ -2106,29 +2249,33 @@ function signOut() {
 function openChangeUserPassword() {
   ui.modal = 'changeuserpw'; ui.form = {}; render();
 }
-function saveChangeUserPassword() {
-  const cur    = document.getElementById('upw-current')?.value || '';
-  const newPw  = document.getElementById('upw-new')?.value     || '';
-  const conf   = document.getElementById('upw-confirm')?.value || '';
+async function saveChangeUserPassword() {
+  const cur    = (document.getElementById('upw-current')?.value || '').trim();
+  const newPw  = (document.getElementById('upw-new')?.value     || '').trim();
+  const conf   = (document.getElementById('upw-confirm')?.value || '').trim();
   const username = ui.currentUsername;
-  const stored   = getStoredPassword(username);
-  if (cur !== stored) {
+  const result = await verifyPassword(username, cur);
+  if (!result.ok) {
     ui.form = {...ui.form, err: 'Current password is incorrect.'}; render(); return;
   }
-  if (newPw.length < 1) {
-    ui.form = {...ui.form, err: 'New password cannot be empty.'}; render(); return;
+  if (newPw.length < PW_MIN_LENGTH) {
+    ui.form = {...ui.form, err: `Password must be at least ${PW_MIN_LENGTH} characters.`}; render(); return;
+  }
+  if (isDefaultPassword(newPw)) {
+    ui.form = {...ui.form, err: 'Please choose a stronger password (not a default).'}; render(); return;
   }
   if (newPw !== conf) {
     ui.form = {...ui.form, err: 'Passwords do not match.'}; render(); return;
   }
-  setStoredPassword(username, newPw);
+  await setStoredPassword(username, newPw);
+  addSecurityLog('PASSWORD_CHANGE', `User "${username}" changed their password.`);
   closeModal(); toast('Password updated');
 }
 // Admin reset of any user's password back to default
-function resetUserPassword(username) {
+async function resetUserPassword(username) {
   const defaultPw = db.defaultPassword || 'changeme';
-  setStoredPassword(username, defaultPw);
-  toast(`Password reset for ${username}`);
+  await setStoredPassword(username, defaultPw);
+  toast(`Password reset for ${username} — they must change it on next login`);
 }
 
 function modalShell(title, body, actions) {
@@ -4300,11 +4447,11 @@ function navigateTo(page) {
   }
 }
 // ── ADMIN PASSWORD ─────────────────────────────────────────
-function submitAdminPassword() {
-  const pw = document.getElementById('admin-pw-input')?.value || '';
+async function submitAdminPassword() {
+  const pw = (document.getElementById('admin-pw-input')?.value || '').trim();
   if (!pw) { ui.form = {...ui.form, err: 'Please enter the password.'}; render(); return; }
-  const stored = getStoredPassword('admin');
-  if (pw !== stored) {
+  const result = await verifyPassword('admin', pw);
+  if (!result.ok) {
     ui.form = {...ui.form, err: 'Incorrect password. Try again.'};
     render();
     setTimeout(() => {
@@ -4313,6 +4460,8 @@ function submitAdminPassword() {
     }, 50);
     return;
   }
+  // Migrate legacy plaintext → hash
+  if (result.needsMigration) await setStoredPassword('admin', pw);
   ui.adminUnlocked = true;
   ui.adminUnlockedAt = Date.now();
   ui.modal = null; ui.form = {};
@@ -4448,21 +4597,25 @@ async function setupBackupTriggerUI() {
   } catch(e) { toast('\u26A0 Trigger setup failed: ' + e.message, 'error'); }
 }
 function openChangePassword() { ui.modal = 'changepw'; ui.form = {}; render(); }
-function saveAdminPassword() {
-  const current = document.getElementById('pw-current')?.value || '';
-  const newPw   = document.getElementById('pw-new')?.value     || '';
-  const confirm = document.getElementById('pw-confirm')?.value || '';
-  const stored  = getStoredPassword('admin');
-  if (current !== stored) {
+async function saveAdminPassword() {
+  const current = (document.getElementById('pw-current')?.value || '').trim();
+  const newPw   = (document.getElementById('pw-new')?.value     || '').trim();
+  const confirmPw = (document.getElementById('pw-confirm')?.value || '').trim();
+  const result = await verifyPassword('admin', current);
+  if (!result.ok) {
     ui.form = {...ui.form, err: 'Current password is incorrect.'}; render(); return;
   }
-  if (newPw.length < 1) {
-    ui.form = {...ui.form, err: 'New password cannot be empty.'}; render(); return;
+  if (newPw.length < PW_MIN_LENGTH) {
+    ui.form = {...ui.form, err: `Password must be at least ${PW_MIN_LENGTH} characters.`}; render(); return;
   }
-  if (newPw !== confirm) {
+  if (isDefaultPassword(newPw)) {
+    ui.form = {...ui.form, err: 'Please choose a stronger password (not a default).'}; render(); return;
+  }
+  if (newPw !== confirmPw) {
     ui.form = {...ui.form, err: 'Passwords do not match.'}; render(); return;
   }
-  setStoredPassword('admin', newPw);
+  await setStoredPassword('admin', newPw);
+  addSecurityLog('PASSWORD_CHANGE', 'Admin password changed.');
   closeModal();
   toast('Admin password updated');
 }
@@ -5003,7 +5156,7 @@ function syncTech(t) {
     API.put('/technicians/' + t.id, {
       name: t.name, role: t.role||'', email: t.email||'',
       username: t.username||'', permission: t.permission||'Edit',
-      password: t.password||'changeme'
+      password: t.password||''
     }).catch(e => console.warn('syncTech failed', e));
   }
 }
@@ -5779,7 +5932,7 @@ function generateUsername(fullName) {
   return (first[0] + last).toLowerCase();
 }
 
-function addTech() {
+async function addTech() {
   const displayName = (ui.newTechName    || getVal('new-tech-name')).trim();
   const email       = (ui.newTechEmail   || getVal('new-tech-email')).trim();
   const tempPw      = (ui.newTechTempPw  || getVal('new-tech-temppw')).trim() || 'changeme';
@@ -5798,14 +5951,17 @@ function addTech() {
     toast('⚠ A user with that display name already exists'); return;
   }
 
+  // Hash the password before storing
+  const hashedPw = await hashPassword(tempPw);
+
   // Add to local db first
-  const newTech = { name: displayName, role, email, username, permission, password: tempPw || 'changeme' };
+  const newTech = { name: displayName, role, email, username, permission, password: hashedPw };
   db.techs.push(newTech);
   ui.newTechName = ''; ui.newTechRole = ''; ui.newTechEmail = '';
   ui.newTechUsername = ''; ui.newTechPermission = ''; ui.newTechTempPw = '';
   // POST directly to GAS and store the returned id
   API.post('/technicians', {
-    name: displayName, role, email, username, permission, password: tempPw || 'changeme'
+    name: displayName, role, email, username, permission, password: hashedPw
   }).then(result => {
     if (result && result.id) { newTech.id = result.id; newTech._synced = true; }
   }).catch(e => console.warn('addTech failed', e));
@@ -5822,7 +5978,7 @@ function archiveTech(idx) {
       db.techs.splice(idx, 1);
       if (!db.archivedTechs) db.archivedTechs = [];
       db.archivedTechs.push(t);
-      if (t.id) API.put('/technicians/' + t.id, {name:t.name,role:t.role||'',email:t.email||'',username:t.username||'',permission:t.permission||'Edit',password:t.password||'changeme',archived:true}).catch(e => toast('⚠ Archive failed: ' + e.message, 'warn'));
+      if (t.id) API.put('/technicians/' + t.id, {name:t.name,role:t.role||'',email:t.email||'',username:t.username||'',permission:t.permission||'Edit',password:t.password||'',archived:true}).catch(e => toast('⚠ Archive failed: ' + e.message, 'warn'));
       saveDB('tech'); render(); toast(`${t.name} archived`);
     }
   });
@@ -5831,7 +5987,7 @@ function restoreTech(idx) {
   if (!db.archivedTechs || !db.archivedTechs[idx]) return;
   const t = db.archivedTechs.splice(idx, 1)[0];
   db.techs.push(t);
-  if (t.id) API.put('/technicians/' + t.id, {name:t.name,role:t.role||'',email:t.email||'',username:t.username||'',permission:t.permission||'Edit',password:t.password||'changeme',archived:false}).catch(e => toast('⚠ Restore failed: ' + e.message, 'warn'));
+  if (t.id) API.put('/technicians/' + t.id, {name:t.name,role:t.role||'',email:t.email||'',username:t.username||'',permission:t.permission||'Edit',password:t.password||'',archived:false}).catch(e => toast('⚠ Restore failed: ' + e.message, 'warn'));
   saveDB('tech'); render(); toast(`${t.name} restored`);
 }
 function permanentlyDeleteTech(idx) {
@@ -5872,7 +6028,7 @@ function saveEditType(idx) {
   API.post('/inst-types/rename', {old_name: old, new_name: val}).catch(e => toast('⚠ Rename failed: ' + e.message, 'warn'));
   try{saveDB('instrument');}catch(e){console.warn('saveDB',e);} closeModal(); toast('Type updated');
 }
-function saveEditTech(idx) {
+async function saveEditTech(idx) {
   const name       = getVal('f-name');
   const role       = getVal('f-role')       || 'Operator';
   const email      = getVal('f-email');
@@ -5883,9 +6039,13 @@ function saveEditTech(idx) {
   if (dup !== -1 && dup !== idx) { ui.form={...ui.form, err:'A user with that display name already exists.'}; render(); return; }
   const t = db.techs[idx];
   const username = t.username || generateUsername(t.name);
-  const updated = newTempPw
-    ? { ...t, name, role, email, permission, username, password: newTempPw }
-    : { ...t, name, role, email, permission, username };
+  let updated;
+  if (newTempPw) {
+    const hashedPw = await hashPassword(newTempPw);
+    updated = { ...t, name, role, email, permission, username, password: hashedPw };
+  } else {
+    updated = { ...t, name, role, email, permission, username };
+  }
   db.techs[idx] = updated;
 
   // Save directly to GAS via PUT if we have an id
@@ -5894,7 +6054,7 @@ function saveEditTech(idx) {
       name, role, email,
       username:   updated.username   || '',
       permission: updated.permission || 'Edit',
-      password:   updated.password   || 'changeme'
+      password:   updated.password   || ''
     }).catch(e => console.warn('tech update failed', e));
   }
 
@@ -7590,14 +7750,14 @@ async function syncToServer() {
           await API.put('/technicians/' + t.id, {
             name: t.name, role: t.role||'', email: t.email||'',
             username: t.username||'', permission: t.permission||'Edit',
-            password: t.password||'changeme', archived: t.archived||false
+            password: t.password||'', archived: t.archived||false
           }).catch(()=>{});
         } else if (!t._synced) {
           // New tech — create
           const created = await API.post('/technicians', {
             name: t.name, role: t.role||'', email: t.email||'',
             username: t.username||'', permission: t.permission||'Edit',
-            password: t.password||'changeme'
+            password: t.password||''
           }).catch(()=>null);
           if (created) { t.id = created.id; t._synced = true; }
         }
@@ -7629,29 +7789,32 @@ function markAllSynced() {
   (db.archivedTechs||[]).forEach(t => { t._synced = true; });
 }
 
-// Admin password — now uses plain text from db (no hashing)
-window.submitAdminPassword = function() {
-  const pw = document.getElementById('admin-pw-input')?.value || '';
+// Admin password — uses SHA-256 hashed comparison
+window.submitAdminPassword = async function() {
+  const pw = (document.getElementById('admin-pw-input')?.value || '').trim();
   if (!pw) { ui.form = {...ui.form, err: 'Please enter the password.'}; render(); return; }
-  const stored = getStoredPassword('admin');
-  if (pw !== stored) {
+  const result = await verifyPassword('admin', pw);
+  if (!result.ok) {
     ui.form = {...ui.form, err: 'Incorrect password. Try again.'}; render();
     setTimeout(() => { const el = document.getElementById('admin-pw-input'); if (el) { el.value=''; el.focus(); } }, 50);
     return;
   }
+  if (result.needsMigration) await setStoredPassword('admin', pw);
   ui.adminUnlocked = true; ui.adminUnlockedAt = Date.now();
   ui.modal = null; ui.form = {}; ui.page = 'admin'; render();
 };
 
-window.saveAdminPassword = function() {
-  const current = document.getElementById('pw-current')?.value || '';
-  const newPw   = document.getElementById('pw-new')?.value     || '';
-  const confirm = document.getElementById('pw-confirm')?.value || '';
-  const stored  = getStoredPassword('admin');
-  if (current !== stored) { ui.form = {...ui.form, err: 'Current password is incorrect.'}; render(); return; }
-  if (newPw.length < 1)   { ui.form = {...ui.form, err: 'New password cannot be empty.'}; render(); return; }
-  if (newPw !== confirm)  { ui.form = {...ui.form, err: 'Passwords do not match.'}; render(); return; }
-  setStoredPassword('admin', newPw);
+window.saveAdminPassword = async function() {
+  const current = (document.getElementById('pw-current')?.value || '').trim();
+  const newPw   = (document.getElementById('pw-new')?.value     || '').trim();
+  const confirmPw = (document.getElementById('pw-confirm')?.value || '').trim();
+  const result = await verifyPassword('admin', current);
+  if (!result.ok) { ui.form = {...ui.form, err: 'Current password is incorrect.'}; render(); return; }
+  if (newPw.length < PW_MIN_LENGTH) { ui.form = {...ui.form, err: `Password must be at least ${PW_MIN_LENGTH} characters.`}; render(); return; }
+  if (isDefaultPassword(newPw)) { ui.form = {...ui.form, err: 'Please choose a stronger password (not a default).'}; render(); return; }
+  if (newPw !== confirmPw) { ui.form = {...ui.form, err: 'Passwords do not match.'}; render(); return; }
+  await setStoredPassword('admin', newPw);
+  addSecurityLog('PASSWORD_CHANGE', 'Admin password changed.');
   closeModal(); toast('Admin password updated');
 };
 
@@ -7904,7 +8067,10 @@ function startAutoRefresh() {
             db.sitesMeta[a.siteCode].photos.push({ url: a.directUrl || a.fileUrl, attachmentId: a.id, fileName: a.fileName });
           });
         }
-        if (!db.adminPassword) db.adminPassword = 'changeme';
+        if (!db.adminPassword) {
+          // Set default admin password — will force change on first login
+          hashPassword('changeme').then(h => { db.adminPassword = h; });
+        }
         // Normalize legacy status
         if (db.workOrders) {
           db.workOrders.forEach(wo => {
