@@ -945,7 +945,7 @@ const SEED = [
 
 // ── API CLIENT ─────────────────────────────────────────────
 // ── GOOGLE APPS SCRIPT API CLIENT ──────────────────────────
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyCjbuNG1qXfadqr62vWsHusWmjgBEKc4oQPU_oz6WkU-EiacEVdAu2jVTMtkl5K5So/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwxq0ya84QWwMZRLI-GBfvBfARAVQO3AY2-6nNITeDqXEkxIG_iVSBl-QrDq7dzXKCl/exec';
 
 const GAS_KEY = 'sdapcd-8f3k2m9x7q4w1e6r';
 
@@ -1640,6 +1640,7 @@ function render() {
         ${canEdit() ? '<button class="btn-add" onclick="openScanner()" style="display:inline-flex;align-items:center;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="7" y1="8" x2="13" y2="8"/><line x1="7" y1="16" x2="15" y2="16"/></svg> SCAN</button>' : ''}
         <button class="btn-export" onclick="exportXLSX()" style="background:var(--green);color:#fff">↓ EXCEL</button>
         <button class="btn-export" onclick="openBatchLabels()" style="display:inline-flex;align-items:center;gap:5px">⎙ QR LABELS</button>
+        <button class="btn-export" onclick="forceRefresh()" style="display:inline-flex;align-items:center;gap:5px" title="Force reload from Google Sheets">↻ REFRESH</button>
       </div>
     </div>
 
@@ -7900,6 +7901,37 @@ function _mergeDelta(delta) {
     changed = true;
   }
   return changed;
+}
+
+// Force refresh — bypasses server cache, reads fresh from Google Sheets
+async function forceRefresh() {
+  toast('Refreshing from Google Sheets...');
+  try {
+    _lastSyncTs = null; // force full load, not delta
+    const d = await API.get('/db?nocache=1');
+    db = d;
+    if (!db.customStatuses) db.customStatuses = [];
+    if (!db.sitesMeta) db.sitesMeta = {};
+    if (!db.securityLog) db.securityLog = [];
+    if (!db.deleteLog) db.deleteLog = [];
+    if (!db.history) db.history = {};
+    if (!db.attachments) db.attachments = [];
+    if (db.instruments) {
+      db.instruments.forEach(i => {
+        if (i.cert_interval_months !== undefined && i.certIntervalMonths === undefined)
+          i.certIntervalMonths = i.cert_interval_months !== undefined && i.cert_interval_months !== '' ? Number(i.cert_interval_months) : null;
+        if (i.last_cert_date !== undefined && i.lastCertDate === undefined)
+          i.lastCertDate = i.last_cert_date || null;
+        if (i.modified_at !== undefined && i.modifiedAt === undefined)
+          i.modifiedAt = i.modified_at || null;
+      });
+    }
+    markAllSynced();
+    render();
+    toast('✓ Data refreshed from Google Sheets');
+  } catch(e) {
+    toast('⚠ Refresh failed: ' + e.message, 'error', () => forceRefresh());
+  }
 }
 
 // Track last user interaction to avoid re-rendering during active use
