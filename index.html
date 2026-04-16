@@ -742,8 +742,13 @@ body {
   .main { padding: 16px 12px; margin-left: 0; padding-top: 52px; }
   .section-hdr { flex-direction: column; align-items: flex-start; gap: 10px; }
   .stat-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
-  .inst-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .inst-table table { min-width: 600px; }
+  .inst-table { overflow-x: visible; }
+  .inst-table table { min-width: 0; }
+  .inst-table thead { display: none; }
+  .inst-table tbody tr { display: block; padding: 12px 14px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); }
+  .inst-table td { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border2); }
+  .inst-table td:last-child { border-bottom: none; }
+  .inst-table td::before { content: attr(data-label); font-family: var(--font-mono); font-size: 10px; font-weight: 600; color: var(--subtle); text-transform: uppercase; flex-shrink: 0; margin-right: 12px; }
   .actions { flex-wrap: wrap; gap: 6px; }
   .btn-act { padding: 10px 14px; font-size: 11px; min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; justify-content: center; }
   .btn-add, .btn-export { padding: 10px 16px; min-height: 44px; font-size: 12px; }
@@ -840,9 +845,13 @@ body {
   display: none;
   box-shadow: 0 4px 12px rgba(0,0,0,.3);
   animation: toast-in .2s ease;
-  max-width: 340px;
+  max-width: 440px;
   letter-spacing: .01em;
+  align-items: center; gap: 10px;
 }
+#toast .toast-retry { padding: 4px 12px; border-radius: var(--radius); border: 1px solid rgba(34,211,238,.4); background: rgba(34,211,238,.12); color: var(--blue); font-family: var(--font-mono); font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+#toast .toast-retry:hover { background: rgba(34,211,238,.25); }
+#toast .toast-dismiss { padding: 2px 6px; border: none; background: transparent; color: var(--subtle); cursor: pointer; font-size: 14px; line-height: 1; }
 @keyframes toast-in { from { opacity:0; transform:translateX(-50%) translateY(-8px) } to { opacity:1; transform:translateX(-50%) translateY(0) } }
 
 /* ── MISC HELPERS ───────────────────────────────────────── */
@@ -881,6 +890,7 @@ body {
 </head>
 <body>
 <div id="sync-indicator"><div class="sync-spinner"></div><span id="sync-text">Syncing...</span></div>
+<div id="offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#d1242f;color:#fff;text-align:center;padding:8px 16px;font-family:var(--font-mono);font-size:12px;font-weight:600;letter-spacing:.5px">⚠ YOU ARE OFFLINE — Changes will not be saved until connection is restored</div>
 <nav id="sidebar"></nav>
 <div id="root"></div>
 <script>
@@ -935,12 +945,13 @@ const SEED = [
 
 // ── API CLIENT ─────────────────────────────────────────────
 // ── GOOGLE APPS SCRIPT API CLIENT ──────────────────────────
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzMyxjRt8x8a-dpqMR34gX66Ty28qoIeOBqHSEZ914EvHMhA6E8S974zL0r0HnBTnYO/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyCjbuNG1qXfadqr62vWsHusWmjgBEKc4oQPU_oz6WkU-EiacEVdAu2jVTMtkl5K5So/exec';
 
 const GAS_KEY = 'sdapcd-8f3k2m9x7q4w1e6r';
 
 async function gasRequest(path, action, params, body) {
   const isFileUpload = path === 'upload' && action === 'file';
+  const isAuth = path === 'auth';
   const url = new URL(GAS_URL);
   url.searchParams.set('apikey', GAS_KEY);
   url.searchParams.set('path', path);
@@ -960,10 +971,10 @@ async function gasRequest(path, action, params, body) {
   let response;
   try {
     const fetchOpts = { signal: controller.signal };
-    if (isFileUpload) {
-      // File uploads: POST with JSON body — base64 too large for URL
+    if (isFileUpload || isAuth) {
+      // File uploads & auth: POST with JSON body — passwords/base64 shouldn't be in URL params
       fetchOpts.method = 'POST';
-      fetchOpts.body = JSON.stringify(body);
+      fetchOpts.body = JSON.stringify(body || {});
       response = await fetch(url.toString(), fetchOpts);
     } else if (body !== null && body !== undefined) {
       // Mutations: flatten every body field into its own URL param
@@ -1104,7 +1115,6 @@ async function loadDBFromServer() {
       });
     }
     markAllSynced();
-    if (!db.adminPassword) db.adminPassword = null;
     // Load attachments — map to instruments and sitesMeta
     if (!db.attachments) db.attachments = [];
     if (db.attachments.length > 0) {
@@ -1137,48 +1147,20 @@ async function loadDBFromServer() {
   } catch(e) {
     if (typeof hideSyncIndicator === 'function') hideSyncIndicator();
     console.error('SDAPCD: failed to load from server.', e);
-    toast('⚠ Could not connect to server — is it running?');
+    toast('⚠ Could not connect to server — is it running?', 'error', () => loadDBFromServer());
   }
 }
 
 // Kick off load after page is ready (called at bottom of script)
 
 // ── SESSION USER ───────────────────────────────────────────
-// ── PASSWORD HELPERS (PLAINTEXT) ───────────────────────────
+// ── PASSWORD HELPERS ───────────────────────────────────────
 
 const PW_MIN_LENGTH = 4;
 const DEFAULT_PASSWORD = 'circuit';
 const _loginAttempts = {};  // { username: { count, lockedUntil } }
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_MS = 60000;  // 1 minute lockout
-
-function getStoredPassword(username) {
-  if (!username) return null;
-  if (username.toLowerCase() === 'admin') {
-    return db.adminPassword || null;
-  }
-  const all = [...(db.techs||[]), ...(db.archivedTechs||[])];
-  const tech = all.find(t => (t.username||'').toLowerCase() === username.toLowerCase());
-  return tech ? (tech.password || null) : null;
-}
-
-function setStoredPassword(username, newPw) {
-  if (!username || !newPw) return;
-  if (username.toLowerCase() === 'admin') {
-    db.adminPassword = newPw;
-    API.post('/settings', {key: 'admin_password', value: newPw}).catch(e => toast('⚠ Password save failed: ' + e.message, 'warn'));
-    return;
-  }
-  const tech = (db.techs||[]).find(t => (t.username||'').toLowerCase() === username.toLowerCase());
-  if (tech) {
-    tech.password = newPw;
-    API.post('/technicians/password', {username, password: newPw}).catch(e => toast('⚠ Password save failed: ' + e.message, 'warn'));
-  }
-}
-
-function isDefaultPassword(pw) {
-  return (pw||'').toLowerCase().trim() === DEFAULT_PASSWORD;
-}
 
 function checkLoginLock(username) {
   const rec = _loginAttempts[username];
@@ -1408,15 +1390,33 @@ document.addEventListener('mouseover', function(e) {
   }, 400);
 });
 
-function toast(msg, severity) {
+function toast(msg, severity, onRetry) {
   clearTimeout(_toastTimer);
   let el = document.getElementById('toast');
   if (!el) { el = document.createElement('div'); el.id = 'toast'; el.className = 'toast'; document.body.appendChild(el); }
-  el.textContent = msg;
-  el.style.display = 'block';
+  el.innerHTML = '';
+  const span = document.createElement('span');
+  span.textContent = msg;
+  span.style.flex = '1';
+  el.appendChild(span);
+  if (onRetry) {
+    const retryBtn = document.createElement('button');
+    retryBtn.className = 'toast-retry';
+    retryBtn.textContent = 'Retry';
+    retryBtn.onclick = () => { el.style.display = 'none'; onRetry(); };
+    el.appendChild(retryBtn);
+    const dismissBtn = document.createElement('button');
+    dismissBtn.className = 'toast-dismiss';
+    dismissBtn.textContent = '\u00d7';
+    dismissBtn.onclick = () => { el.style.display = 'none'; };
+    el.appendChild(dismissBtn);
+  }
+  el.style.display = 'flex';
   el.style.borderColor = severity === 'error' ? 'var(--red)' : severity === 'warn' ? 'var(--amber)' : 'rgba(34,211,238,.3)';
   el.style.color = severity === 'error' ? 'var(--red)' : severity === 'warn' ? 'var(--amber)' : '';
-  _toastTimer = setTimeout(() => { el.style.display = 'none'; }, severity === 'error' ? 4000 : 2200);
+  if (!onRetry) {
+    _toastTimer = setTimeout(() => { el.style.display = 'none'; }, severity === 'error' ? 4000 : 2200);
+  }
 }
 
 // ── LIVE SEARCH — filters rows directly without re-rendering ──
@@ -1473,74 +1473,65 @@ function filterDashboard(q) {
 
 // ── VIRTUAL TABLE UTILITY ──────────────────────────────────
 const VirtualTable = {
-  THRESHOLD: 100,   // only virtualize above this count
-  BUFFER: 15,       // extra rows above/below viewport
-  ROW_HEIGHT: 52,   // estimated row height in px
-  configs: {},       // stores data refs per tableId
-  scrollPositions: {},
+  PAGE_SIZE: 50,     // rows per page
+  PAGE_SIZES: [25, 50, 100, 250],
+  pages: {},         // current page per tableId
+  configs: {},
+
+  getPage(tableId) { return this.pages[tableId] || 0; },
+  setPage(tableId, page) { this.pages[tableId] = page; this.rerender(tableId); },
 
   renderVirtual(tableId, items, rowRenderer, rendererArgs) {
-    if (items.length <= this.THRESHOLD) {
-      // Below threshold — render all, no virtualization
-      this.configs[tableId] = null;
+    this.configs[tableId] = { items, rowRenderer, rendererArgs };
+    if (items.length <= this.PAGE_SIZE) {
       return items.map(i => rowRenderer(i, rendererArgs)).join('');
     }
-    // Store config for scroll-based re-rendering
-    this.configs[tableId] = { items, rowRenderer, rendererArgs };
-    // Calculate visible range
-    const scrollTop = this.scrollPositions[tableId] || 0;
-    const viewportHeight = window.innerHeight || 800;
-    const totalHeight = items.length * this.ROW_HEIGHT;
-    const startIdx = Math.max(0, Math.floor(scrollTop / this.ROW_HEIGHT) - this.BUFFER);
-    const endIdx = Math.min(items.length, Math.ceil((scrollTop + viewportHeight) / this.ROW_HEIGHT) + this.BUFFER);
-    const topPad = startIdx * this.ROW_HEIGHT;
-    const bottomPad = Math.max(0, (items.length - endIdx) * this.ROW_HEIGHT);
-    // Render spacers + visible rows
-    return (topPad > 0 ? `<tr class="vt-spacer-top" style="height:${topPad}px"><td colspan="99"></td></tr>` : '') +
-      items.slice(startIdx, endIdx).map(i => rowRenderer(i, rendererArgs)).join('') +
-      (bottomPad > 0 ? `<tr class="vt-spacer-bottom" style="height:${bottomPad}px"><td colspan="99"></td></tr>` : '');
+    const page = this.getPage(tableId);
+    const start = page * this.PAGE_SIZE;
+    const end = Math.min(start + this.PAGE_SIZE, items.length);
+    const pageItems = items.slice(start, end);
+    return pageItems.map(i => rowRenderer(i, rendererArgs)).join('');
   },
 
-  // Partial re-render for a specific table during scroll
+  renderPagination(tableId, totalItems) {
+    if (totalItems <= this.PAGE_SIZE) return '';
+    const page = this.getPage(tableId);
+    const totalPages = Math.ceil(totalItems / this.PAGE_SIZE);
+    const start = page * this.PAGE_SIZE + 1;
+    const end = Math.min((page + 1) * this.PAGE_SIZE, totalItems);
+    return `<div class="vt-pagination" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;font-family:var(--font-mono);font-size:11px;color:var(--subtle);border-top:1px solid var(--border2)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span>Show</span>
+        <select onchange="VirtualTable.PAGE_SIZE=Number(this.value);VirtualTable.pages={};render()" style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:2px 6px;font-family:var(--font-mono);font-size:11px;color:var(--fg)">
+          ${this.PAGE_SIZES.map(s => `<option value="${s}" ${s===this.PAGE_SIZE?'selected':''}>${s}</option>`).join('')}
+        </select>
+        <span>per page</span>
+      </div>
+      <span>${start}–${end} of ${totalItems}</span>
+      <div style="display:flex;gap:4px">
+        <button onclick="VirtualTable.setPage('${tableId}',0)" ${page===0?'disabled':''} style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:3px 8px;cursor:pointer;font-size:11px;color:var(--fg)">«</button>
+        <button onclick="VirtualTable.setPage('${tableId}',${page-1})" ${page===0?'disabled':''} style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:3px 8px;cursor:pointer;font-size:11px;color:var(--fg)">‹</button>
+        <span style="padding:3px 8px">${page+1} / ${totalPages}</span>
+        <button onclick="VirtualTable.setPage('${tableId}',${page+1})" ${page>=totalPages-1?'disabled':''} style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:3px 8px;cursor:pointer;font-size:11px;color:var(--fg)">›</button>
+        <button onclick="VirtualTable.setPage('${tableId}',${totalPages-1})" ${page>=totalPages-1?'disabled':''} style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:3px 8px;cursor:pointer;font-size:11px;color:var(--fg)">»</button>
+      </div>
+    </div>`;
+  },
+
   rerender(tableId) {
     const cfg = this.configs[tableId];
     if (!cfg) return;
     const tbody = document.querySelector(`[data-vt="${tableId}"] tbody`);
     if (!tbody) return;
     tbody.innerHTML = this.renderVirtual(tableId, cfg.items, cfg.rowRenderer, cfg.rendererArgs);
-  },
-
-  // Calibrate row height from actual DOM after first render
-  calibrate() {
-    const firstRow = document.querySelector('.inst-table tbody tr:not(.vt-spacer-top):not(.vt-spacer-bottom):not(.empty-row)');
-    if (firstRow) {
-      const h = firstRow.getBoundingClientRect().height;
-      if (h > 20 && h < 200) this.ROW_HEIGHT = Math.round(h);
-    }
+    // Update pagination
+    const pagEl = document.querySelector(`[data-vt-pag="${tableId}"]`);
+    if (pagEl) pagEl.innerHTML = this.renderPagination(tableId, cfg.items.length);
   }
 };
 
-// Scroll listener for virtual tables — RAF throttled
-let _vtScrollTicking = false;
-window.addEventListener('scroll', () => {
-  if (_vtScrollTicking) return;
-  _vtScrollTicking = true;
-  requestAnimationFrame(() => {
-    _vtScrollTicking = false;
-    const tables = document.querySelectorAll('[data-vt]');
-    tables.forEach(table => {
-      const id = table.getAttribute('data-vt');
-      if (!VirtualTable.configs[id]) return;
-      const rect = table.getBoundingClientRect();
-      const newScroll = Math.max(0, -rect.top);
-      const prev = VirtualTable.scrollPositions[id] || 0;
-      if (Math.abs(newScroll - prev) > VirtualTable.ROW_HEIGHT * 3) {
-        VirtualTable.scrollPositions[id] = newScroll;
-        VirtualTable.rerender(id);
-      }
-    });
-  });
-}, { passive: true });
+// Scroll listener (pagination handles large tables now — no-op)
+window.addEventListener('scroll', () => {}, { passive: true });
 
 function render() {
   // ── LOGIN GATE ─────────────────────────────────────────
@@ -1553,7 +1544,8 @@ function render() {
     }, 50);
     return;
   }
-  const inst      = db.instruments.filter(i => !i.archived);
+  const hasSubmittedWO = i => db.workOrders.some(w => String(w.instrumentId) === String(i.id) && w.status === 'Submitted for Closure');
+  const inst      = db.instruments.filter(i => !i.archived && !hasSubmittedWO(i));
   const field     = inst.filter(isField);
   const shop      = inst.filter(isShop);
   const vendor    = inst.filter(isVendor);
@@ -1709,7 +1701,7 @@ function render() {
         <tbody>${fField.length===0
           ? '<tr class="empty-row"><td colspan="4">No field instruments match your filter</td></tr>'
           : VirtualTable.renderVirtual('field', fField, renderFieldRow, fieldSites)}</tbody>
-      </table></div>`}
+      </table><div data-vt-pag="field">${VirtualTable.renderPagination('field', fField.length)}</div></div>`}
     </div>` : ''}
 
     ${(ui.locationF==='Field & Shop'||ui.locationF==='In the Shop'||ui.locationF==='Storage / Operational') ? `
@@ -1725,7 +1717,7 @@ function render() {
         <tbody>${fShop.length===0
           ? '<tr class="empty-row"><td colspan="5">No instruments currently in service</td></tr>'
           : VirtualTable.renderVirtual('shop', fShop, renderShopRow)}</tbody>
-      </table></div>`}
+      </table><div data-vt-pag="shop">${VirtualTable.renderPagination('shop', fShop.length)}</div></div>`}
     </div>
     <div class="group">
       <div class="group-hdr">
@@ -1739,7 +1731,7 @@ function render() {
         <tbody>${fStorage.length===0
           ? '<tr class="empty-row"><td colspan="5">No operational instruments in storage</td></tr>'
           : VirtualTable.renderVirtual('storage', fStorage, renderShopRow)}</tbody>
-      </table></div>`}
+      </table><div data-vt-pag="storage">${VirtualTable.renderPagination('storage', fStorage.length)}</div></div>`}
     </div>` : ''}
 
     ${(ui.locationF==='Field & Shop'||ui.locationF==='At Vendor') && (fVendor.length > 0 || ui.locationF==='At Vendor') ? `
@@ -1755,14 +1747,13 @@ function render() {
         <tbody>${fVendor.length===0
           ? '<tr class="empty-row"><td colspan="5">No instruments currently at vendor</td></tr>'
           : VirtualTable.renderVirtual('vendor', fVendor, renderVendorRow)}</tbody>
-      </table></div>`}
+      </table><div data-vt-pag="vendor">${VirtualTable.renderPagination('vendor', fVendor.length)}</div></div>`}
     </div>` : ''}
   `}
   </div>
   `;
   if (ui.page === 'admin' && ui.adminUnlocked) setTimeout(setupAdminSections, 0);
-  // Calibrate virtual table row height after render
-  if (ui.page === 'dashboard') setTimeout(() => VirtualTable.calibrate(), 50);
+  // Pagination is handled inline by VirtualTable.renderPagination
 
   // Inject modal directly into body so position:fixed works correctly
   let _modalEl = document.getElementById('_modal_root');
@@ -1778,8 +1769,8 @@ function render() {
 function renderFieldRow(i, fieldSites) {
   const ro = !canEdit();
   return `<tr>
-    <td><div class="inst-name">${esc(i.name)}</div><div class="inst-sn">${esc(i.serial)}</div>${i.notes?`<div class="inst-notes" title="${esc(i.notes)}">${esc(i.notes)}</div>`:''}</td>
-    <td>
+    <td data-label="Instrument"><div class="inst-name">${esc(i.name)}</div><div class="inst-sn">${esc(i.serial)}</div>${i.notes?`<div class="inst-notes" title="${esc(i.notes)}">${esc(i.notes)}</div>`:''}</td>
+    <td data-label="Site">
       <select class="site-sel" onchange="updateSite(${i.id},this.value)" ${ro?'disabled':''}>
         <option value="HQ/SHOP">↩ Move to HQ/SHOP</option>
         <option value="VENDOR">↗ Send to Vendor</option>
@@ -1787,12 +1778,12 @@ function renderFieldRow(i, fieldSites) {
         ${fieldSites.map(s=>`<option ${i.site===s?'selected':''}>${s}</option>`).join('')}
       </select>
     </td>
-    <td>
+    <td data-label="Status">
       <select class="status-sel ${statusClass(i.status)}" onchange="updateStatus(${i.id},this.value)" ${ro?'disabled':''}>
         ${fieldStatuses().map(s=>`<option ${i.status===s?'selected':''}>${s}</option>`).join('')}
       </select>
     </td>
-    <td>
+    <td data-label="Actions">
       <div class="actions">
         <button class="btn-act btn-history" onclick="openHistory(${i.id})" title="View History (H)">▤ HISTORY</button>
         <div class="more-menu-wrap">
@@ -1810,8 +1801,8 @@ function renderFieldRow(i, fieldSites) {
 function renderShopRow(i) {
   const ro = !canEdit();
   return `<tr>
-    <td><div class="inst-name">${esc(i.name)}</div><div class="inst-sn">${esc(i.serial)}</div>${i.notes?`<div class="inst-notes" title="${esc(i.notes)}">${esc(i.notes)}</div>`:''}</td>
-    <td>
+    <td data-label="Instrument"><div class="inst-name">${esc(i.name)}</div><div class="inst-sn">${esc(i.serial)}</div>${i.notes?`<div class="inst-notes" title="${esc(i.notes)}">${esc(i.notes)}</div>`:''}</td>
+    <td data-label="Site">
       <select class="site-sel" onchange="updateSite(${i.id},this.value)" ${ro?'disabled':''}>
         ${db.sites.map(s => {
           if (s === 'VENDOR') return `<option ${i.site===s?'selected':''} value="${esc(s)}">${s}</option>`;
@@ -1819,12 +1810,12 @@ function renderShopRow(i) {
         }).join('')}
       </select>
     </td>
-    <td>
+    <td data-label="Status">
       <select class="status-sel ${statusClass(i.status)}" onchange="updateStatus(${i.id},this.value)" ${ro?'disabled':''}>
         ${shopStatuses().map(s=>`<option ${i.status===s?'selected':''}>${s}</option>`).join('')}
       </select>
     </td>
-    <td>
+    <td data-label="Work Order">
       ${(() => {
         const openWOs = db.workOrders.filter(w => String(w.instrumentId)===String(i.id) && w.status!=='Closed' && w.status!=='Submitted for Closure');
         if (!openWOs.length) return ro ? '<span style="color:var(--subtle);font-size:11px">\u2014</span>' : `<button class="btn-act btn-createwo" onclick="openCreateWO(${i.id})" title="Create Work Order (C)">+ CREATE WO</button>`;
@@ -1835,7 +1826,7 @@ function renderShopRow(i) {
           '</div>';
       })()}
     </td>
-    <td>
+    <td data-label="Actions">
       <div class="actions">
         <button class="btn-act btn-history" onclick="openHistory(${i.id})" title="View History (H)">▤ HISTORY</button>
         <div class="more-menu-wrap">
@@ -1853,20 +1844,20 @@ function renderShopRow(i) {
 function renderVendorRow(i) {
   const ro = !canEdit();
   return `<tr>
-    <td><div class="inst-name">${esc(i.name)}</div><div class="inst-sn">${esc(i.serial)}</div>${i.notes?`<div class="inst-notes" title="${esc(i.notes)}">${esc(i.notes)}</div>`:''}</td>
-    <td>
+    <td data-label="Instrument"><div class="inst-name">${esc(i.name)}</div><div class="inst-sn">${esc(i.serial)}</div>${i.notes?`<div class="inst-notes" title="${esc(i.notes)}">${esc(i.notes)}</div>`:''}</td>
+    <td data-label="Site">
       <select class="site-sel" onchange="updateSite(${i.id},this.value)" ${ro?'disabled':''}>
         <option value="VENDOR" selected>VENDOR</option>
         <option disabled>──────────────</option>
         <option value="HQ/SHOP">↩ Return to HQ/SHOP</option>
       </select>
     </td>
-    <td>
+    <td data-label="Status">
       <select class="status-sel ${statusClass(i.status)}" onchange="updateStatus(${i.id},this.value)" ${ro?'disabled':''}>
         ${vendorStatuses().map(s=>`<option ${i.status===s?'selected':''}>${s}</option>`).join('')}
       </select>
     </td>
-    <td>
+    <td data-label="Work Order">
       ${(() => {
         const openWOs = db.workOrders.filter(w => String(w.instrumentId)===String(i.id) && w.status!=='Closed' && w.status!=='Submitted for Closure');
         if (!openWOs.length) return ro ? '<span style="color:var(--subtle);font-size:11px">\u2014</span>' : `<button class="btn-act btn-createwo" onclick="openCreateWO(${i.id})" title="Create Work Order (C)">+ CREATE WO</button>`;
@@ -1877,7 +1868,7 @@ function renderVendorRow(i) {
           '</div>';
       })()}
     </td>
-    <td>
+    <td data-label="Actions">
       <div class="actions">
         <button class="btn-act btn-history" onclick="openHistory(${i.id})" title="View History (H)">▤ HISTORY</button>
         <div class="more-menu-wrap">
@@ -2070,7 +2061,7 @@ function renderLoginScreen() {
   </div>`;
 }
 
-function submitLogin() {
+async function submitLogin() {
   const username = (document.getElementById('login-username')?.value || '').trim().toLowerCase();
   const pw       = (document.getElementById('login-pw')?.value      || '').trim();
   const remember = document.getElementById('login-remember')?.checked || false;
@@ -2087,121 +2078,86 @@ function submitLogin() {
   if (remember) { try { localStorage.setItem('sdapcd_remember_user', username); } catch(e){} }
   else { try { localStorage.removeItem('sdapcd_remember_user'); } catch(e){} }
 
-  // ── ADMIN LOGIN ──────────────────────────────────────────
-  if (username === 'admin') {
-    const stored = getStoredPassword('admin');
-    if (pw !== stored) {
-      recordFailedLogin(username);
-      addSecurityLog('LOGIN_FAILED', `Failed login attempt for "admin".`);
-      ui._loginErr = 'Incorrect password. Try again.';
-      render();
-      setTimeout(() => { const el = document.getElementById('login-pw'); if (el) { el.value = ''; el.focus(); } }, 50);
-      return;
-    }
+  // ── SERVER-SIDE LOGIN ──────────────────────────────────────
+  try {
+    const result = await API.post('/auth/login', { username, password: pw });
     clearLoginAttempts(username);
-    // Force password change if default password
-    if (isDefaultPassword(pw)) {
+
+    if (result.forcePasswordChange) {
       ui._loginErr = '';
-      ui._forceChangePwUser = 'admin';
-      ui._forceChangePwDisplay = 'Admin';
+      ui._forceChangePwUser = username;
+      ui._forceChangePwDisplay = result.name;
       ui._loginView = 'forcepw';
       ui._cpErr = 'You are using the default password. Please set a new password.';
       render(); return;
     }
+
     ui._loginErr = '';
-    ui.currentUser = 'Admin';
-    ui.currentUsername = 'admin';
-    setSessionUser('Admin');
-    sessionStorage.setItem('sdapcd_username', 'admin');
+    ui.currentUser = result.name;
+    ui.currentUsername = username;
+    setSessionUser(result.name);
+    sessionStorage.setItem('sdapcd_username', username);
     addSecurityLog('LOGIN', 'User logged in successfully.');
     ui.page = 'dashboard';
     resetSessionTimer();
     render();
-    return;
-  }
-
-  // ── REGULAR USERS ────────────────────────────────────────
-  const tech = [...db.techs, ...(db.archivedTechs||[])].find(t => (t.username||'').toLowerCase() === username);
-  if (!tech) {
-    ui._loginErr = 'Username not found. Contact your admin.';
-    render();
-    setTimeout(() => { const el = document.getElementById('login-username'); if (el) { el.value = ''; el.focus(); } }, 50);
-    return;
-  }
-  const stored = getStoredPassword(username);
-  if (pw !== stored) {
+  } catch(e) {
     recordFailedLogin(username);
     addSecurityLog('LOGIN_FAILED', `Failed login attempt for "${username}".`);
-    ui._loginErr = 'Incorrect password. Try again.';
+    ui._loginErr = e.message === 'Invalid credentials' ? 'Incorrect username or password. Try again.' : ('Login failed: ' + e.message);
     render();
     setTimeout(() => { const el = document.getElementById('login-pw'); if (el) { el.value = ''; el.focus(); } }, 50);
-    return;
   }
-  clearLoginAttempts(username);
-  // Force password change if default password
-  if (isDefaultPassword(pw)) {
-    ui._loginErr = '';
-    ui._forceChangePwUser = username;
-    ui._forceChangePwDisplay = tech.name;
-    ui._loginView = 'forcepw';
-    ui._cpErr = 'You are using the default password. Please set a new password.';
-    render(); return;
-  }
-  ui._loginErr = '';
-  ui.currentUser = tech.name;
-  ui.currentUsername = username;
-  setSessionUser(tech.name);
-  sessionStorage.setItem('sdapcd_username', username);
-  addSecurityLog('LOGIN', 'User logged in successfully.');
-  ui.page = 'dashboard';
-  resetSessionTimer();
-  render();
 }
 
-function submitChangePassword() {
+async function submitChangePassword() {
   const username = (document.getElementById('cp-username')?.value || '').trim().toLowerCase();
   const cur      = (document.getElementById('cp-current')?.value  || '').trim();
   const newPw    = (document.getElementById('cp-new')?.value      || '').trim();
   const conf     = (document.getElementById('cp-confirm')?.value  || '').trim();
   if (!username) { ui._cpErr = 'Please enter your username.'; render(); return; }
-  const isAdmin = username === 'admin';
-  const tech = !isAdmin && [...db.techs, ...(db.archivedTechs||[])].find(t => (t.username||'').toLowerCase() === username);
-  if (!isAdmin && !tech) { ui._cpErr = 'Username not found.'; render(); return; }
-  const stored = getStoredPassword(username);
-  if (cur !== stored) { ui._cpErr = 'Current password is incorrect.'; render(); return; }
+  if (!cur) { ui._cpErr = 'Please enter your current password.'; render(); return; }
   if (newPw.length < PW_MIN_LENGTH) { ui._cpErr = `Password must be at least ${PW_MIN_LENGTH} characters.`; render(); return; }
-  if (isDefaultPassword(newPw)) { ui._cpErr = 'Please choose a different password (not the default).'; render(); return; }
   if (newPw !== conf) { ui._cpErr = 'Passwords do not match.'; render(); return; }
-  setStoredPassword(username, newPw);
-  ui._cpErr = ''; ui._loginView = '';
-  ui._loginErr = '✓ Password updated — please sign in.';
-  render();
+  try {
+    await API.post('/auth/change-password', { username, currentPassword: cur, newPassword: newPw });
+    ui._cpErr = ''; ui._loginView = '';
+    ui._loginErr = '✓ Password updated — please sign in.';
+    render();
+  } catch(e) {
+    ui._cpErr = e.message || 'Password change failed.';
+    render();
+  }
 }
 
 // Force password change screen (after login with default password)
-function submitForceChangePassword() {
+async function submitForceChangePassword() {
   const newPw = (document.getElementById('fcp-new')?.value || '').trim();
   const conf  = (document.getElementById('fcp-confirm')?.value || '').trim();
   const username = ui._forceChangePwUser;
   const displayName = ui._forceChangePwDisplay;
   if (!newPw) { ui._cpErr = 'Please enter a new password.'; render(); return; }
   if (newPw.length < PW_MIN_LENGTH) { ui._cpErr = `Password must be at least ${PW_MIN_LENGTH} characters.`; render(); return; }
-  if (isDefaultPassword(newPw)) { ui._cpErr = 'Please choose a different password (not the default).'; render(); return; }
   if (newPw !== conf) { ui._cpErr = 'Passwords do not match.'; render(); return; }
-  setStoredPassword(username, newPw);
-  // Complete login
-  ui._loginErr = ''; ui._loginView = ''; ui._cpErr = '';
-  ui._forceChangePwUser = ''; ui._forceChangePwDisplay = '';
-  ui.currentUser = displayName;
-  ui.currentUsername = username;
-  setSessionUser(displayName);
-  sessionStorage.setItem('sdapcd_username', username);
-  addSecurityLog('LOGIN', 'User logged in (password changed on first login).');
-  addSecurityLog('PASSWORD_CHANGE', `User "${username}" changed from default password.`);
-  ui.page = 'dashboard';
-  resetSessionTimer();
-  render();
-  toast('Password updated successfully');
+  try {
+    await API.post('/auth/change-password', { username, currentPassword: '', newPassword: newPw, forceChange: true });
+    // Complete login
+    ui._loginErr = ''; ui._loginView = ''; ui._cpErr = '';
+    ui._forceChangePwUser = ''; ui._forceChangePwDisplay = '';
+    ui.currentUser = displayName;
+    ui.currentUsername = username;
+    setSessionUser(displayName);
+    sessionStorage.setItem('sdapcd_username', username);
+    addSecurityLog('LOGIN', 'User logged in (password changed on first login).');
+    addSecurityLog('PASSWORD_CHANGE', `User "${username}" changed from default password.`);
+    ui.page = 'dashboard';
+    resetSessionTimer();
+    render();
+    toast('Password updated successfully');
+  } catch(e) {
+    ui._cpErr = e.message || 'Password change failed.';
+    render();
+  }
 }
 
 function signOut() {
@@ -2223,33 +2179,35 @@ function signOut() {
 function openChangeUserPassword() {
   ui.modal = 'changeuserpw'; ui.form = {}; render();
 }
-function saveChangeUserPassword() {
+async function saveChangeUserPassword() {
   const cur    = (document.getElementById('upw-current')?.value || '').trim();
   const newPw  = (document.getElementById('upw-new')?.value     || '').trim();
   const conf   = (document.getElementById('upw-confirm')?.value || '').trim();
   const username = ui.currentUsername;
-  const stored = getStoredPassword(username);
-  if (cur !== stored) {
-    ui.form = {...ui.form, err: 'Current password is incorrect.'}; render(); return;
-  }
+  if (!cur) { ui.form = {...ui.form, err: 'Please enter current password.'}; render(); return; }
   if (newPw.length < PW_MIN_LENGTH) {
     ui.form = {...ui.form, err: `Password must be at least ${PW_MIN_LENGTH} characters.`}; render(); return;
-  }
-  if (isDefaultPassword(newPw)) {
-    ui.form = {...ui.form, err: 'Please choose a different password (not the default).'}; render(); return;
   }
   if (newPw !== conf) {
     ui.form = {...ui.form, err: 'Passwords do not match.'}; render(); return;
   }
-  setStoredPassword(username, newPw);
-  addSecurityLog('PASSWORD_CHANGE', `User "${username}" changed their password.`);
-  closeModal(); toast('Password updated');
+  try {
+    await API.post('/auth/change-password', { username, currentPassword: cur, newPassword: newPw });
+    addSecurityLog('PASSWORD_CHANGE', `User "${username}" changed their password.`);
+    closeModal(); toast('Password updated');
+  } catch(e) {
+    ui.form = {...ui.form, err: e.message || 'Password change failed.'};
+    render();
+  }
 }
 // Admin reset of any user's password back to default
-function resetUserPassword(username) {
-  const defaultPw = DEFAULT_PASSWORD;
-  setStoredPassword(username, defaultPw);
-  toast(`Password reset for ${username} — they must change it on next login`);
+async function resetUserPassword(username) {
+  try {
+    await API.post('/auth/change-password', { username, currentPassword: '', newPassword: 'circuit' });
+    toast(`Password reset for ${username} — they must change it on next login`);
+  } catch(e) {
+    toast('Password reset failed: ' + e.message, 'error');
+  }
 }
 
 function modalShell(title, body, actions) {
@@ -2659,8 +2617,16 @@ function renderModal() {
 
     const currentView = hv === 'list' ? listView : hv === 'timeline' ? timelineView : hv === 'attachments' ? attachView : woTabView;
 
+    const quickActions = canEdit() ? `
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="btn-act" onclick="openLogWork(${f.instId})" style="padding:6px 14px;font-size:11px">▣ Log Work</button>
+        <button class="btn-act" onclick="openCreateWO(${f.instId})" style="padding:6px 14px;font-size:11px">⊡ Create WO</button>
+        <button class="btn-act" onclick="openEditInstrument(${f.instId})" style="padding:6px 14px;font-size:11px">✎ Edit</button>
+      </div>` : '';
+
     return modalShell('INSTRUMENT HISTORY', `
       <div class="modal-sub">${esc(f.instName)} \u00B7 ${esc(f.serial)}</div>
+      ${quickActions}
       ${histViewTab}
       ${currentView}`,
       `<button class="btn-export" onclick="printHistory(${f.instId})">⎙ Print PDF</button>
@@ -3015,6 +2981,7 @@ function renderModal() {
       <span class="confirm-icon">${f.icon||'⚠'}</span>
       <div class="confirm-msg">${f.msg||'Are you sure?'}</div>
       ${f.detail ? `<div class="confirm-detail">${esc(f.detail)}</div>` : ''}
+      ${f.showNotes ? `<div class="form-group" style="margin-top:12px"><label class="form-label">Notes (optional)</label><textarea id="confirm-notes" class="form-input" rows="3" placeholder="Add notes about this move..."></textarea></div>` : ''}
       <div class="modal-actions">
         <button class="btn-cancel" onclick="confirmCancel()">Cancel</button>
         <button class="btn-confirm-ok" onclick="confirmProceed()">Confirm</button>
@@ -4420,26 +4387,6 @@ function navigateTo(page) {
     ui.page = page; render();
   }
 }
-// ── ADMIN PASSWORD ─────────────────────────────────────────
-function submitAdminPassword() {
-  const pw = (document.getElementById('admin-pw-input')?.value || '').trim();
-  if (!pw) { ui.form = {...ui.form, err: 'Please enter the password.'}; render(); return; }
-  const stored = getStoredPassword('admin');
-  if (pw !== stored) {
-    ui.form = {...ui.form, err: 'Incorrect password. Try again.'};
-    render();
-    setTimeout(() => {
-      const el = document.getElementById('admin-pw-input');
-      if (el) { el.value = ''; el.focus(); }
-    }, 50);
-    return;
-  }
-  ui.adminUnlocked = true;
-  ui.adminUnlockedAt = Date.now();
-  ui.modal = null; ui.form = {};
-  ui.page = 'admin';
-  render();
-}
 // ── GAS CONNECTION TESTS ─────────────────────────────────────
 function gasTestLog(msg, ok) {
   const el = document.getElementById('gas-test-result');
@@ -4569,28 +4516,6 @@ async function setupBackupTriggerUI() {
   } catch(e) { toast('\u26A0 Trigger setup failed: ' + e.message, 'error'); }
 }
 function openChangePassword() { ui.modal = 'changepw'; ui.form = {}; render(); }
-function saveAdminPassword() {
-  const current = (document.getElementById('pw-current')?.value || '').trim();
-  const newPw   = (document.getElementById('pw-new')?.value     || '').trim();
-  const confirmPw = (document.getElementById('pw-confirm')?.value || '').trim();
-  const stored = getStoredPassword('admin');
-  if (current !== stored) {
-    ui.form = {...ui.form, err: 'Current password is incorrect.'}; render(); return;
-  }
-  if (newPw.length < PW_MIN_LENGTH) {
-    ui.form = {...ui.form, err: `Password must be at least ${PW_MIN_LENGTH} characters.`}; render(); return;
-  }
-  if (isDefaultPassword(newPw)) {
-    ui.form = {...ui.form, err: 'Please choose a different password (not the default).'}; render(); return;
-  }
-  if (newPw !== confirmPw) {
-    ui.form = {...ui.form, err: 'Passwords do not match.'}; render(); return;
-  }
-  setStoredPassword('admin', newPw);
-  addSecurityLog('PASSWORD_CHANGE', 'Admin password changed.');
-  closeModal();
-  toast('Admin password updated');
-}
 
 function toggleTheme() {
   ui.theme = ui.theme === 'dark' ? 'light' : 'dark';
@@ -4599,7 +4524,7 @@ function toggleTheme() {
   render();
 }
 // markDirty is defined in the sync layer below
-function closeModal() { ui.modal = null; ui.form = {}; ui.dirty = false; render(); }
+function closeModal() { ui.modal = null; ui.form = {}; render(); }
 
 function toggleMobileMenu() {
   const sb = document.getElementById('sidebar');
@@ -4966,11 +4891,11 @@ window.addEventListener('hashchange', handleDeepLink);
 // ── CONFIRM HELPER ─────────────────────────────────────────
 let _confirmCallback = null;
 function confirmCancel() { _confirmCallback = null; closeModal(); }
-function confirmProceed() { if (_confirmCallback) { const cb = _confirmCallback; _confirmCallback = null; ui.modal = null; ui.form = {}; cb(); } }
-function showConfirm({ title, icon, msg, detail, onConfirm }) {
+function confirmProceed() { if (_confirmCallback) { const cb = _confirmCallback; _confirmCallback = null; const notesEl = document.getElementById('confirm-notes'); const notes = notesEl ? notesEl.value.trim() : ''; ui.modal = null; ui.form = {}; cb(notes); } }
+function showConfirm({ title, icon, msg, detail, showNotes, onConfirm }) {
   _confirmCallback = onConfirm;
   ui.modal = 'confirm';
-  ui.form  = { title, icon, msg, detail };
+  ui.form  = { title, icon, msg, detail, showNotes };
   render();
 }
 
@@ -5003,8 +4928,10 @@ function updateSite(id, val) {
     icon: '▶',
     msg: `Move <strong>${esc(i.name)}</strong> S/N ${esc(i.serial)} to a new site?`,
     detail: `${prev}  →  ${val}`,
-    onConfirm: () => {
-      addHistory(id, 'Site changed', `${prev} → ${val}`);
+    showNotes: true,
+    onConfirm: (notes) => {
+      const moveDetail = `${prev} → ${val}${notes ? ' | Notes: ' + notes : ''}`;
+      addHistory(id, 'Site changed', moveDetail);
       i.site = val;
       if (val === 'VENDOR') {
         const prevStatus = i.status;
@@ -5055,7 +4982,7 @@ function syncInstrument(i, force) {
         toast('\u26A0 Conflict detected but could not parse server data', 'error');
       }
     } else {
-      toast('\u26A0 Instrument sync failed: ' + msg, 'error');
+      toast('\u26A0 Instrument sync failed: ' + msg, 'error', () => syncInstrument(i));
       console.error('syncInstrument failed', e);
     }
   });
@@ -5449,8 +5376,7 @@ function saveWorkEntry(mode) {
   const dupWO = db.workOrders.find(w => String(w.instrumentId) === String(instId) && w.type === type && w.status !== 'Closed');
   if (dupWO) { ui.form={...ui.form, err:'An open ' + type + ' work order (WO-' + dupWO.id + ') already exists for this instrument.', type, by, desc, priority}; render(); return; }
   const maxId = db.workOrders.reduce((m, w) => Math.max(m, parseInt(w.id)||0), 0);
-  const woId = Math.max(maxId + 1, Date.now());
-  db.woId = woId + 1;
+  const woId = maxId + 1;
   const newWO = { id:woId, instrumentId:instId, type, description:desc, technician:by, status:'Open', created:today(), priority };
   db.workOrders.push(newWO);
   // Auto-update instrument status to match the WO type and move to HQ/SHOP
@@ -5482,8 +5408,10 @@ function saveWorkEntry(mode) {
   _savingWO = true;
   closeModal();
   toast('✓ Work order created — saving to Sheets...');
+  const _idemKey = instId + '_' + type + '_' + Date.now();
   API.post('/work-orders', {
-    instrument_id: instId, type, description: desc, tech_name: by, priority, status: 'Open'
+    instrument_id: instId, type, description: desc, tech_name: by, priority, status: 'Open',
+    _idempotencyKey: _idemKey
   }).then(result => {
     if (result && result.id) {
       // Update the WO in db with server-assigned id
@@ -7475,7 +7403,7 @@ function renderSites() {
               <span style="font-family:var(--font-mono);font-size:9px;color:var(--subtle);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100px" title="${esc(label)}">${esc(label)}</span>
               <div style="display:flex;gap:4px">
                 <a href="${esc(viewUrl)}" target="_blank" style="font-family:var(--font-mono);font-size:9px;color:var(--blue);text-decoration:none;padding:2px 5px;border:1px solid rgba(88,166,255,.2);border-radius:var(--radius)">↗</a>
-                ${currentUserHasFullControl() ? `<button onclick="removeSitePhotoById(${p.attachmentId})" style="background:none;border:1px solid rgba(248,81,73,.2);color:var(--red);font-family:var(--font-mono);font-size:9px;padding:2px 5px;border-radius:var(--radius);cursor:pointer">✕</button>` : ''}
+                ${currentUserHasFullControl() ? `<button onclick="removeSitePhotoById(${p.id})" style="background:none;border:1px solid rgba(248,81,73,.2);color:var(--red);font-family:var(--font-mono);font-size:9px;padding:2px 5px;border-radius:var(--radius);cursor:pointer">✕</button>` : ''}
               </div>
             </div>
           </div>`;}).join('')}
@@ -7671,6 +7599,7 @@ function hideSyncIndicator() {
 
 async function syncToServer() {
   showSyncIndicator('Syncing...');
+  const _failedInstruments = new Set();
   try {
     // ── INSTRUMENTS ─────────────────────────────────────────
     for (const instId of _dirty.instruments) {
@@ -7678,14 +7607,23 @@ async function syncToServer() {
       if (!inst) { await API.del('/instruments/' + instId).catch(()=>{}); continue; }
       // Only PUT existing synced instruments — new ones are POSTed directly in saveAdd
       if (inst._synced && inst.id) {
-        await API.put('/instruments/' + inst.id, {
-          name: inst.name, serial: inst.serial, status: inst.status,
-          site: inst.site, notes: inst.notes||'',
-          archived: inst.archived ? 1 : 0,
-          last_cert_date: inst.lastCertDate || null,
-          cert_interval_months: inst.certIntervalMonths || null
-        }).catch(()=>{});
+        try {
+          await API.put('/instruments/' + inst.id, {
+            name: inst.name, serial: inst.serial, status: inst.status,
+            site: inst.site, notes: inst.notes||'',
+            archived: inst.archived ? 1 : 0,
+            last_cert_date: inst.lastCertDate || null,
+            cert_interval_months: inst.certIntervalMonths || null
+          });
+        } catch(e) {
+          console.error('Instrument sync failed id=' + inst.id, e);
+          _failedInstruments.add(instId);
+        }
       }
+    }
+    if (_failedInstruments.size > 0) {
+      _failedInstruments.forEach(id => _dirty.instruments.add(id));
+      toast('⚠ Some instruments failed to sync — will retry', 'error');
     }
     _dirty.instruments.clear();
 
@@ -7715,15 +7653,14 @@ async function syncToServer() {
           await API.put('/technicians/' + t.id, {
             name: t.name, role: t.role||'', email: t.email||'',
             username: t.username||'', permission: t.permission||'Edit',
-            password: t.password||'', archived: t.archived||false
-          }).catch(()=>{});
+            archived: t.archived||false
+          }).catch(e => { console.error('Tech sync failed id=' + t.id, e); });
         } else if (!t._synced) {
           // New tech — create
           const created = await API.post('/technicians', {
             name: t.name, role: t.role||'', email: t.email||'',
-            username: t.username||'', permission: t.permission||'Edit',
-            password: t.password||''
-          }).catch(()=>null);
+            username: t.username||'', permission: t.permission||'Edit'
+          }).catch(e => { console.error('Tech create failed', e); return null; });
           if (created) { t.id = created.id; t._synced = true; }
         }
       }
@@ -7754,32 +7691,34 @@ function markAllSynced() {
   (db.archivedTechs||[]).forEach(t => { t._synced = true; });
 }
 
-// Admin password — plaintext comparison
-window.submitAdminPassword = function() {
+// Admin password — server-side verification
+window.submitAdminPassword = async function() {
   const pw = (document.getElementById('admin-pw-input')?.value || '').trim();
   if (!pw) { ui.form = {...ui.form, err: 'Please enter the password.'}; render(); return; }
-  const stored = getStoredPassword('admin');
-  if (pw !== stored) {
+  try {
+    await API.post('/auth/login', { username: 'admin', password: pw });
+    ui.adminUnlocked = true; ui.adminUnlockedAt = Date.now();
+    ui.modal = null; ui.form = {}; ui.page = 'admin'; render();
+  } catch(e) {
     ui.form = {...ui.form, err: 'Incorrect password. Try again.'}; render();
     setTimeout(() => { const el = document.getElementById('admin-pw-input'); if (el) { el.value=''; el.focus(); } }, 50);
-    return;
   }
-  ui.adminUnlocked = true; ui.adminUnlockedAt = Date.now();
-  ui.modal = null; ui.form = {}; ui.page = 'admin'; render();
 };
 
-window.saveAdminPassword = function() {
+window.saveAdminPassword = async function() {
   const current = (document.getElementById('pw-current')?.value || '').trim();
   const newPw   = (document.getElementById('pw-new')?.value     || '').trim();
   const confirmPw = (document.getElementById('pw-confirm')?.value || '').trim();
-  const stored = getStoredPassword('admin');
-  if (current !== stored) { ui.form = {...ui.form, err: 'Current password is incorrect.'}; render(); return; }
+  if (!current) { ui.form = {...ui.form, err: 'Please enter current password.'}; render(); return; }
   if (newPw.length < PW_MIN_LENGTH) { ui.form = {...ui.form, err: `Password must be at least ${PW_MIN_LENGTH} characters.`}; render(); return; }
-  if (isDefaultPassword(newPw)) { ui.form = {...ui.form, err: 'Please choose a different password (not the default).'}; render(); return; }
   if (newPw !== confirmPw) { ui.form = {...ui.form, err: 'Passwords do not match.'}; render(); return; }
-  setStoredPassword('admin', newPw);
-  addSecurityLog('PASSWORD_CHANGE', 'Admin password changed.');
-  closeModal(); toast('Admin password updated');
+  try {
+    await API.post('/auth/change-password', { username: 'admin', currentPassword: current, newPassword: newPw });
+    addSecurityLog('PASSWORD_CHANGE', 'Admin password changed.');
+    closeModal(); toast('Admin password updated');
+  } catch(e) {
+    ui.form = {...ui.form, err: e.message || 'Password change failed.'}; render();
+  }
 };
 
 // Danger-zone actions wired to server endpoints
@@ -7893,6 +7832,8 @@ function _mergeDelta(delta) {
   // Merge instruments
   if (delta.instruments && delta.instruments.length) {
     delta.instruments.forEach(newInst => {
+      // Skip records with pending local edits
+      if (_dirty.instruments.has(String(newInst.id))) return;
       // Normalize snake_case
       if (newInst.cert_interval_months !== undefined && newInst.certIntervalMonths === undefined)
         newInst.certIntervalMonths = newInst.cert_interval_months !== undefined && newInst.cert_interval_months !== '' ? Number(newInst.cert_interval_months) : null;
@@ -7961,12 +7902,20 @@ function _mergeDelta(delta) {
   return changed;
 }
 
+// Track last user interaction to avoid re-rendering during active use
+let _lastUserInteraction = 0;
+const _INTERACTION_DEBOUNCE = 5000; // 5 seconds
+['click','keydown','input','touchstart'].forEach(evt => {
+  document.addEventListener(evt, () => { _lastUserInteraction = Date.now(); }, { passive: true, capture: true });
+});
+
 function startAutoRefresh() {
   if (_autoRefreshInterval) clearInterval(_autoRefreshInterval);
   _autoRefreshInterval = setInterval(async () => {
     if (!ui.currentUser) return;
     if (ui.modal) return;
     if (ui.dirty) return;
+    if (Date.now() - _lastUserInteraction < _INTERACTION_DEBOUNCE) return;
     try {
       let d, isDelta = false;
       // Use delta sync if we have a previous sync timestamp
@@ -8031,7 +7980,6 @@ function startAutoRefresh() {
             db.sitesMeta[a.siteCode].photos.push({ url: a.directUrl || a.fileUrl, attachmentId: a.id, fileName: a.fileName });
           });
         }
-        if (!db.adminPassword) db.adminPassword = DEFAULT_PASSWORD;
         // Normalize legacy status
         if (db.workOrders) {
           db.workOrders.forEach(wo => {
@@ -8042,8 +7990,6 @@ function startAutoRefresh() {
       }
 
       markAllSynced();
-      // Save to offline cache
-      try { localStorage.setItem('sdapcd_db_cache', JSON.stringify(db)); } catch(e) {}
       // Preserve scroll position
       const mainEl = document.getElementById('main') || document.scrollingElement || document.documentElement;
       const scrollTop = mainEl.scrollTop;
@@ -8061,127 +8007,36 @@ function startAutoRefresh() {
   }, 120000); // 2 minutes
 }
 
-// ══════════════════════════════════════════════════════════════
-// ── FEATURE: OFFLINE MODE (localStorage cache) ──────────────
-// ══════════════════════════════════════════════════════════════
-function saveDBToCache() {
-  try { localStorage.setItem('sdapcd_db_cache', JSON.stringify(db)); } catch(e) {}
-}
-function loadDBFromCache() {
-  try {
-    const cached = localStorage.getItem('sdapcd_db_cache');
-    if (cached) {
-      db = JSON.parse(cached);
-      if (!db.customStatuses) db.customStatuses = [];
-      if (!db.sitesMeta) db.sitesMeta = {};
-      if (!db.securityLog) db.securityLog = [];
-      if (!db.deleteLog) db.deleteLog = [];
-      if (!db.history) db.history = {};
-      if (!db.attachments) db.attachments = [];
-      render();
-      return true;
-    }
-  } catch(e) {}
-  return false;
-}
-
-// Patch loadDBFromServer to save cache on success and fallback on failure
+// Patch loadDBFromServer to start auto-refresh on success
 const _originalLoadDB = loadDBFromServer;
 loadDBFromServer = async function() {
   try {
     await _originalLoadDB();
-    saveDBToCache();
     startAutoRefresh();
     updateActivityBadge();
   } catch(e) {
-    console.warn('Server load failed, trying offline cache...');
-    if (loadDBFromCache()) {
-      toast('📡 Offline mode — showing cached data');
-    } else {
-      toast('⚠ No connection and no cached data available');
-    }
+    toast('⚠ Could not connect to server. Check your connection.', 'error', () => loadDBFromServer());
   }
 };
 
+
 // ══════════════════════════════════════════════════════════════
-// ── FEATURE: OFFLINE RETRY QUEUE ─────────────────────────────
+// ── OFFLINE INDICATOR ────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════
-const _offlineQueue = JSON.parse(localStorage.getItem('sdapcd_offline_queue') || '[]');
-let _isOnline = navigator.onLine;
-let _retryingQueue = false;
-
-function _saveQueue() {
-  try { localStorage.setItem('sdapcd_offline_queue', JSON.stringify(_offlineQueue)); } catch(e) {}
-}
-
-function queueOfflineRequest(method, path, body) {
-  _offlineQueue.push({ method, path, body, ts: Date.now() });
-  // Cap queue at 200 entries to prevent localStorage overflow
-  if (_offlineQueue.length > 200) _offlineQueue.splice(0, _offlineQueue.length - 200);
-  _saveQueue();
-}
-
-async function flushOfflineQueue() {
-  if (_retryingQueue || _offlineQueue.length === 0) return;
-  _retryingQueue = true;
-  let successCount = 0;
-  while (_offlineQueue.length > 0) {
-    const req = _offlineQueue[0];
-    try {
-      if (req.method === 'post') await API.post(req.path, req.body);
-      else if (req.method === 'put') await API.put(req.path, req.body);
-      else if (req.method === 'del') await API.del(req.path);
-      else if (req.method === 'patch') await API.patch(req.path, req.body);
-      _offlineQueue.shift();
-      _saveQueue();
-      successCount++;
-    } catch(e) {
-      // Still failing — stop retrying, will try again on next online event
-      break;
-    }
+function _updateOfflineBanner() {
+  const el = document.getElementById('offline-banner');
+  if (!el) return;
+  if (navigator.onLine) {
+    el.style.display = 'none';
+    document.body.style.paddingTop = '';
+  } else {
+    el.style.display = 'block';
+    document.body.style.paddingTop = '36px';
   }
-  _retryingQueue = false;
-  if (successCount > 0) toast('✓ ' + successCount + ' queued change' + (successCount===1?'':'s') + ' synced to server');
-  if (_offlineQueue.length > 0 && successCount > 0) toast('⚠ ' + _offlineQueue.length + ' change' + (_offlineQueue.length===1?'':'s') + ' still pending', 'warn');
 }
-
-// Listen for online/offline events
-window.addEventListener('online', () => {
-  _isOnline = true;
-  toast('✓ Connection restored — syncing queued changes...');
-  flushOfflineQueue();
-});
-window.addEventListener('offline', () => {
-  _isOnline = false;
-  toast('⚠ You are offline. Changes will be queued and synced when reconnected.', 'warn');
-});
-
-// Patch gasRequest to queue on network failure for mutations
-const _originalGasRequest = gasRequest;
-gasRequest = async function(path, action, params, body) {
-  try {
-    const result = await _originalGasRequest(path, action, params, body);
-    // On success, try flushing any queued requests
-    if (_offlineQueue.length > 0 && !_retryingQueue) flushOfflineQueue();
-    return result;
-  } catch(e) {
-    // Only queue write operations (not reads)
-    if (action !== 'get' && e.message && e.message.includes('Network error')) {
-      const method = action === 'put' ? 'put' : action === 'delete' ? 'del' : action === 'patch' ? 'patch' : 'post';
-      // Reconstruct the API-style path
-      const apiPath = '/' + path + (params && params.id ? '/' + params.id : '') + (action && action !== 'post' && action !== 'put' && action !== 'delete' && action !== 'patch' ? '/' + action : '');
-      queueOfflineRequest(method, apiPath, body || params || {});
-      toast('⚠ Offline — change queued for sync', 'warn');
-      return null; // Don't throw, let the UI continue
-    }
-    throw e; // Re-throw non-network errors
-  }
-};
-
-// Try flushing queue on startup
-if (_offlineQueue.length > 0 && _isOnline) setTimeout(flushOfflineQueue, 5000);
-
-// ══════════════════════════════════════════════════════════════
+window.addEventListener('online', () => { _updateOfflineBanner(); toast('✓ Connection restored'); });
+window.addEventListener('offline', _updateOfflineBanner);
+_updateOfflineBanner();
 
 // ══════════════════════════════════════════════════════════════
 // ── FEATURE: ACTIVITY BADGE ──────────────────────────────────
@@ -8360,14 +8215,8 @@ renderSites = function() {
 // ══════════════════════════════════════════════════════════════
 // ── BOOTSTRAP ──────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════
-// Show cached data instantly if available, then refresh from server in background
-if (loadDBFromCache()) {
-  // Cached data shown — now refresh silently from server
-  loadDBFromServer();
-} else {
-  render(); // initial paint with empty db
-  loadDBFromServer(); // fetch from server, cache offline, start auto-refresh
-}
+render();
+loadDBFromServer();
 </script>
 </body>
 </html>
