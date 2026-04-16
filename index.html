@@ -320,12 +320,12 @@ body {
 }
 
 /* ── STAT CARDS ─────────────────────────────────────────── */
-.stat-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 14px; margin-bottom: 28px; }
+.stat-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 10px; margin-bottom: 28px; }
 .stat-card {
   background: linear-gradient(145deg, rgba(20,28,44,0.92) 0%, rgba(14,20,34,0.96) 100%);
   border: 1px solid rgba(48,68,100,.62);
   border-radius: var(--radius-lg);
-  padding: 18px 20px 16px;
+  padding: 14px 14px 12px;
   cursor: pointer;
   transition: transform .2s ease, border-color .2s, box-shadow .2s;
   box-shadow: var(--shadow);
@@ -358,8 +358,8 @@ body {
 .stat-card:hover::after { opacity: 1; transform: scaleX(1); }
 .stat-card.active { border-color: var(--border); background: transparent; box-shadow: none; }
 .stat-card.active::after { opacity: 1; transform: scaleX(1); background: var(--slate); }
-.stat-label { font-size: 9.5px; font-weight: 600; color: var(--subtle); letter-spacing: .11em; margin-bottom: 10px; text-transform: uppercase; font-family: var(--font-mono); }
-.stat-num { font-size: 32px; font-weight: 600; line-height: 1; color: var(--text); font-family: var(--font-mono); letter-spacing: -.02em; }
+.stat-label { font-size: 8.5px; font-weight: 600; color: var(--subtle); letter-spacing: .11em; margin-bottom: 8px; text-transform: uppercase; font-family: var(--font-mono); }
+.stat-num { font-size: 26px; font-weight: 600; line-height: 1; color: var(--text); font-family: var(--font-mono); letter-spacing: -.02em; }
 .stat-card.active .stat-num { color: var(--slate); text-shadow: none; }
 .c-blue  { color: var(--blue);   text-shadow: 0 0 12px rgba(34,211,238,.4); }
 .c-green { color: var(--green);  text-shadow: 0 0 12px rgba(52,211,153,.35); }
@@ -741,7 +741,7 @@ body {
   }
   .main { padding: 16px 12px; margin-left: 0; padding-top: 52px; }
   .section-hdr { flex-direction: column; align-items: flex-start; gap: 10px; }
-  .stat-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+  .stat-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 8px !important; }
   .inst-table { overflow-x: visible; }
   .inst-table table { min-width: 0; }
   .inst-table thead { display: none; }
@@ -1545,15 +1545,18 @@ function render() {
     return;
   }
   const hasSubmittedWO = i => db.workOrders.some(w => String(w.instrumentId) === String(i.id) && w.status === 'Submitted for Closure');
-  const inst      = db.instruments.filter(i => !i.archived && !hasSubmittedWO(i));
+  const allInst   = db.instruments.filter(i => !i.archived); // all non-archived for stats
+  const inst      = allInst.filter(i => !hasSubmittedWO(i)); // exclude pending closure from tables
   const field     = inst.filter(isField);
   const shop      = inst.filter(isShop);
   const vendor    = inst.filter(isVendor);
-  const opCount   = inst.filter(i => i.status === 'Operational').length;
+  const opCount   = allInst.filter(i => i.status === 'Operational').length;
   const instWithWO = new Set(db.workOrders.filter(w => w.status !== 'Closed' && w.status !== 'Submitted for Closure').map(w => String(w.instrumentId)));
   const openWOCount = db.workOrders.filter(w => w.status !== 'Closed' && w.status !== 'Submitted for Closure').length;
+  const pendingClosureCount = db.workOrders.filter(w => w.status === 'Submitted for Closure').length;
 
-  const filtered = inst.filter(i => {
+  const filterSource = ui.activeStatCard === 'pending' || ui.activeStatCard === 'total' ? allInst : inst;
+  const filtered = filterSource.filter(i => {
     const q  = ui.search.toLowerCase();
     const mq = !q || i.name.toLowerCase().includes(q)
                   || i.serial.toLowerCase().includes(q)
@@ -1563,6 +1566,7 @@ function render() {
     if (ui.activeStatCard === 'field')       return mq && isField(i);
     if (ui.activeStatCard === 'shop')        return mq && isShop(i);
     if (ui.activeStatCard === 'nowork')      return mq && instWithWO.has(String(i.id));
+    if (ui.activeStatCard === 'pending')     return mq && hasSubmittedWO(i);
     const ms = ui.statusF   === 'All Statuses' || i.status === ui.statusF;
     const mt = ui.typeF     === 'All Types'    || i.name   === ui.typeF;
     const ml = ui.locationF === 'Field & Shop'
@@ -1647,7 +1651,7 @@ function render() {
     <div class="stat-grid">
       <div class="stat-card ${ui.activeStatCard==='total'?'active':''}"       onclick="setStatFilter('total')">
         <div class="stat-label">Total Instruments</div>
-        <div class="stat-num c-slate">${inst.length}</div>
+        <div class="stat-num c-slate">${allInst.length}</div>
       </div>
       <div class="stat-card ${ui.activeStatCard==='operational'?'active':''}" onclick="setStatFilter('operational')">
         <div class="stat-label">Operational</div>
@@ -1664,6 +1668,10 @@ function render() {
       <div class="stat-card ${ui.activeStatCard==='nowork'?'active':''}"      onclick="setStatFilter('nowork')">
         <div class="stat-label">Open Work Orders</div>
         <div class="stat-num c-slate">${openWOCount}</div>
+      </div>
+      <div class="stat-card ${ui.activeStatCard==='pending'?'active':''}"     onclick="setStatFilter('pending')">
+        <div class="stat-label">WO Ready to Close</div>
+        <div class="stat-num c-slate">${pendingClosureCount}</div>
       </div>
     </div>
 
